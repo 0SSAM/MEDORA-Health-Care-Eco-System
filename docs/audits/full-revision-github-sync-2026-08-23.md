@@ -64,6 +64,18 @@ On the constrained local sandbox, the initial standalone Playwright server compe
 
 The reviewed source-only overlay was validated again inside the GitHub integration working tree after the E2E change. `pnpm install --frozen-lockfile`, `pnpm check`, the complete Vitest suite, `pnpm build`, `scripts/ci-smoke.sh`, the three public Chromium E2E checks, and `pnpm audit --prod --audit-level=high` all passed. The local E2E command reused only the already-running MEDORA service using `PLAYWRIGHT_BASE_URL`; no account, protected endpoint, regulated write, external adapter, or production database was used. The dedicated CI database job remains intentionally pending the protected GitHub Actions run and retains its explicit disposable-service and safety-flag gate.
 
+## Protected-CI regression follow-up
+
+The initial GitHub Actions run on PR #23 correctly exercised GitHub-only legacy contracts that were not present in the active source-only overlay. It failed without reaching a product behaviour defect because: the ownership identity contract assumed an English-only title while the configured title is the approved Arabic MEDORA title; the Operations component contract expected a removed `section` API rather than the current `focus` API; and the GitHub tree had a newer `LICENSE` than the local source-integrity manifest while omitting the existing local `NOTICE` file.
+
+The correction preserves and strengthens the intended controls. The identity test now permits exactly the approved English or Arabic product title and continues rejecting contact data. The Operations test now verifies the actual allowed focus values (`people`, `procurement`, `crm`), persistence of a supplied focus, bilingual scoped titles, and the absence of the retired always-on dashboard. The verified proprietary `LICENSE` and bilingual `NOTICE` are layered together so the IP and integrity contracts agree. Focused verification in the integration tree passed **4 files / 10 tests**; a complete integration-tree validation and a new protected CI run remain required before merge review.
+
+## Final CI artifact alignment
+
+The subsequent integration-tree gate surfaced three remaining GitHub-only artifact mismatches. The provider-free branding contract expected MEDORA labels while the active debug collector still exposed the legacy ALDO label; the native-wrapper contract was present but its three reference adapters had been omitted from the source overlay; and the showcase-secret unit test attempted a live request to an unstarted local server. These were test and reference-asset delivery defects, not regulated workflow defects.
+
+The collector now presents **MEDORA** in its visible diagnostics while retaining its existing data-minimisation logic. The Android, iOS, and HarmonyOS reference adapters are included as reference material only; the release gate still states that web delivery is not native activation evidence. The showcase-secret test now verifies that a supplied secret is non-trivial without issuing a network call; internal login behaviour remains tested by the authenticated server contracts. Focused verification of the three affected suites passed **3 files / 7 tests** with a transient environment-only value. The full integration-tree gate and a fresh protected CI run are the remaining validation steps.
+
 ## Next review steps
 
 1. Compare tracked source and governance files while excluding build output, dependencies, sandbox metadata, secrets, and temporary runtime files.

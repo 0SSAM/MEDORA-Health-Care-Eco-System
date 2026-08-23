@@ -2499,3 +2499,6 @@ Generated invoice PDF remains a local presentation/export artifact; official ETA
 - [x] Remove the reproducible Express `clearCookie` deprecation warning without changing session-scope, logout, or showcase authorization behavior; add a focused regression test.
 - [x] Remove literal test-password values from GitHub-sync candidate sources and retain only environment-backed test configuration with regression coverage.
 - [x] Make the existing Playwright E2E specification runnable and CI-enforced with a declared test-runner dependency and browser setup, while retaining unauthenticated and non-destructive coverage only.
+- [x] Align stale source-contract expectations with the current bilingual MEDORA identity and Operations workspace focus contract so protected GitHub CI validates the implemented behaviour.
+- [x] Add the missing proprietary NOTICE file required by the existing IP-protection and source-integrity contracts, without asserting legal certification or changing licence ownership.
+- [x] Align remaining GitHub-only CI artifacts with current MEDORA source: provider-free debug-brand contract, native-wrapper reference files, and a bounded showcase-secret test that does not depend on an external running service.
