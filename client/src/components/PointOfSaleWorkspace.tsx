@@ -77,7 +77,50 @@ export function PointOfSaleWorkspace({ branchId, jurisdictionId }: Props) {
   useEffect(() => { if (!showCameraScanner) return; let cancelled = false; const start = async () => { const reason = cameraUnavailableReason(); if (reason === "insecure") { setCameraStatus("insecure"); setCameraMessage(t("pos.cameraHttps")); return; } if (reason === "unsupported") { setCameraStatus("unsupported"); setCameraMessage(t("pos.cameraUnsupported")); return; } setCameraStatus("requesting"); setCameraMessage(t("pos.cameraPermission")); try { const stream = await requestRearCamera(); if (cancelled) { stopCameraStream(stream); return; } cameraStreamRef.current = stream; if (!videoRef.current) throw new Error("video"); videoRef.current.srcObject = stream; await videoRef.current.play(); cameraDetectorRef.current = createCameraDetector(); setCameraStatus("scanning"); setCameraMessage(t("pos.cameraAim")); const detect = async () => { if (cancelled || !videoRef.current || !cameraDetectorRef.current) return; try { const raw = (await cameraDetectorRef.current.detect(videoRef.current)).map(cameraResultToRaw).find(Boolean); if (raw) { applyScan(raw, "camera"); setCameraStatus("success"); setCameraMessage(t("pos.cameraSuccess")); setShowCameraScanner(false); return; } } catch { setCameraStatus("error"); setCameraMessage(t("pos.cameraFailed")); return; } cameraFrameRef.current = window.requestAnimationFrame(() => { void detect(); }); }; cameraFrameRef.current = window.requestAnimationFrame(() => { void detect(); }); } catch (error) { const reason = error instanceof Error ? error.message : "error"; setCameraStatus(reason === "NotAllowedError" || reason === "denied" ? "denied" : "error"); setCameraMessage(t("pos.cameraDenied")); } }; void start(); return () => { cancelled = true; if (cameraFrameRef.current !== null) window.cancelAnimationFrame(cameraFrameRef.current); cameraFrameRef.current = null; stopCameraStream(cameraStreamRef.current); cameraStreamRef.current = null; cameraDetectorRef.current = null; if (videoRef.current) videoRef.current.srcObject = null; }; }, [applyScan, showCameraScanner, t]);
   const restoreInvoice = (held: HeldInvoice) => { if (basket.length && !window.confirm(t("pos.replaceBasket"))) return; restoreInvoiceMutation.mutate({ branchId: branchId!, heldId: Number(held.id) }); };
   const submitSale = () => { if (!branchId || !jurisdictionId || !basket.length || invoiceNumber.trim().length < 3) return; setStatus(null); const saleInput = { branchId, invoiceNumber: invoiceNumber.trim(), paymentMethod, discountAmount: 0, items: basket.map(line => ({ productId: line.productId, batchId: line.batchId, quantity: line.quantity, unit: line.unit, unitPrice: line.unitPrice })) }; (sessionMode === "showcase" ? commitShowcaseSale : commitProductionSale).mutate(saleInput); };
-  const printReceipt = () => { if (!lastReceipt) return; const printWindow = window.open("", "_blank", "noopener,noreferrer,width=420,height=640"); if (!printWindow) { setStatus(t("pos.printWindowFailed")); return; } printWindow.document.write(`<html dir="${direction}"><head><title>${t("pos.receiptTitle")} ${lastReceipt.invoiceNumber}</title><style>body{font-family:Arial,sans-serif;padding:24px;color:#0f172a}h1{font-size:20px}p{margin:8px 0;border-bottom:1px solid #e2e8f0;padding-bottom:8px}</style></head><body><h1>MEDORA | ${t("pos.receiptTitle")}</h1><p>${t("pos.invoiceNumber")}: ${lastReceipt.invoiceNumber}</p><p>${t("pos.saleNumber")}: ${lastReceipt.saleId}</p><p><strong>${t("pos.totalBeforeDiscount")}: ${formatCurrency(lastReceipt.total)}</strong></p><p>${t("pos.receiptIssued")}</p><script>window.onload=()=>{window.print();window.close()}</script></body></html>`); printWindow.document.close(); };
+  const printReceipt = () => {
+    if (!lastReceipt) return;
+    const printWindow = window.open("", "_blank", "noopener,noreferrer,width=420,height=640");
+    if (!printWindow) { setStatus(t("pos.printWindowFailed")); return; }
+
+    const doc = printWindow.document;
+    doc.open();
+    doc.documentElement.setAttribute("dir", direction);
+
+    const title = doc.createElement("title");
+    title.textContent = `${t("pos.receiptTitle")} ${lastReceipt.invoiceNumber}`;
+
+    const style = doc.createElement("style");
+    style.textContent = "body{font-family:Arial,sans-serif;padding:24px;color:#0f172a}h1{font-size:20px}p{margin:8px 0;border-bottom:1px solid #e2e8f0;padding-bottom:8px}";
+
+    const head = doc.head || doc.createElement("head");
+    head.append(title, style);
+    if (!doc.head) doc.documentElement.append(head);
+
+    const body = doc.body || doc.createElement("body");
+
+    const h1 = doc.createElement("h1");
+    h1.textContent = `MEDORA | ${t("pos.receiptTitle")}`;
+
+    const pInvoice = doc.createElement("p");
+    pInvoice.textContent = `${t("pos.invoiceNumber")}: ${lastReceipt.invoiceNumber}`;
+
+    const pSale = doc.createElement("p");
+    pSale.textContent = `${t("pos.saleNumber")}: ${lastReceipt.saleId}`;
+
+    const pTotal = doc.createElement("p");
+    const strong = doc.createElement("strong");
+    strong.textContent = `${t("pos.totalBeforeDiscount")}: ${formatCurrency(lastReceipt.total)}`;
+    pTotal.append(strong);
+
+    const pIssued = doc.createElement("p");
+    pIssued.textContent = t("pos.receiptIssued");
+
+    body.append(h1, pInvoice, pSale, pTotal, pIssued);
+    if (!doc.body) doc.documentElement.append(body);
+
+    doc.close();
+    printWindow.onload = () => { printWindow.print(); printWindow.close(); };
+  };
   const shareWhatsApp = () => { if (!lastReceipt) return; const text = `MEDORA ${t("pos.receiptTitle")}\n${t("pos.invoiceNumber")}: ${lastReceipt.invoiceNumber}\n${t("pos.saleNumber")}: ${lastReceipt.saleId}\n${t("pos.totalBeforeDiscount")}: ${formatCurrency(lastReceipt.total)}`; window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank", "noopener,noreferrer"); };
   if (!branchId || !jurisdictionId) return <Card className="border-amber-200 bg-amber-50/60 shadow-none"><CardContent className="flex items-start gap-3 p-5 text-sm text-amber-900"><AlertCircle className="mt-0.5 h-5 w-5 shrink-0" /><div><p className="font-semibold">{t("pos.scopeRequired")}</p><p className="mt-1 leading-6">{t("pos.scopeRequiredDetail")}</p></div></CardContent></Card>;
   const cameraFallback = ["denied", "unsupported", "insecure", "error"].includes(cameraStatus);
