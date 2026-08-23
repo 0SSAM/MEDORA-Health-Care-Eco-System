@@ -15,15 +15,15 @@ describe("workspace access contract", () => {
   });
 
   it("returns an authenticated employee to the workspace landing route", () => {
-    expect(loginSource).toContain("await utils.auth.me.invalidate();");
-    expect(loginSource).toContain('setLocation("/workspace")');
+    expect(loginSource).toContain("resetIdentityBoundClientState(queryClient);");
+    expect(loginSource).toContain('window.location.assign("/workspace");');
     expect(loginSource).toContain("فتح مساحة العمل");
     expect(loginSource).toContain("أنت مسجل الدخول بالفعل");
   });
 
   it("keeps workspace modules constrained by authenticated role and organization scope", () => {
     expect(homeSource).toContain("const { user, loading, logout } = useAuth()");
-    expect(homeSource).toContain("تسجيل الخروج");
+    expect(homeSource).toContain('t("home.logout")');
     expect(homeSource).toContain("const allowedModules = useMemo");
     expect(homeSource).toContain("const access: Record<string, string[]> =");
     expect(homeSource).toContain("organizationModules");
@@ -31,9 +31,10 @@ describe("workspace access contract", () => {
   });
 
   it("uses empty states and real-data boundaries instead of fabricated operational records", () => {
-    expect(homeSource).toContain("لا توجد أحداث معروضة بعد");
-    expect(homeSource).toContain("لن يتم إنشاء بيانات تجريبية");
-    expect(homeSource).toContain("تظهر بعد ربط قاعدة البيانات");
+    expect(homeSource).toContain('t("home.noEvents")');
+    expect(homeSource).toContain('t("home.noEventsDetail")');
+    expect(homeSource).toContain('t("home.nonProductionSimulation")');
+    expect(homeSource).toContain("isShowcaseSession");
   });
 });
 

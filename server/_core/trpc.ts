@@ -2,7 +2,8 @@ import { NOT_ADMIN_ERR_MSG, UNAUTHED_ERR_MSG } from '@shared/const';
 import { initTRPC, TRPCError } from "@trpc/server";
 import superjson from "superjson";
 import type { TrpcContext } from "./context";
-import { recordAuthenticationEvent } from "../db";
+import { hasCurrentNdaAcceptance, recordAuthenticationEvent } from "../db";
+import { MEDORA_NDA_HASH, MEDORA_NDA_VERSION } from "../domain/nda-policy";
 
 const t = initTRPC.context<TrpcContext>().create({
   transformer: superjson,
@@ -43,7 +44,23 @@ const blockShowcaseMutations = t.middleware(async opts => {
   return opts.next();
 });
 
-export const protectedProcedure = t.procedure.use(requireUser).use(blockShowcaseMutations);
+const requireCurrentNda = t.middleware(async opts => {
+  const user = opts.ctx.user;
+  if (!user || !(await hasCurrentNdaAcceptance(user.id, MEDORA_NDA_VERSION, MEDORA_NDA_HASH))) {
+    throw new TRPCError({ code: "FORBIDDEN", message: "NDA_ACCEPTANCE_REQUIRED" });
+  }
+  return opts.next();
+});
+
+export const authenticatedProcedure = t.procedure.use(requireUser);
+export const protectedProcedure = authenticatedProcedure.use(requireCurrentNda).use(blockShowcaseMutations);
+
+/**
+ * Explicit opt-in procedure for mutations that are safe to persist inside the
+ * isolated showcase scope. Production routes must continue using protectedProcedure.
+ * Callers must enforce organization/branch/jurisdiction scope themselves.
+ */
+export const isolatedDemoMutationProcedure = authenticatedProcedure.use(requireCurrentNda);
 
 export const adminProcedure = t.procedure.use(
   t.middleware(async opts => {
@@ -60,4 +77,4 @@ export const adminProcedure = t.procedure.use(
       },
     });
   }),
-).use(blockShowcaseMutations);
+).use(requireCurrentNda).use(blockShowcaseMutations);

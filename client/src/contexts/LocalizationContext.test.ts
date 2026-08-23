@@ -1,10 +1,5 @@
-// MEDORA | ميدورا — Integrated Health Care System
-// Copyright (c) 2026 Hossam Naeim Osman | حسام نعيم عثمان. All rights reserved.
-// Proprietary and confidential. Unauthorized copying, distribution, or use of this
-// software, or of any portion of it, is strictly prohibited.
-// Source: https://github.com/0SSAM/MEDORA-Health-Care-Eco-System
 import { describe, expect, it } from "vitest";
-import { normalizeLanguage } from "./LocalizationContext";
+import { hasScopedJurisdictionId, normalizeLanguage, translateLocalization } from "./LocalizationContext";
 
 describe("language preference", () => {
   it("accepts English and safely falls back to Arabic", () => {
@@ -12,5 +7,24 @@ describe("language preference", () => {
     expect(normalizeLanguage("ar")).toBe("ar");
     expect(normalizeLanguage("fr")).toBe("ar");
     expect(normalizeLanguage(null)).toBe("ar");
+  });
+
+  it("returns English POS and home labels after the user switches languages", () => {
+    expect(translateLocalization("en", "pos.openSale")).toBe("Open sale invoice");
+    expect(translateLocalization("en", "pos.completeSale")).toBe("Complete sale");
+    expect(translateLocalization("en", "home.module.pos")).toBe("Point of Sale");
+    expect(translateLocalization("en", "home.group.work")).toBe("Daily work");
+    expect(translateLocalization("ar", "pos.openSale")).toBe("فتح فاتورة بيع");
+  });
+});
+
+describe("active branch scope guards", () => {
+  it("accepts the non-regulatory showcase jurisdiction identifier zero without accepting missing or invalid scope", () => {
+    expect(hasScopedJurisdictionId(0)).toBe(true);
+    expect(hasScopedJurisdictionId(12)).toBe(true);
+    expect(hasScopedJurisdictionId(null)).toBe(false);
+    expect(hasScopedJurisdictionId(undefined)).toBe(false);
+    expect(hasScopedJurisdictionId(-1)).toBe(false);
+    expect(hasScopedJurisdictionId(1.5)).toBe(false);
   });
 });

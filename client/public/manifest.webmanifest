@@ -1,12 +1,21 @@
 {
-  "name": "ميدورا | منظومة الرعاية الصحية المتكاملة",
-  "short_name": "ميدورا",
-  "description": "منظومة رعاية صحية مؤسسية متعددة الدول",
+  "name": "MEDORA Health Care Eco System | منظومة الرعاية الصحية المتكاملة",
+  "short_name": "MEDORA",
+  "description": "MEDORA Health Care Eco System — منظومة رعاية صحية مؤسسية متعددة الدول",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#eef8f8",
   "theme_color": "#123B50",
   "lang": "ar",
   "dir": "rtl",
-  "icons": [{ "src": "/manus-storage/medora-system-icon_1c63a72c.png", "sizes": "1024x1024", "type": "image/png", "purpose": "any maskable" }]
+  "icons": [
+    { "src": "/manus-storage/medora-logo-primary-512_9338f979.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" },
+    { "src": "/manus-storage/medora-logo-primary-512_9338f979.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ],
+  "shortcuts": [{
+    "name": "نقطة البيع",
+    "short_name": "POS",
+    "url": "/pos",
+    "icons": [{ "src": "/manus-storage/medora-logo-primary-512_9338f979.png", "sizes": "512x512", "type": "image/png" }]
+  }]
 }

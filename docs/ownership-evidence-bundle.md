@@ -27,9 +27,9 @@ The verifier must record the result as **verified**, **verified with exceptions*
 
 ## Approved product identity wording
 
-**English:** MEDORA Integrated Health System is the approved product identity for this release. MEDORA may be explained as the brand narrative **Adaptive Healthcare, Logistics, Data, and Operations** when a concise expansion is useful; this narrative is not a legal registration statement unless separately adopted by the rights holder.
+**English:** MEDORA Integrated Health System is the approved product identity for this release. ALDO may be explained as the brand narrative **Adaptive Healthcare, Logistics, Data, and Operations** when a concise expansion is useful; this narrative is not a legal registration statement unless separately adopted by the rights holder.
 
-**العربية:** الاسم المعتمد للمنتج في هذا الإصدار هو **منظومة MEDORA المتكاملة للرعاية الصحية**. ويمكن شرح MEDORA تسويقياً باعتباره **Adaptive Healthcare, Logistics, Data, and Operations**، أي منظومة متكيفة للرعاية الصحية واللوجستيات والبيانات والعمليات، ولا يُعد ذلك بياناً قانونياً للتسجيل إلا إذا اعتمده صاحب الحق رسمياً.
+**العربية:** الاسم المعتمد للمنتج في هذا الإصدار هو **منظومة MEDORA المتكاملة للرعاية الصحية**. ويمكن شرح ALDO تسويقياً باعتباره **Adaptive Healthcare, Logistics, Data, and Operations**، أي منظومة متكيفة للرعاية الصحية واللوجستيات والبيانات والعمليات، ولا يُعد ذلك بياناً قانونياً للتسجيل إلا إذا اعتمده صاحب الحق رسمياً.
 
 ## Access separation
 

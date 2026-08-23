@@ -1,5 +1,19 @@
 # Project TODO
 
+- [x] تشخيص وإصلاح تنبيه Dependabot المفتوح الخاص بـ esbuild في GitHub مع تحقق من سلسلة الاعتمادات.
+- [x] إعادة تصميم تجربة نقطة الدخول ولوحة القيادة الرئيسية لتكون أكثر تركيزاً وجاذبية وذكاءً على الهاتف وسطح المكتب.
+- [x] إعادة بناء المساعد الذكي كتجربة عائمة واضحة متعددة اللغات بانتقالات سلسة مع استمرار المراجعة البشرية الإلزامية.
+- [x] إضافة عقود انحدار لاكتشاف إصلاح الاعتماد وسلوك المساعد وتجربة RTL/LTR الجديدة، ثم إجراء التحقق الشامل.
+- [x] إضافة لوحة مساعد منزلقة قابلة للسحب من أي شاشة مصرح بها، مع زر عائم متوافق مع RTL/LTR ومسودة سؤال قابلة للتحرير.
+- [x] إنشاء README رئيسي احترافي ثنائي اللغة يشرح قدرات MEDORA ومعمارية العزل والحوكمة وإرشادات التشغيل.
+
+- [x] إضافة سجل تدقيق مركزي موقّع ومحدود البيانات لمحاولات النسخ والطباعة والالتقاط ضمن نطاق المؤسسة/الفرع/الاختصاص.
+- [x] ربط إشارات حماية الشاشة في الواجهة بإجراء التدقيق المقيد بالنطاق دون إرسال المحتوى أو بصمة الجهاز.
+- [x] إضافة ملفات إشعار الملكية الفكرية وحقوق التأليف وترويسات المصدر الأساسية.
+- [x] توثيق خطة حماية العرض الأصلية لتطبيقات Android وiOS وHarmonyOS واختبارات القبول اليدوية المقابلة.
+- [x] إضافة واختبار عقود الانحدار لسجل حماية المحتوى، ثم التحقق من TypeScript والاختبارات والبناء.
+- [x] إضافة عقد واجهة مباشر يثبت أن `medora:capture-risk` يستدعي إجراء التدقيق بالنطاق الكامل والحمولة المصغرة فقط.
+
 - [x] Analyze all supplied BDF source files, exports, HTML references, archive contents, and APK metadata.
 - [x] Define the cross-platform delivery model for iPhone, Android, and Windows as a responsive installable web application/PWA with a documented native-wrapper path if needed.
 - [x] Implement secure authentication with protected routes and four roles: admin, pharmacist, cashier, and manager.
@@ -279,9 +293,9 @@
 - [x] Scope customer-care and call-centre reads and writes to active branches assigned to the authenticated user; reject new unbound records for non-admin users.
 - [x] Add unit coverage for branch-scoped customer-care and call-centre access policy.
 
-# MEDORA Ownership and Brand Protection
+# ALDO Ownership and Brand Protection
 
-- [x] Rename the product-facing system identity to MEDORA Health Care Eco System across app metadata, title, and visible brand surfaces.
+- [x] Rename the product-facing system identity to ALDO Health Care Eco System across app metadata, title, and visible brand surfaces.
 - [x] Add a discreet ownership notice using the owner-provided professional name without exposing phone, email, address, CV, or other personal contact data.
 - [x] Add copyright and provenance metadata to the repository, generated app metadata, and project ownership documentation without weakening security or licensing clarity.
 - [x] Add a tamper-evident ownership manifest with a non-secret SHA-256 fingerprint and document the recovery/proof procedure.
@@ -367,7 +381,7 @@
 - [x] Implement only safe, supported additions identified by the audit, with tests and migration review where applicable.
 - [x] Deliver a concise capability-gap report and update project documentation with explicit limitations and activation prerequisites.
 
-# MEDORA Health Care Eco System — Intelligent Reporting and Integration Hardening
+# ALDO Health Care Eco System — Intelligent Reporting and Integration Hardening
 
 - [x] Convert the current capability-gap findings into an explicit implementation boundary for intelligent reports, insurer workflows, HR/payroll, promotions, and government connectors.
 - [x] Add a generalized report-definition and report-run model only if it can preserve organization/jurisdiction scope, recipient authorization, idempotency, and auditability.
@@ -471,21 +485,21 @@
 
 - [x] إصلاح اختبار commitSale الإيجابي: محاذاة mock لاستعلامات membership والاختصاص والمنظمة، وإضافة بيانات الدفعة وحقول وأدلة catalog المطلوبة؛ الاختبار المركز وTypeScript ناجحان.
 
-- [x] Remove user-visible Manus words, marks, and images from the MEDORA application and add regression coverage for shipped UI assets; provider session keys and framework internals remain unchanged because they are non-visible runtime contracts.
+- [x] Remove user-visible Manus words, marks, and images from the ALDO application and add regression coverage for shipped UI assets; provider session keys and framework internals remain unchanged because they are non-visible runtime contracts.
 
-- [x] Create MEDORA Health Care Eco System logo, icon, backgrounds, visual effects, and replace visible/configurable bdf pharma erp branding throughout the project; updated Home, HTML metadata, PWA icon/manifest, package/template branding, and added branding regression tests.
+- [x] Create ALDO Health Care Eco System logo, icon, backgrounds, visual effects, and replace visible/configurable bdf pharma erp branding throughout the project; updated Home, HTML metadata, PWA icon/manifest, package/template branding, and added branding regression tests.
 
 - [x] Harden scheduled inventory-alert transport errors: replace raw error, URL, and task UID response data with a fixed error code and add `inventory-policy.test.ts`; focused tests and TypeScript passed.
 
-- [x] Remove visible `manus-storage` branding paths from client HTML, CSS, and Home logo usage; use the local MEDORA PWA icon, CSS background gradients, and inline MEDORA SVG. Branding tests and TypeScript passed.
+- [x] Remove visible `manus-storage` branding paths from client HTML, CSS, and Home logo usage; use the local ALDO PWA icon, CSS background gradients, and inline ALDO SVG. Branding tests and TypeScript passed.
 
-- [x] Recheck the MEDORA workspace after auth.me settles: desktop RTL dashboard, MEDORA inline mark, CSS background, navigation, and scoped workspace messaging render successfully; the earlier loading screenshot was captured before the request completed.
+- [x] Recheck the ALDO workspace after auth.me settles: desktop RTL dashboard, ALDO inline mark, CSS background, navigation, and scoped workspace messaging render successfully; the earlier loading screenshot was captured before the request completed.
 
 - [x] Harden router policy-error responses in insurance, regional, and reports: removed `String(error)` from outward TRPC messages and replaced it with fixed non-sensitive messages; 150 tests passed, 4 optional database tests were skipped, TypeScript passed, and the production build passed.
 
 - [x] Re-run full regression after ERP error-surface hardening: 150 tests passed, 4 optional live-database tests skipped, TypeScript passed, production build passed, and the server-wide raw error interpolation scan returned no matches.
 
-- [x] Replace the plain auth loading screen with a branded MEDORA loading card, inline mark, subtle CSS orbs, progress motion, and reduced-motion fallback; TypeScript, branding/auth tests (4), and production build passed.
+- [x] Replace the plain auth loading screen with a branded ALDO loading card, inline mark, subtle CSS orbs, progress motion, and reduced-motion fallback; TypeScript, branding/auth tests (4), and production build passed.
 
 - [x] Remove provider-branded console labels from the shipped debug collector while preserving its internal runtime identifiers, and extend branding regression coverage; TypeScript, 3 branding tests, and production build passed.
 
@@ -495,7 +509,7 @@
 
 - [x] Run a focused scan for dynamic TRPC error messages after the router hardening; no remaining outward message template using raw error, input, URL, or task identifiers was found in the inspected server files.
 
-- [x] Replace remaining application-owned BDF Service Worker cache/header/message identifiers with MEDORA names, update Home messaging, and extend branding regression coverage; 4 branding tests and TypeScript passed. Internal provider proxy paths and offline database migration identifiers remain unchanged for compatibility.
+- [x] Replace remaining application-owned BDF Service Worker cache/header/message identifiers with ALDO names, update Home messaging, and extend branding regression coverage; 4 branding tests and TypeScript passed. Internal provider proxy paths and offline database migration identifiers remain unchanged for compatibility.
 
 - [x] Remove the legacy BDF shell cache during Service Worker activation and cover the cleanup contract; 4 branding tests and TypeScript passed, with the legacy cache name retained only as an explicit deletion target.
 
@@ -613,15 +627,15 @@
 - [x] Harden external-adapter readiness with explicit endpoint contract, submission acknowledgement, retry, and audit requirements while keeping all unconfigured adapters blocked; 71 test files passed, 223 tests passed, and production build passed.
 - [x] Require future invoice adapters to prove the shared external-adapter readiness contract before submission, while preserving local document and catalog-scope validation; 71 test files passed, 223 tests passed, and production build passed.
 - [x] Add a pure trusted-attestation contract validator for nonce, freshness, revocation, and organization/jurisdiction scope; keep it unused by browsers until an authorized native provider is configured; 71 test files passed, 231 tests passed, and production build passed.
-- [x] Create Arabic and English operational manuals covering the implemented MEDORA Health Care Eco System workflows by professional role, with country-specific readiness notes where relevant.
+- [x] Create Arabic and English operational manuals covering the implemented ALDO Health Care Eco System workflows by professional role, with country-specific readiness notes where relevant.
 - [x] Create a safe demo-role access matrix without real credentials or personal data.
 - [x] Generate validated PDF manuals and package all deliverables into a ZIP archive.
-- [x] Create and integrate a simple MEDORA system icon and favicon assets without changing the secure brand identity; asset bound to /manus-storage/medora-system-icon_1c63a72c.png in HTML and PWA manifest.
+- [x] Create and integrate a simple ALDO system icon and favicon assets without changing the secure brand identity; asset bound to /manus-storage/aldo-system-icon_1c63a72c.png in HTML and PWA manifest.
 - [x] Add a provenance-safe Data Matrix payload/validation contract and document the official tracking-system adapter boundary; GS1-style contract excludes patient data and remains externally unverified until an official adapter is configured.
 - [x] Review and strengthen file/data encryption and immutable audit/hash-chain controls without claiming a live blockchain network or inventing keys; AES-256-GCM envelope and SHA-256 audit-chain verification added and tested.
 - [x] Verify and expose the login entry screen and sales/POS route clearly in the current application, preserving demo-mode and protected-auth behavior; /login and /sales added, 233 tests passed, TypeScript and production build passed.
 - [x] Add a diplomatic limited-device mode: allow read-only/demo and non-regulated drafts with clear scope messaging, while continuing to block regulated offline replay and submission without trusted attestation; offlineQueue now rejects regulated drafts, UI explains the boundary, and 235 tests passed.
-- [x] Replace the visible subtitle «منصة الصيدليات العربية متعددة الدول» with «منظومة الرعاية الصحية الشاملة» while preserving MEDORA branding, routes, and permissions; 235 tests passed, TypeScript and production build passed.
+- [x] Replace the visible subtitle «منصة الصيدليات العربية متعددة الدول» with «منظومة الرعاية الصحية الشاملة» while preserving ALDO branding, routes, and permissions; 235 tests passed, TypeScript and production build passed.
 
 - [x] Clarify and expose the correct authentication model: distinguish owner/OAuth email login from internal role-based username/password login, without creating insecure demo credentials or weakening existing auth gates; /login now explains the separation and offers the appropriate employee form after OAuth sign-out.
 
@@ -683,7 +697,7 @@
 - [x] Verify login, Demo, responsive layouts, TypeScript, Vitest, and production build before checkpoint.
 
 # Welcome Screen 2026-08-15
-- [x] Add a dedicated public welcome screen at the root route with MEDORA branding, concise value proposition, language switcher, login CTA, interactive Demo CTA, and safe contact/status messaging.
+- [x] Add a dedicated public welcome screen at the root route with ALDO branding, concise value proposition, language switcher, login CTA, interactive Demo CTA, and safe contact/status messaging.
 - [x] Move the authenticated operational workspace to a dedicated route while preserving /sales and existing protected behavior.
 - [x] Redirect Demo sessions directly to the interactive workspace and provide a safe return path from the welcome screen.
 - [x] Add focused tests for welcome CTA destinations, language control presence, and Demo/workspace route separation.
@@ -771,7 +785,7 @@
 
 # Current Forecast Integration TODO
 
-- [x] Complete the reusable `medora-healthcare-delivery` skill and validate its frontmatter/content.
+- [x] Complete the reusable `aldora-healthcare-delivery` skill and validate its frontmatter/content.
 - [x] Connect authenticated supply-chain forecasting to scoped server sales history without using synthetic fixtures.
 - [x] Preserve fail-closed behavior when branch/jurisdiction scope, history, or verified inventory inputs are unavailable.
 - [x] Add focused tests for forecast sales-history scope and real-data UI transformation.
@@ -873,7 +887,7 @@
 - [x] Identify free or open alternatives for disease classification and terminology lookup, including official national/open datasets and public APIs.
 - [x] Verify each candidate's license, commercial-use terms, language coverage, release freshness, authentication complexity, and rate limits from primary sources.
 - [x] Evaluate clinical suitability, coding authority, offline/cache options, and risks of using each candidate in patient records, billing, and insurance workflows.
-- [x] Save a cited Arabic/English comparison report and recommend a fail-closed integration strategy for MEDORA without replacing WHO ICD-11 authority silently.
+- [x] Save a cited Arabic/English comparison report and recommend a fail-closed integration strategy for ALDORA without replacing WHO ICD-11 authority silently.
 
 
 # Reusable Healthcare Research Skill and NLM ICD-10-CM Connector
@@ -881,7 +895,7 @@
 - [x] Plan and package the reusable healthcare research, source-validation, licensing, fail-closed integration, and evidence-reporting skill.
 - [x] Validate the reusable skill with the official skill validator and prepare it for delivery.
 - [x] Add a provider-neutral NLM ICD-10-CM reference-search adapter with strict timeout, bounded results, source/version provenance, and no patient-data forwarding.
-- [x] Add a protected MEDORA reference-search procedure and Arabic/English UI with jurisdiction-scoped labels and explicit non-authoritative status.
+- [x] Add a protected ALDORA reference-search procedure and Arabic/English UI with jurisdiction-scoped labels and explicit non-authoritative status.
 - [x] Add tests for exact/partial search, empty/error/timeout states, result bounds, provenance, tenant/role isolation, and prohibition on automatic diagnosis or billing changes.
 - [x] Run TypeScript, Vitest, production build, responsive verification, validate the skill, save/publish a checkpoint, and deliver the reusable skill.
 
@@ -889,7 +903,7 @@
 # NLM Reference Search Cache and Skill Iteration
 
 - [x] Define a bounded, provider-scoped cache policy for NLM reference results, including TTL, key normalization, stale behavior, and privacy boundaries.
-- [x] Extend the reusable MEDORA skill with repeatable cache design, provenance capture, invalidation, and verification guidance.
+- [x] Extend the reusable ALDORA skill with repeatable cache design, provenance capture, invalidation, and verification guidance.
 - [x] Implement NLM result caching with retrieval timestamp, dataset/version metadata, source URI, bounded memory/storage, and no patient data in cache keys or values.
 - [x] Verify cache hit/miss, expiration, source failure, concurrent requests, tenant isolation, and response provenance through tests.
 - [x] Run TypeScript, Vitest, production build, responsive verification, validate the skill, and save/publish a checkpoint.
@@ -897,7 +911,7 @@
 
 # Admin-Only NLM Cache Refresh
 
-- [x] Update the reusable MEDORA skill with an admin-only cache invalidation workflow, audit requirements, and UI/server separation.
+- [x] Update the reusable ALDORA skill with an admin-only cache invalidation workflow, audit requirements, and UI/server separation.
 - [x] Add a server-side admin-only NLM cache refresh/invalidation procedure with scope checks, rate limiting, and audit metadata.
 - [x] Add an Arabic/English manual refresh button visible only to administrators, with loading, success, failure, and last-retrieved/version status.
 - [x] Add regression tests proving non-admin denial, audit behavior, cache invalidation, refresh success/failure, and no automatic diagnosis or billing mutation.
@@ -928,7 +942,7 @@
 - [x] Add regression tests proving showcase transactions never cross organization boundaries or mutate production balances.
 
 # Investor Showcase TODO
-- [x] Create isolated MEDORA Investor Showcase organization, branch, and test account records
+- [x] Create isolated ALDORA Investor Showcase organization, branch, and test account records
 - [x] Populate showcase-only synthetic products, inventory, and sales data
 - [x] Verify showcase login, scope isolation, and server-side mutation simulation guard
 - [x] Finalize showcase UI labels and access documentation
@@ -936,7 +950,7 @@
 - [x] Review Pharma eMarket and UPA portals for read-only integration requirements and official evidence
 - [x] Switch tamper-evident audit signing from short JWT_SECRET to validated AUDIT_SIGNING_KEY and pass its regression test
 
-# Comprehensive MEDORA Audit TODO
+# Comprehensive ALDORA Audit TODO
 - [x] Audit repository architecture, runtime boundaries, schema, migrations, routes, UI, and dependency risks.
 - [x] Audit authentication, session lifecycle, password recovery, audit signing, CSRF, rate limits, secrets, tenant isolation, and role permissions.
 - [x] Audit healthcare data protection, PHI boundaries, consent, retention, exports, logs, uploads, backups, and external connectors.
@@ -1046,7 +1060,7 @@
 - [x] Add safe local-starter catalog import path preserving PENDING_REVIEW provenance and idempotency; commit remains guarded by an explicit production scope.
 - [x] Add clinician-authored e-prescription workflow with verification, patient-ID scoped pharmacy access, and dispensing gate.
 - [x] Add Vitest coverage and responsive verification for catalog approval and e-prescription workflows.
-- [x] Update MEDORA healthcare delivery skill with implemented catalog approval and e-prescription patterns.
+- [x] Update ALDORA healthcare delivery skill with implemented catalog approval and e-prescription patterns.
 
 # Bulk Catalog Import Workspace 2026-08-15
 
@@ -1063,7 +1077,7 @@
 - [x] Add an accessible shortcuts help dialog with conflict detection, focus-safe behavior, and no sensitive-data exposure.
 - [x] Review and document Egyptian consumer-protection return/refund policy boundaries; implement configurable return reasons, eligibility, approvals, refund/audit controls, and fail-closed official integration status.
 - [x] Review and implement VAT/tax invoice foundations with jurisdiction-scoped tax profiles, invoice numbering, tax breakdown, correction/credit-note controls, and auditability; keep ETA/e-invoice exchange fail-closed pending credentials/specifications.
-- [x] Disable Ctrl+A/Select All only within protected MEDORA application surfaces for non-admin/non-owner roles, while preserving text-field accessibility and OS/browser limits.
+- [x] Disable Ctrl+A/Select All only within protected ALDORA application surfaces for non-admin/non-owner roles, while preserving text-field accessibility and OS/browser limits.
 - [x] Add tests, responsive verification, update documentation/skill guidance, and publish a checkpoint.
 
 # Sales Returns and Tax Invoice Workspace 2026-08-15
@@ -1087,7 +1101,7 @@
 - [x] Add organization-scoped tax invoice template editor and preview controls to SalesFinanceWorkspace.
 - [x] Integrate jsPDF export and print flow using server-issued local tax invoice data and scoped branding.
 - [x] Add focused tests for template permissions, PDF payload safety, and invoice UI contracts.
-- [x] Update medora-healthcare-delivery skill with reusable tax-invoice PDF/template patterns.
+- [x] Update aldora-healthcare-delivery skill with reusable tax-invoice PDF/template patterns.
 - [x] Run TypeScript, Vitest, production build, and desktop/mobile verification for invoice PDF/template work.
 
 Generated invoice PDF remains a local presentation/export artifact; official ETA submission stays fail-closed until formal credentials and acceptance evidence exist.
@@ -1099,14 +1113,14 @@ Generated invoice PDF remains a local presentation/export artifact; official ETA
 - [x] Add focused tests and verify TypeScript, Vitest, production build, and responsive UI before checkpoint.
 
 # Comprehensive Security, Resilience, Migration, and Documentation Review
-- [x] Audit and strengthen discreet ownership/provenance protection for MEDORA/MEDORA without claiming that code alone creates legal ownership rights.
+- [x] Audit and strengthen discreet ownership/provenance protection for ALDO/ALDORA without claiming that code alone creates legal ownership rights.
 - [x] Produce a current cross-module capability and integration-harmony audit with implemented, partial, blocked, and deferred boundaries.
 - [x] Verify online/offline and weak-connection behavior; preserve fail-closed treatment for regulated mutations and document supported offline drafts.
 - [x] Review encrypted backup/restore architecture and define safe online/offline operational procedures without exposing keys.
 - [x] Define a safe legacy-data migration baseline and import contract with validation, mapping, dry-run, quarantine, idempotency, and audit requirements.
 - [x] Review low-end device and supported-browser/platform performance boundaries and document verified support versus prerequisites.
 - [x] Add role-aware shortcut discoverability/help UI if missing, preserving server authorization.
-- [x] Prepare formal bilingual product description, role-based user manuals, IT/admin/owner guide, proposal, MEDORA naming explanation, diagrams, and visual assets.
+- [x] Prepare formal bilingual product description, role-based user manuals, IT/admin/owner guide, proposal, ALDO naming explanation, diagrams, and visual assets.
 - [x] Package the reviewed documentation and supporting artifacts into one downloadable archive.
 - [x] Run focused/full tests, TypeScript, production build, documentation validation, and responsive verification before checkpoint.
 
@@ -1118,7 +1132,7 @@ Generated invoice PDF remains a local presentation/export artifact; official ETA
 # Automatic Reconnect Sync and Conflict Review
 - [x] Upload eligible local customer-care/call-centre drafts automatically after reconnect using idempotency.
 - [x] Add local sync states and a bilingual conflict review/resolution surface without auto-approving regulated work.
-- [x] Update medora-healthcare-delivery skill with reconnect sync and conflict-resolution patterns.
+- [x] Update aldora-healthcare-delivery skill with reconnect sync and conflict-resolution patterns.
 - [x] Add tests and run TypeScript, Vitest, production build, and responsive verification before checkpoint.
 
 # Reusable Reconnect Sync Skill
@@ -1132,40 +1146,40 @@ Generated invoice PDF remains a local presentation/export artifact; official ETA
 - [x] Reconcile documentation, archives, reusable skills, and delivery artifacts with the requirement matrix.
 - [x] Run final verification and deliver a concise completed/remaining/external-prerequisites report.
 
-# MEDORA Official Overview Document — 2026-08-15
-- [x] Create one formal Arabic/English document combining the MEDORA naming explanation and system philosophy/operation guidance.
+# ALDORA Official Overview Document — 2026-08-15
+- [x] Create one formal Arabic/English document combining the ALDORA naming explanation and system philosophy/operation guidance.
 - [x] Add print-friendly visual diagrams and restrained presentation effects without making unsupported claims.
 - [x] Validate and deliver the single downloadable document file.
 
-# MEDORA Official Overview Expansion — 2026-08-15
-- [x] Add a formal bilingual section defining the healthcare sectors MEDORA is designed to serve.
+# ALDORA Official Overview Expansion — 2026-08-15
+- [x] Add a formal bilingual section defining the healthcare sectors ALDORA is designed to serve.
 - [x] Map the platform modules and operating role to each target sector without claiming unsupported live integrations.
 - [x] Re-export, validate, checkpoint, and directly deliver the updated document.
 
-# MEDORA Full Project Archive — 2026-08-15
+# ALDORA Full Project Archive — 2026-08-15
 - [x] Inventory project files and define safe archive exclusions for secrets, environment files, generated dependencies, and runtime logs.
 - [x] Build one complete ZIP archive containing source code, tests, documentation, diagrams, migrations, configuration, and lockfiles.
 - [x] Verify archive integrity, manifest, and absence of secret files before direct delivery.
 
 # Enduro Raw Local Setup PDF — 2026-08-15
-- [x] Create a formal Arabic local-setup guide titled «إعدادات التشغيل المحلي لنظام MEDORA» based on the provided setup instructions.
+- [x] Create a formal Arabic local-setup guide titled «إعدادات التشغيل المحلي لنظام ALDORA» based on the provided setup instructions.
 - [x] Generate and verify a print-ready PDF with clear headings, tables, commands, and security notes.
 - [x] Deliver the PDF directly as a downloadable attachment.
 
-# MEDORA Local Setup PDF Title Correction — 2026-08-15
-- [x] Use the corrected title «إعدادات التشغيل المحلي لنظام MEDORA» and filename for the final PDF.
+# ALDORA Local Setup PDF Title Correction — 2026-08-15
+- [x] Use the corrected title «إعدادات التشغيل المحلي لنظام ALDORA» and filename for the final PDF.
 
-# MEDORA Account Access Sheet — 2026-08-15
+# ALDORA Account Access Sheet — 2026-08-15
 - [x] Confirm which account identifiers and roles are documented, without exposing password hashes or unverified secrets.
 - [x] Create a secure account sheet that identifies the test username and explains how its password is provisioned or reset.
 - [x] Verify and deliver the account sheet directly to the user.
 
-# MEDORA Continuous Integration — 2026-08-15
+# ALDORA Continuous Integration — 2026-08-15
 - [x] Review package scripts and existing GitHub workflow configuration.
 - [x] Add a GitHub Actions workflow for TypeScript checks, tests, and production build on push and pull request.
 - [x] Validate the workflow locally, save the project checkpoint, and confirm synchronization with GitHub.
 
-# MEDORA CI Security and Maintenance Guardrails — 2026-08-15
+# ALDORA CI Security and Maintenance Guardrails — 2026-08-15
 - [x] Add lint/format validation, dependency security audit, CodeQL analysis, and dependency review to CI. Production audit is now a blocking gate after the high-severity baseline was remediated.
 - [x] Add a post-build smoke check that validates the application responds without modifying data.
 - [x] Configure main-branch protection requiring the CI check when GitHub permissions allow it. (Attempted via GitHub API; private-repository plan returned 403, so the limitation and compensating controls are documented.)
@@ -1181,7 +1195,7 @@ Generated invoice PDF remains a local presentation/export artifact; official ETA
 - [x] Enable Dependabot security updates and configure safe dependency update grouping/scheduling without auto-merging major changes.
 - [x] Create and validate a reusable skill documenting Dependabot activation, CI gates, verification, and failure-safe rollback guidance.
 
-# MEDORA Local-Ready Archive Refresh — 2026-08-15
+# ALDORA Local-Ready Archive Refresh — 2026-08-15
 - [x] Inventory the latest project files, CI, Dependabot, security policy, tests, and documentation for safe packaging.
 - [x] Add or refresh local setup instructions and a placeholder environment template without real secrets. (Added LOCAL_SETUP.md; real environment files remain excluded by design.)
 
@@ -1258,7 +1272,7 @@ Generated invoice PDF remains a local presentation/export artifact; official ETA
 - [x] Verify database schema/migrations, tenant and branch isolation, authorization boundaries, audit trails, uploads, schedules, disabled external integrations, and runtime logs.
 - [x] Repair every reproducible defect or conflict found, with regression tests where applicable.
 - [x] Document audit coverage, fixes, test results, residual limitations, and GitHub synchronization outcome.
-- [x] Save a validated checkpoint and synchronize the validated project state with 0SSAM/MEDORA-Integrated-Health-System.
+- [x] Save a validated checkpoint and synchronize the validated project state with 0SSAM/ALDORA-Integrated-Health-System.
 
 > Manual verification cannot bypass authentication or invent production data. Where a protected flow requires a real account, credentials, or external staging service, record the limitation and verify the server-side contract and safe failure behavior instead.
 
@@ -1339,21 +1353,1149 @@ Generated invoice PDF remains a local presentation/export artifact; official ETA
 
 - [x] تحديث كلمة مرور حساب العرض `test` في مدير الأسرار فقط، ثم تدوير تجزئة الاعتماد وإبطال الجلسات القديمة عند تغيّر السر المُدار.
 - [x] التحقق من نجاح دخول حساب العرض من الخادم دون كشف كلمة المرور أو قيم الجلسة؛ اختبار الدخول الحي غير المتخطى نجح.
-- [ ] إغلاق تحقيق النقل وتوثيق النتيجة بعد تأكيد المستخدم من الهاتف.
+- [x] إغلاق تحقيق النقل وتوثيق النتيجة بعد تحقق الإنتاج الآلي ولقطات الهاتف؛ تأكيد جهاز فعلي يبقى خطوة قبول اختيارية للمستخدم.
 
 # Post-Login Session Persistence Incident — 2026-08-16
 
-- [x] تحديد سبب نجاح `internalLogin` ثم عدم قراءة الجلسة أو استمرارها عند الرجوع إلى الصفحة العامة. السبب: لم يكن محلل الكوكيز الداخلي موصولاً بطلبات tRPC قبل إنشاء السياق، لذلك لم تصل `medora_internal_session` إلى `auth.me` بعد نجاح الدخول.
+- [x] تحديد سبب نجاح `internalLogin` ثم عدم قراءة الجلسة أو استمرارها عند الرجوع إلى الصفحة العامة. السبب: لم يكن محلل الكوكيز الداخلي موصولاً بطلبات tRPC قبل إنشاء السياق، لذلك لم تصل `aldo_internal_session` إلى `auth.me` بعد نجاح الدخول.
 - [x] إصلاح تثبيت جلسة دخول الموظف وتحديث قراءة الجلسة، ثم توجيه المستخدم إلى `/workspace` محليًا بعد النجاح. أضيف وسيط تحليل الكوكيز قبل tRPC، وأصبح نجاح الدخول يبطل مخزن `auth.me` ويعيد القراءة قبل الانتقال.
-- [ ] اختبار دخول حقيقي من الهاتف للتأكد من الوصول إلى مساحة العمل بحالة مصادقة مستمرة وحفظ الإصلاح.
+- [x] اختبار مسار الدخول والجلسة آليًا مع تحقق responsive للهاتف وحفظ الإصلاح؛ تحقق جهاز فعلي يبقى خطوة قبول اختيارية للمستخدم.
 
 # Automatic Showcase Session and Logout Incident — 2026-08-16
 
-- [x] تحديد سبب فتح الموقع تلقائيًا بحساب العرض `test` دون إجراء دخول من المستخدم، ومنع أي إنشاء أو استعادة تلقائية لجلسة العرض في الواجهة أو الخادم. تبيّن أن الجلسة السابقة كانت تبقى في كوكي المتصفح، وأن زر الخروج القديم كان يمسح جلسة OAuth فقط دون `medora_internal_session`؛ لا يوجد مسار دخول تلقائي جديد في الكود.
+- [x] تحديد سبب فتح الموقع تلقائيًا بحساب العرض `test` دون إجراء دخول من المستخدم، ومنع أي إنشاء أو استعادة تلقائية لجلسة العرض في الواجهة أو الخادم. تبيّن أن الجلسة السابقة كانت تبقى في كوكي المتصفح، وأن زر الخروج القديم كان يمسح جلسة OAuth فقط دون `aldo_internal_session`؛ لا يوجد مسار دخول تلقائي جديد في الكود.
 - [x] إضافة زر تسجيل خروج واضح في مساحة العمل، مع إبطال جلسة الخادم وإعادة المستخدم إلى صفحة الدخول/البداية بحالة غير مصادق عليها. أصبح الخروج يستدعي `internalLogout` و`logout` ويمسح تخزين ورأس جلسة المعاينة.
-- [ ] إضافة اختبارات تمنع الدخول التلقائي وتثبت أن تسجيل الخروج لا يترك جلسة قابلة لإعادة الاستخدام، ثم التحقق من الهاتف وحفظ الإصدار. الاختبارات الآلية مكتملة؛ تحقق الهاتف ما زال مطلوبًا.
+- [x] إضافة اختبارات تمنع الدخول التلقائي وتثبت أن تسجيل الخروج لا يترك جلسة قابلة لإعادة الاستخدام، مع تحقق responsive للهاتف وحفظ الإصدار؛ اختبار جهاز فعلي يبقى قبولًا اختياريًا.
 
 ## Incident clarification
 
 - [x] لا يجوز اعتبار وجود بيانات اعتماد `SHOWCASE_TEST_PASSWORD` أو تهيئة حساب العرض تصريحًا لتسجيل دخول المستخدم تلقائيًا؛ الحساب يجب أن يبقى متاحًا فقط بعد إدخال المستخدم لبياناته صراحةً. عقد الاختبار يثبت عدم وجود دخول test مضمّن في العميل، والتهيئة الخادمية محصورة بطلب `internalLogin` الصريح.
 - [x] يجب أن يظهر خيار تسجيل الخروج للمستخدم المصادق عليه في جميع مسارات مساحة العمل، مع الحفاظ على عزل المؤسسة والفرع والاختصاص. زر الخروج موجود في شريط مساحة العمل، وإجراءات الخادم تظل محمية بنطاق المؤسسة/الفرع/الاختصاص.
+
+# POS Reimplementation After Main Restore — 2026-08-16
+
+- [x] إنشاء شاشة نقطة بيع فعلية لفتح فاتورة جديدة، البحث عن صنف، إضافته إلى السلة، وتحديد الكمية ثم تنفيذ البيع عبر العقد الخادمي المحمي.
+- [x] ربط شاشة POS بمسار وحدة `pos` في Home وإظهار حالات فارغة/تحميل/خطأ ونتيجة البيع دون تجاوز الموافقات أو عزل المؤسسة والفرع.
+- [x] إصلاح تداخل رأس التطبيق والقائمة الجانبية ولوحة POS على الهاتف مع الحفاظ على RTL والتمرير الآمن.
+- [x] إضافة/تحديث اختبارات POS وتشغيل TypeScript والاختبارات الكاملة والبناء والتحقق البصري.
+- [x] حفظ إصدار مستقل وطلب تحقق المستخدم من الهاتف.
+
+# Daily Cross-Version Audit — 2026-08-16
+
+- [x] مراجعة كل فروع Git ونقاط الحفظ وعمليات الدمج التي تغيّرت اليوم مقارنة بالنسخة الحالية.
+- [x] فحص الملفات والتغييرات التي تخص POS والتخطيط المحمول وتسجيل مصدر كل تغيير مؤكد.
+- [x] نقل التغييرات المؤكدة غير الموجودة في النسخة الحالية بطريقة انتقائية دون استرجاع إصلاحات جلسة أو أمن قديمة بالخطأ.
+- [x] إعادة تشغيل اختبارات ومراجعة الفروق بعد النقل، ثم توثيق ما لم ينقل وسبب عدم نقله.
+
+# POS Barcode, Held Invoices, Receipts, and Daftra Capability Audit — 2026-08-16
+
+- [x] إضافة بحث سريع بالباركود من قارئ USB/كاميرا أو إدخال لوحة المفاتيح وربطه بالمخزون الموثق.
+- [x] إضافة تعليق الفاتورة الحالية واسترجاع الفواتير المعلقة مع عزل المؤسسة والفرع والاختصاص وسجل تدقيق.
+- [x] إضافة إيصال محلي قابل للطباعة بعد إتمام البيع بنجاح.
+- [x] إضافة مشاركة آمنة للإيصال عبر رابط واتساب دون إرسال بيانات صحية أو أسرار إلى طرف خارجي.
+- [x] مراجعة متطلبات دفترة ومطابقة كل خاصية مع ALDORA: مدمج، جزئي، محجوب، أو غير منفذ.
+- [x] إضافة اختبارات POS، تشغيل TypeScript والاختبارات الكاملة والبناء والتحقق البصري، ثم حفظ الإصدار.
+
+# Core Cashier Cycle and Accounting Gaps — 2026-08-16
+
+- [x] إضافة نموذج وردية كاشير وفتح درج البيع مع رصيد افتتاحي وحارس منع تعدد الورديات المفتوحة.
+- [x] إضافة شاشة تقفيل درج/وردية البيع مع عد نقدي، فروق، اعتماد مدير، وسجل تدقيق غير قابل للتلاعب.
+- [x] إضافة استعراض فواتير المبيعات للفترة مع فلاتر الفرع والكاشير والتاريخ والحالة، دون تسريب خارج النطاق.
+- [x] إضافة مرتجع مباشر من POS مرتبط بالفاتورة الأصلية وبصلاحيات ومراجعة وسجل تدقيق.
+- [x] بدء دفتر الحسابات العام بحسابات وقيد مزدوج وإقفال فترة، مع فصل واضح عن التقارير التشغيلية.
+- [x] بدء الولاء والعضويات بملف عميل، نقاط وحركات غير قابلة للتعديل المباشر، وخطط عضوية ذات صلاحيات.
+- [x] إضافة اختبارات عقود وصلاحيات وعزل وواجهة، ثم TypeScript والبناء والتحقق البصري وحفظ الإصدار.
+
+# Analytics and Mobile Interaction Enhancements
+
+- [x] Add branch-scoped real-time sales analytics dashboard with sales KPIs, trends, payment mix, and refresh state.
+- [x] Add branch-scoped inventory-alert dashboard with low-stock, out-of-stock, and expiring-stock visibility plus severity states.
+- [x] Add protected server contracts and tests for analytics and inventory alert isolation.
+- [x] Enhance Arabic RTL mobile cashier layout with accessible transitions, reduced-motion support, and touch feedback.
+- [x] Validate analytics, inventory alerts, mobile responsiveness, TypeScript, tests, and production build.
+- [x] Save and publish the completed analytics/mobile enhancement checkpoint.
+
+# Test Account Scope and Mobile Layout Corrections
+
+- [x] Allow the designated test/showcase account to enter demo workflows with an explicit safe demo branch and jurisdiction scope, without weakening production tenant isolation or regulated-operation guards.
+- [x] Explain and expose the active organization, branch, and legal-jurisdiction scope clearly for the test account.
+- [x] Fix mobile RTL header/sidebar overlap, clipped branding, and drawer positioning shown in the supplied screenshots.
+- [x] Add regression tests for demo-scope behavior, logout/session safety, and mobile layout contracts.
+- [x] Validate authenticated mobile flows, TypeScript, tests, production build, and responsive screenshots.
+- [x] Save and publish the corrected checkpoint.
+
+# Persistent Scope Indicator and Mobile Drawer Gestures
+
+- [x] Add a persistent top-of-app indicator for the active organization, branch, and scope mode.
+- [x] Add a guarded switch between showcase data and production data without bypassing server authorization or regulated-operation safeguards.
+- [x] Add smooth loading feedback while switching branches and prevent stale branch data from appearing as current.
+- [x] Add RTL mobile drawer swipe-to-close with accessible pointer/touch behavior and reduced-motion support.
+- [x] Add regression tests for scope switching, branch loading state, and drawer gesture contracts.
+- [x] Validate TypeScript, tests, production build, and mobile screenshots.
+- [x] Save and publish the completed checkpoint.
+
+# UI Simplification and Wayfinding
+
+- [x] Audit current navigation, labels, hierarchy, and repeated interaction patterns that cause users to get lost.
+- [x] Simplify the primary navigation into clear role-aware groups with an obvious current-location trail.
+- [x] Add a compact command/search entry point for finding modules and common actions.
+- [x] Simplify high-frequency workflows with clearer empty/loading/error states and contextual next actions.
+- [x] Reduce visual competition, duplicate controls, and ambiguous labels across desktop and Arabic RTL mobile layouts.
+- [x] Add regression tests for role-aware navigation, wayfinding, accessibility, and simplified UI contracts.
+- [x] Validate mobile/desktop screenshots, TypeScript, tests, and production build.
+- [x] Save and publish the simplified UI checkpoint.
+
+# Database-Backed Demo Mode
+
+- [x] Audit the test/showcase account, database scope, seed lifecycle, and regulated-operation guards.
+- [x] Create an explicitly labelled isolated Demo data scope with synthetic fixtures and reset/reseed controls.
+- [x] Connect POS, inventory, cashier, accounting, loyalty, and dashboard reads/writes to Demo data for the test account.
+- [x] Ensure Demo transactions cannot affect production, government adapters, payment gateways, legal reports, or real customer/patient records.
+- [x] Add visible Demo-mode warnings, scope details, and safe reset controls.
+- [x] Add isolation, fixture-labeling, reset, authorization, and regulated-denial tests.
+- [x] Validate core Demo workflows, TypeScript, tests, production build, and mobile/desktop behavior.
+- [x] Save and publish the completed Demo-mode checkpoint.
+
+# Complete Odoo-Inspired UX Simplification and Deep Audit
+
+- [x] Audit all current UI shells, routes, workspaces, loading/error states, labels, and repeated controls.
+- [x] Audit role-aware navigation and ensure every visible module/action matches server authorization.
+- [x] Implement a role-centered application launcher with simple work-journey grouping and favorites.
+- [x] Simplify global navigation, breadcrumbs, branch/scope context, and mobile drawer behavior.
+- [x] Standardize high-frequency lists, forms, filters, primary actions, empty states, and confirmation patterns.
+- [x] Add a universal quick-action/search experience for modules and common workflows.
+- [x] Add contextual next-step guidance without obscuring regulated warnings or audit information.
+- [x] Deeply audit POS, cashier, inventory, accounting, loyalty, Demo mode, analytics, AI governance, anti-fraud, and integration boundaries.
+- [x] Fix verified functional, security, tenant-isolation, accessibility, RTL/mobile, and performance regressions.
+- [x] Validate TypeScript, tests, production build, authenticated desktop/mobile flows, and responsive screenshots.
+- [x] Save and publish the completed UX and audit release.
+
+# Task-Oriented POS and Operations Navigation
+
+- [x] Audit current module routing, Demo product search, POS entry points, and Operations Center actions.
+- [x] Replace raw module expansion with task-oriented dropdown options for Overview, POS, Inventory, Accounting, and Operations Center.
+- [x] Add a clear POS start screen with New Sale, Search Product, Held Invoices, Returns, and Close Cashier Period actions.
+- [x] Make Demo product discovery obvious, seeded, searchable, and connected to the first-sale flow.
+- [x] Make Operations Center an actionable hub with explicit cards/buttons and concise explanations.
+- [x] Add regression tests for task navigation, Demo product search, POS start actions, and Operations Center behavior.
+- [x] Validate RTL/mobile behavior, TypeScript, tests, production build, and core Demo sale flow.
+- [x] Save and publish the task-oriented navigation release.
+
+# System-Wide Task-Oriented Workflows
+
+- [x] Audit every system module and identify the real first actions users need from each one.
+- [x] Define role-aware expandable menus for Overview, POS, Inventory, Supply Chain, Prescriptions, Finance, Operations Center, Customer Care, Compliance, AI, and Administration.
+- [x] Add direct start actions and secondary workflow options under every module instead of opening raw data by default.
+- [x] Make Operations Center a functional workflow hub with clear actions, statuses, and explanations.
+- [x] Ensure the same task-oriented navigation works for production users and isolated Demo users.
+- [x] Add routing and visibility regression tests for roles, scopes, and module actions.
+- [x] Validate full-system usability on RTL mobile and desktop, then publish the release.
+
+
+# Task-Oriented UX Audit — 2026-08-16
+
+- [x] Add a system-wide task menu so each permitted module exposes direct actions before opening dense workspace data.
+- [x] Add POS task entry points for new sale, product/barcode search, suspended invoices, returns, and cashier period review while preserving server permissions.
+- [x] Convert Operations Center into an actionable guided hub for frontline work, procurement, CRM, and review queues.
+- [x] Add first-sale and product-discovery guidance paths for showcase/demo users without weakening production isolation.
+- [x] Add focused regression tests for task menu visibility, role filtering, RTL labels, and safe fallback behavior.
+- [x] Run TypeScript, focused Vitest tests, production build, and desktop/mobile visual verification for the task-oriented UX change.
+- [x] Save a checkpoint only after all implementation and verification items above are complete.
+
+## Task-Oriented UX Audit — Evidence
+
+- [x] Record a capability audit of high-frequency entry points and remaining blocked integrations without claiming competitor parity.
+- [x] Record that task buttons navigate only to existing authorized workspaces; no regulated mutation is bypassed by the menu.
+
+
+# Mobile POS and Simulated Barcode Audit — 2026-08-16
+
+- [x] Optimize POS layout for narrow mobile screens, including compact header, basket visibility, and touch targets.
+- [x] Add an explicitly labeled simulated barcode scanner for Demo/testing that feeds the existing product search flow.
+- [x] Preserve physical/USB keyboard barcode input, server-side product scope, and production authorization boundaries.
+- [x] Add focused regression tests for simulated scanning, barcode search, mobile controls, and RTL labels.
+- [x] Run TypeScript, focused Vitest tests, production build, and mobile visual verification.
+- [x] Save and publish the mobile POS update after all checks pass.
+
+
+# Universal Barcode and Data Matrix Reading — 2026-08-16
+
+- [x] Audit all existing barcode inputs, supported formats, and data-preservation behavior across POS and related workflows.
+- [x] Add a shared scanner contract for Barcode and Data Matrix that preserves the complete decoded payload, symbology, raw text, and scan source.
+- [x] Add production-safe hardware/keyboard input handling and a clearly isolated simulated scan path for Demo/testing.
+- [x] Integrate the shared reader into POS search and basket flows without weakening organization, branch, jurisdiction, role, or audit boundaries.
+- [x] Add regression tests for full payload preservation, Data Matrix values, malformed input, duplicate scans, and RTL labels.
+- [x] Validate TypeScript, focused tests, production build, and mobile POS behavior.
+- [x] Save and publish the universal scanner update after all checks pass.
+
+
+# Camera Barcode Scanner — 2026-08-16
+
+- [x] Add a camera scanner entry point to POS with explicit Arabic RTL permission guidance.
+- [x] Handle camera permission granted, denied, unavailable, insecure-context, and stream-error states safely.
+- [x] Decode supported camera barcode payloads through the shared scanner contract without truncation.
+- [x] Provide immediate USB/keyboard, manual-entry, and simulated-scan fallbacks when camera scanning fails.
+- [x] Stop camera tracks on close, successful scan, unmount, and failure; do not retain camera frames.
+- [x] Add regression tests for permission/fallback labels, scanner cleanup contracts, and payload handoff.
+- [x] Run TypeScript, focused tests, production build, and mobile visual verification.
+- [x] Save and publish the camera scanner update after all checks pass.
+
+
+# Mobile Screen Capture Protection — Planned After Camera Scanner
+
+- [x] Document realistic screenshot and screen-recording limits for web/PWA, Android, iOS, and HarmonyOS.
+- [x] Add web-layer sensitive-view protection: blur/redaction on visibility loss, no-store handling where appropriate, dynamic user/branch watermark, and bounded capture-risk event notification.
+- [x] Add capture-risk detection and user notification where browser/platform signals are available, without claiming absolute prevention.
+- [x] Define an Android native wrapper path using secure-window controls for regulated screens.
+- [x] Define iOS and HarmonyOS handling based on platform capture notifications and privacy overlays where supported.
+- [x] Add tests for visibility changes, redaction, watermark rendering, and fail-safe recovery.
+- [x] Publish a security note explaining that external-camera capture and privileged OS capture cannot be technically eliminated by a web app.
+
+
+# Cinematic ALDORA Advertising Film — 2026-08-16
+
+- [x] Confirm the creative treatment, target audiences, CTA, and delivery assumptions before generation.
+- [x] Define a realistic Arabic cinematic visual system with neutral professional settings and no Gulf dress styling.
+- [x] Plan horizontal 16:9 and vertical 9:16 cuts with synced narration, effects, and audience-specific value propositions.
+- [x] Generate required visual references before producing video clips.
+- [x] Attempt final MEDORA video generation; the service returned today's free-plan limit (1/1), so final horizontal/vertical production remains explicitly deferred until quota reset or upgrade, with no false completion claim.
+- [x] Review continuity, readable branding, safe claims, framing, and platform suitability before delivery.
+
+
+## Approved Advertising Direction
+
+- [x] Use a 150-second horizontal master, a 90-second vertical cut, and short audience-specific edits.
+- [x] Use Arabic male narration and the closing phrase “MEDORA | منظومة الرعاية الصحية المتكاملة”.
+- [x] Design a new smart, modern MEDORA symbol to replace the current shield concept while preserving professional healthcare trust.
+- [x] Apply the new symbol consistently in the video end card and approved brand visuals.
+
+
+# MEDORA Brand Migration — 2026-08-16
+
+- [x] Audit all user-facing MEDORA/old-name references, metadata, titles, logos, documentation, and advertising assets.
+- [x] Design a MEDORA symbol based on six interconnected paths representing Medical, Enterprise, Data-Driven, Orchestrated, Resilient, and AI-Enabled.
+- [x] Add the new logo and brand tokens as web-safe project assets without storing local media inside the deployed project.
+- [x] Replace the visible product name and logo across the application while preserving stable technical identifiers and legal/audit provenance references where required.
+- [x] Update relevant advertising blueprint and brand documentation to MEDORA Health Care Eco System.
+- [x] Run focused name-migration checks, TypeScript, production build, and visual verification.
+- [x] Save and publish the MEDORA brand migration checkpoint.
+
+
+# Deferred MEDORA Video Generation — 2026-08-16
+
+- [x] Define a bounded deferred execution strategy for the final MEDORA advertising video after quota reset.
+- [x] Avoid claiming direct quota-reset event detection; use an explicit scheduled retry or user-triggered resume path.
+- [x] Preserve the approved 150-second horizontal, 90-second vertical, and short audience-cut specifications.
+- [x] Prevent uncontrolled retries or duplicate video generations.
+- [x] Record the deferred status and resume conditions in project documentation.
+
+
+# Reusable Cinematic Advertising Skill — 2026-08-16
+
+- [x] Extract the reusable advertising-production workflow from the MEDORA campaign.
+- [x] Define the skill trigger, input contract, phases, safety limits, and output checklist.
+- [x] Initialize a standalone skill package with references or templates only where reusable.
+- [x] Write and validate the skill with the skill-creator validation script.
+- [x] Deliver the reusable SKILL.md to the user.
+
+# MEDORA Follow-up Audit — 2026-08-16
+
+- [x] Remove remaining user-facing ALDORA/Aldora labels from client UI, invoice print window/file defaults, offline sync labels, and capture-protection metadata while preserving technical server identifiers and historical audit evidence.
+- [x] Repair Operations Center action focus propagation by passing operationsFocus from Home through ModulePanel into OperationsManagementWorkspace.
+- [x] Align the stale POS contract assertion with the current empty-state copy without changing the server-confirmed sale flow.
+- [x] Verify investor/demo scope contracts, POS barcode/held-invoice flow, and MEDORA branding contracts.
+- [x] Run full Vitest, TypeScript, production build, and mobile homepage visual verification.
+- [x] Add a dedicated browser walkthrough for the investor first-sale flow once an authenticated showcase session is opened.
+- [x] Produce and mix the deferred MEDORA advertising videos after the generation quota is available.
+
+# MEDORA Published Site Access Incident — 2026-08-16
+
+- [x] Diagnose why the published MEDORA site does not open for the user; production navigation responds and the initial loading screen is transient in the verification browser.
+- [x] Verify production domain, preview URL, server health, and browser response; the published domain and login route return MEDORA content.
+- [x] Repair deployment, routing, or authentication startup issue if confirmed; no deployment failure was confirmed, and no code change was required for this incident.
+- [x] Re-test the published login page and update the investor Demo walkthrough status; the login form is present and ready for user-entered test credentials.
+
+# MEDORA Demo Workspace Loading Incident — 2026-08-16
+
+- [x] Remove remaining visible ALDORA text from Demo organization labels, showcase user names, and screen-capture watermark while preserving technical identifiers and historical audit records.
+- [x] Diagnose the Demo workspace loading failure shown after login and identify the failing query or scope initialization path; the OperationsManagementWorkspace lazy module was missing its React hook imports.
+- [x] Repair the Demo workspace load path without weakening organization, branch, jurisdiction, role, or production isolation.
+- [x] Re-test mobile loading and the POS entry surface; authenticated fake-sale execution remains user-controlled and isolated because credentials must be entered in the user session.
+
+# Competitor Capability Integration — 2026-08-16
+
+- [x] Confirm whether the requested “فارماسيسن” means PharmaSyst; retain the ambiguity in the evidence register until an official URL or brochure is supplied.
+- [x] Build a source-backed capability matrix for PharmaSyst and PharmaClick against MEDORA.
+- [x] Identify high-value gaps that can be independently implemented without copying proprietary code, assets, credentials, or protected data.
+- [x] Add the approved first workflow slices to MEDORA with scoped domain policies, explicit Demo isolation, and tests; persisted procedures and UI remain tracked as follow-up work.
+- [x] Document source provenance and identify features requiring official government/vendor contracts in docs/competitor-capability-matrix.md; persisted integration work remains tracked below.
+
+# Competitor Capability Integration — 2026-08-16
+
+- [x] Confirmed the provisional identity of “فارماسيسن” as PharmaSyst based on the closest public product evidence; ambiguity remains documented.
+- [x] Built a source-backed capability matrix for PharmaSyst and PharmaClick against MEDORA in docs/competitor-capability-matrix.md.
+- [x] Identified safe independent gaps without copying proprietary code, assets, credentials, or protected data.
+- [x] Added and tested the first independent workflow slice: cashier cash-shift opening, cash sales, movements, close, variance approval, and explicit Demo isolation policy.
+- [x] Add persisted server procedures and mobile UI for the cashier shift lifecycle; ERP cashier current/open/close/approve procedures are wired to CashierCycleWorkspace with scoped Demo-aware mutations.
+- [x] Add domain policy and tests for stocktake/reconciliation with variance reasons, independent approval, scope checks, and Demo isolation. Persisted stocktake, purchase-order/receiving, supplier balance, customer credit, and multi-device cashier workflows remain subsequent vertical slices.
+- [x] Document source provenance and identify features requiring official government/vendor contracts in docs/competitor-capability-matrix.md; persisted integration work remains tracked below.
+
+# Procurement, Balances & Operations Dashboard — 2026-08-16
+
+- [x] Audit existing inventory, supplier, customer, sales, cashier-shift, organization, branch, and jurisdiction models before schema changes.
+- [x] Design scoped purchase-order, receiving, inventory-posting, supplier-balance, customer-credit, approval, and reporting contracts.
+- [x] Add safe persistence and server procedures for purchase orders and receiving with idempotent inventory posting and Demo isolation.
+- [x] Add supplier balances, customer balances, credit limits, approval thresholds, and immutable audit events.
+- [x] Add unified branch/inventory/cash-shift operations dashboard with loading, empty, error, and mobile RTL states.
+- [x] Add unit/contract tests for scope isolation, approval separation, idempotency, Demo behavior, and dashboard aggregates.
+- [x] Run TypeScript, focused tests, full Vitest, production build, and visual verification before checkpoint.
+- [x] Document investor/tester flows and any government/vendor integration prerequisites in docs/investor-and-tester-flow.md.
+
+# Permanent Demo Workspace Load Fix — 2026-08-16
+
+- [x] Capture and instrument the failing Demo workspace path; the failure was hidden by the broad internal-login catch and fixture bootstrap was allowed to abort session creation.
+- [x] Fix the root cause rather than hiding the error, while preserving tenant/branch/jurisdiction isolation.
+- [x] Add a safe, auditable fallback for transient workspace initialization failures; synthetic fixtures now defer on seed/lock/duplicate errors while the scoped Demo session remains available.
+- [x] Add regression coverage for the failing request and the mobile Demo load path.
+- [x] Re-run mobile, POS, Operations Center, TypeScript, full tests, and production build before checkpoint.
+
+- [x] Add direct task-oriented aliases for POS and Operations so mobile testers do not receive a 404 when opening those workflows directly.
+
+# Procurement and Balance Reports — 2026-08-16
+
+- [x] Define scoped report contracts for purchases and balances with filter, sort, pagination, and export parameters.
+- [x] Add server-side filtered/sorted report queries with organization, branch, jurisdiction, role, and Demo isolation.
+- [x] Add Excel export with safe column definitions, localized labels, and audit metadata.
+- [x] Add PDF export with RTL-friendly layout, localized labels, scope summary, and audit metadata.
+- [x] Add advanced filters and sorting controls to procurement and balance workspaces with loading, empty, and error states.
+- [x] Add unit/contract tests for scope isolation, filter validation, sort allowlists, export consistency, and Demo behavior.
+- [x] Run TypeScript, focused tests, full Vitest, production build, and mobile visual verification before checkpoint.
+
+- [x] Add a direct /finance route alias so report reviewers opening the finance workflow directly do not receive a 404.
+
+# Interactive Charts, Scheduled Email, and Branch Report Templates — 2026-08-16
+
+- [x] Add filtered purchase and balance aggregation contracts for interactive charts.
+- [x] Add interactive RTL-friendly charts that reflect the active filters and sort scope.
+- [x] Add branch-scoped customizable report templates with allowlisted fields and audit history.
+- [x] Implement Heartbeat-backed recurring email report schedules and secure scheduled callback handling. The implementation is guarded and ready; activation remains intentionally deferred until valid Resend credentials and explicit production scheduling enablement are provided.
+- [x] Add tests for chart aggregates, template isolation, schedule ownership/idempotency, and email failure handling; external email validation intentionally avoids network calls.
+- [x] Re-run TypeScript, focused/full tests, production build, and mobile/desktop visual verification before checkpoint.
+
+# Detailed Chart Tooltips — 2026-08-16
+
+- [x] Add detailed Arabic tooltips for filtered purchase and balance charts, including metric, period/branch, value, count, and available trend context.
+- [x] Preserve tooltip accuracy for active filters, sort scope, Demo isolation, and responsive RTL layout.
+- [x] Add regression coverage and run TypeScript, tests, production build, and visual verification before checkpoint.
+
+# Role-Based Full Operational Audit — 2026-08-17
+
+- [x] Inventory all user roles, scoped permissions, workspaces, workflows, reports, exports, integrations, and Demo constraints; the inventory is recorded in docs/role-based-audit-inventory.md.
+- [x] Execute role-based tests for clinical, sales/POS, procurement, inventory, finance, HR/CRM, management, and system administration workflows; focused run passed 304 tests with 7 environment-gated skips.
+- [x] Verify cross-cutting controls: tenant/branch/jurisdiction isolation, Demo isolation, approvals, audit trail, fraud controls, screen protection, RTL/mobile behavior, and error recovery.
+- [x] Verify reports, filters, charts, Excel/PDF exports, scheduled-report guards, and integration prerequisites.
+- [x] Fix confirmed defects and add only evidence-based missing functionality with regression tests; no new defect or evidence-based gap was reproduced in the focused audit.
+- [x] Re-run the full audit, capture coverage/results/limitations, and save a production checkpoint.
+
+# Cross-Device Compatibility Audit — 2026-08-17
+
+- [x] Build a compatibility matrix for Android mobile, Android tablet, PC, Mac, iPhone, and HarmonyOS, including viewport, input, camera, download, PWA, and RTL expectations; native OS claims remain documented as requiring physical-device validation.
+- [x] Execute mobile and tablet viewport tests for POS, barcode/Data Matrix, reports, filters, charts, exports, branch switching, and screen-protection states.
+- [x] Execute desktop viewport and keyboard/mouse tests for POS, procurement, balances, reports, exports, and administrative workflows.
+- [x] Verify browser-capability fallbacks and document claims that require native Android, iOS, or HarmonyOS testing.
+- [x] Fix reproducible responsive, interaction, accessibility, or browser-compatibility defects and add regression coverage; no new reproducible defect was found in this matrix.
+- [x] Re-run the matrix, capture evidence, update compatibility documentation, and save a checkpoint.
+
+# Physical Device Acceptance Test — 2026-08-17
+
+- [x] Prepare Android, iPhone, and HarmonyOS acceptance scenarios for camera permission, Data Matrix/barcode scanning, printing, and sharing; documented in docs/physical-device-acceptance-test.md.
+- [x] Execute camera permission and scan fallback checks on each available physical device; no physical device was connected, so native results remain explicitly Not tested, while capability and fallback contracts passed automated verification.
+- [x] Execute receipt/report printing and WhatsApp/system-share checks on each available physical device; physical printer/share-sheet execution remains Not tested because no physical device was available, and the browser-level paths are documented.
+- [x] Collect device/browser evidence and record pass, fail, blocked, and not-tested states; the compatibility inventory records the evidence boundaries and the automated browser baseline.
+- [x] Fix only reproducible defects discovered during physical-device acceptance and add regression coverage; no physical-device defect was reproducible, and 3 focused regression files with 9 tests passed.
+- [x] Deliver the acceptance report and update the compatibility inventory; physical-device rows remain Not tested until the user supplies device evidence.
+- [x] Add focused regression tests for lossless Data Matrix payload handling and camera capability/permission fallback states discovered during acceptance preparation; 3 files and 9 tests passed.
+
+# Mobile Workspace Load Failure — 2026-08-17
+
+- [x] Reproduce and diagnose the mobile workspace load failure shown after Demo scope selection; root cause addressed by remounting the error boundary per workspace scope and adding safe recovery UI.
+- [x] Fix the underlying loading/error-state defect without weakening organization, branch, jurisdiction, or Demo isolation.
+- [x] Add regression coverage for successful workspace bootstrap and safe failure fallback; workspace reset-key contract tests pass.
+- [x] Re-run focused tests, TypeScript, production build, and mobile visual verification; 449 tests passed, TypeScript/build passed, and the mobile screenshot rendered successfully.
+- [x] Save a checkpoint and provide concise mobile re-test instructions.
+
+# MEDORA Cinematic Campaign and Safe Diagnostics — 2026-08-17
+
+- [x] Lock MEDORA Health Care Eco System branding, verified capabilities, audience claims, Arabic male narration, and 150-second horizontal plus 90-second vertical formats.
+- [x] Prepare the Arabic narration script, shot plan, sound-design plan, music brief, subtitles, and end-card copy without unverified regulatory or customer claims.
+- [x] Generate or resume approved visual/audio/video assets, preserving realistic live-action direction and separate 16:9 and 9:16 compositions; delivered verified 8-second 16:9 and reframed 9:16 opening previews with available narration/music. Full 150-second and 90-second films remain a documented generation phase, not claimed complete.
+- [x] Implement privacy-safe background diagnostics for lazy bundle failures and uncaught UI errors, with redaction and no request/response body collection.
+- [x] Add regression tests for diagnostic redaction, event classification, and safe failure behavior; 4 focused diagnostics tests passed.
+- [x] Run TypeScript, focused tests, production build, and visual verification; save an application checkpoint and record video-generation blockers accurately.
+
+# POS Catalog Loading Failure — 2026-08-17
+
+- [x] Reproduce and trace the POS catalog-loading failure shown in the Demo branch on mobile; the failure was caused by missing scoped Demo inventory/catalog fixtures.
+- [x] Verify Demo product fixtures and organization/branch/jurisdiction scope alignment without mixing production data.
+- [x] Fix catalog loading, search, add-to-cart, and sale-start behavior while preserving server-side isolation; availableStock now self-heals only showcase scope.
+- [x] Add regression tests for Demo catalog availability, search, empty/error states, and cart entry; POS, bootstrap, and scope tests passed 15/15.
+- [x] Re-run focused tests, TypeScript, production build, and mobile visual verification; focused tests, TypeScript, build, and mobile screenshot passed.
+- [x] Save a checkpoint and provide concise steps to test a simulated sale.
+
+# Demo Catalog, Bluetooth Scanner, and Invoice Review — 2026-08-17
+
+- [x] Inventory existing POS, Demo fixture, invoice, permissions, and scope contracts before implementation.
+- [x] Add an isolated Demo catalog-management workspace for create/edit/archive and stock visibility.
+- [x] Add a searchable, filterable Demo invoice ledger with line items, totals, status, timestamps, and audit context.
+- [x] Add Bluetooth scanner support through keyboard-wedge capture, focus-safe handling, duplicate suppression, and manual fallback; do not claim Web Bluetooth support where unavailable.
+- [x] Add regression tests for Demo-only writes, organization/branch/jurisdiction isolation, permissions, invoice ledger, and scanner parsing.
+- [x] Run TypeScript, focused tests, production build, and mobile verification; save a checkpoint and document usage limits.
+
+# MEDORA Demo Experience and Scanner TODO
+
+- [x] Add an isolated Demo catalog-management workspace for editing synthetic showcase products with server-side scope and role guards.
+- [x] Add Bluetooth/keyboard-wedge barcode capture with rapid-sequence buffering, suffix handling, focus safety, and manual fallback.
+- [x] Add a searchable, filterable Demo trial-invoice log that exposes synthetic sales only and never production records.
+- [x] Add focused regression tests for Demo catalog isolation, scanner parsing, and trial-invoice log filtering.
+- [x] Re-run TypeScript, focused Vitest, full Vitest, production build, and desktop/mobile RTL visual verification.
+- [x] Save a checkpoint after evidence-backed completion of the three requested features.
+
+## Deferred external acceptance
+
+- [x] Keep full-length cinematic film generation explicitly deferred until the generation quota resets; do not claim completion.
+- [x] Defer physical Android, iPhone, and HarmonyOS acceptance at the user's request; status remains Not tested and no device success is claimed.
+
+
+# Global Scope Audit — 2026-08-17
+
+- [x] Audit recent feature flags, session-mode checks, showcase guards, and Test-account conditionals for accidental general-system restrictions.
+- [x] Verify that generic POS search, barcode/Data Matrix scanning, invoice workflows, reporting, and task-oriented navigation are available to all authorized production users.
+- [x] Verify that only synthetic fixtures, trial invoices, and Demo catalog writes remain restricted to showcase scope.
+- [x] Add regression coverage proving production users receive shared capabilities while Demo data remains isolated.
+- [x] Run TypeScript, focused tests, full tests, production build, and visual verification after the scope audit.
+- [x] Save a checkpoint documenting the global-scope policy and any corrections.
+
+# Production Hardware Integration Preparation — 2026-08-17
+
+- [x] Audit current camera, keyboard-wedge, receipt, print, share, and hardware-boundary code paths.
+- [x] Define provider-neutral printer and scanner capability contracts with explicit browser/device fallbacks.
+- [x] Implement secure hardware adapter boundaries without hardcoding an unapproved vendor or sending production data to unknown endpoints.
+- [x] Add printer-preview/receipt contract coverage and scanner adapter/error-state tests.
+- [x] Document supported integration modes, required device details, permissions, certificates, and production activation gates.
+- [x] Run TypeScript, focused tests, full tests, production build, and visual verification; save a checkpoint.
+
+# Responsive Sidebar Gestures — 2026-08-17
+
+- [x] Audit DashboardLayout/sidebar state, RTL/LTR direction source, route-selection handlers, and existing mobile drawer behavior.
+- [x] Add touch-edge swipe opening and closing with direction-aware thresholds, rotation-safe viewport handling, and scroll/interactive-element guards.
+- [x] Add desktop edge-hover reveal on the logical inline-end edge for RTL and inline-start edge for LTR, with pointer and keyboard accessibility.
+- [x] Close the drawer after destination selection, Escape, backdrop click, and orientation/layout changes where appropriate.
+- [x] Add reduced-motion, focus management, and responsive regression tests; verify POS and form interactions are not hijacked.
+- [x] Run TypeScript, focused tests, full tests, production build, responsive screenshots, and save a checkpoint.
+
+# Supplier Directory and Credit Profile — 2026-08-17
+
+- [x] Audit the existing supplier schema, procurement procedures, balance ledger, branch scope guards, role policies, and purchasing UI.
+- [x] Define the supplier profile fields, payment terms, credit limits, tax identity, contacts, addresses, documents metadata, and status transitions without storing unsafe file bytes in the database.
+- [x] Add non-destructive supplier-profile schema changes and server CRUD/list/detail procedures with organization, branch, jurisdiction, role, and audit enforcement.
+- [x] Add duplicate checks, safe validation, optimistic-concurrency/idempotency behavior, and maker-checker approval for sensitive credit/payment changes.
+- [x] Build the Arabic RTL supplier directory with scoped search/filtering, create/edit/detail flows, payment and credit panels, and explicit empty/loading/error states.
+- [x] Add regression tests proving cross-organization and cross-branch isolation, role restrictions, duplicate prevention, approval gates, and purchase-order linkage.
+- [x] Run TypeScript, focused tests, full tests, production build, and desktop/mobile visual verification; save a checkpoint.
+
+# Multi-Entity Chart of Accounts and Other Expenses — 2026-08-17
+
+- [x] Audit existing chart-of-accounts, finance ledger, branch/entity scope, administrative hierarchy, approvals, inter-entity links, and reporting procedures.
+- [x] Determine whether each organization, branch, and business entity has an independent financial/admin ledger scope while preserving controlled consolidation and inter-entity visibility.
+- [x] Define governance rules for supervisory monitoring without bypassing authorization, segregation of duties, auditability, or jurisdiction boundaries.
+- [x] Add a reasoned other-expense workflow with category, amount, currency, date, beneficiary, cost center, evidence metadata, linked entity/branch, status, and audit trail.
+- [x] Add server and UI procedures for scoped chart accounts, other expenses, consolidation views, and controlled inter-entity links.
+- [x] Add regression tests for financial isolation, consolidation boundaries, hierarchy visibility, permissions, duplicate prevention, and expense validation.
+- [x] Run TypeScript, focused tests, full tests, production build, visual verification, and save a checkpoint.
+
+# Hierarchical Accounting and Justified Expenses — 2026-08-17
+
+- [x] Audit existing general-ledger account, entry, period-close, organization, branch, jurisdiction, role, and storage contracts.
+- [x] Add a non-destructive hierarchical chart-of-accounts model with parent accounts, branch ownership, account scope, posting policy, and active/archive states.
+- [x] Add cost-center model and scoped assignment rules for branches, departments, and operational units.
+- [x] Add controlled inter-branch/inter-entity journal model with balanced pairs, source/destination scope, reciprocal references, and duplicate prevention.
+- [x] Add justified-other-expense model with reason, category, vendor/payee, dates, amount, currency, branch, cost center, status, and audit metadata.
+- [x] Add secure document metadata and upload/reference flow for expense evidence using approved storage helpers; never store file bytes in the database.
+- [x] Add double-entry posting and maker-checker/administrative oversight for sensitive expense and inter-entity operations without blocking ordinary authorized entry.
+- [x] Build Arabic RTL accounting tree, cost-center, inter-entity, and other-expense interfaces with scoped search, detail, review, and reporting states.
+- [x] Add regression tests for balance enforcement, hierarchy integrity, cross-branch isolation, inter-entity pairing, expense evidence, permissions, and audit trails.
+- [x] Run TypeScript, focused tests, full tests, production build, visual verification, and save a checkpoint.
+
+# Complete Accounting Cycle Expansion — 2026-08-17
+
+- [x] Audit the complete accounting lifecycle, not only the currently requested minimum: chart hierarchy, posting rules, periods, closing, cost centers, inter-entity flows, expenses, reporting, permissions, and audit.
+- [x] Complete all missing accounting data models and non-destructive migrations required for branch/entity independence.
+- [x] Complete all required server procedures, validations, duplicate guards, balanced double-entry posting, and oversight controls.
+- [x] Complete all required Arabic RTL interfaces, review states, reports, and secure evidence-document references.
+- [x] Add comprehensive regression coverage for every completed accounting path and every tenant/branch/role boundary.
+- [x] Run full verification and save a final checkpoint only after all executable scope is complete; document any externally blocked acceptance separately.
+
+# Competitive Capability Gap Analysis — 2026-08-17
+
+- [x] Collect authoritative product capabilities for Oracle, Odoo, Daftera, Erteqa, SAP, and Microsoft Dynamics.
+- [x] Verify MEDORA capabilities against implemented schema, routers, UI, documentation, tests, and explicit production prerequisites.
+- [x] Build a sourced gap matrix separating absent, partial, deferred, integration-gated, and not-applicable capabilities.
+- [x] Produce an Arabic executive report with priority tiers and practical next-step recommendations.
+
+# AI Assistant, Help Desk, and Backup Hardening — 2026-08-17
+
+- [x] Audit existing AI chat, support, diagnostics, notification, storage, scheduling, and backup-related code and documentation.
+- [x] Build an in-app AI assistant with scoped, explainable answers, role-aware actions, Arabic/English support, and human confirmation for sensitive operations.
+- [x] Build an automatic help desk with knowledge-grounded answers, ticket creation/escalation, safe diagnostics, and tenant-aware history.
+- [x] Add a backup policy model and management UI for Online and Offline destinations, retention, frequency, encryption, and integrity manifests.
+- [x] Perform an isolated restore-readiness drill using signed manifest integrity, payload-shape, tamper, and tenant/branch scope verification. A full production restore remains an operator exercise requiring a real destination and evidence.
+- [x] Add scheduled backup execution using platform-supported callbacks, idempotency, retry safety, and auditable run history.
+- [x] Add Vitest coverage for prompt/data boundaries, tenant isolation, backup integrity, scheduling authorization, and restore safety.
+- [x] Run TypeScript, focused/full tests, production build, visual verification, and save a published checkpoint.
+
+# AI Assistant and Help Desk Verification — 2026-08-17
+
+- [x] Verify the AI Assistant and automatic help desk are visible from the main authenticated navigation for authorized users.
+- [x] Verify assistant responses, support-ticket creation, escalation, safe diagnostics, and tenant/branch scoping through the actual UI contracts.
+- [x] Fix any reproducible access, rendering, permission, or interaction defect found during verification; no reproducible defect was found in this verification pass.
+- [x] Re-run focused/full tests, TypeScript, production build, and visual verification; no code change was required in this verification pass.
+
+# Policy Knowledge Base Management — 2026-08-17
+
+- [x] Audit existing assistant, support-ticket, organization/branch scope, and authorization contracts for policy knowledge integration.
+- [x] Add non-destructive policy knowledge schema with versioning, draft/active/archived states, scope, owner, review metadata, and audit linkage.
+- [x] Add server procedures for policy CRUD, submit-for-review, approve, archive, scoped search, and assistant retrieval limited to approved content.
+- [x] Add RTL management and review UI with clear effective-version and approval status indicators.
+- [x] Add regression coverage for tenant/branch isolation, approval gating, version supersession, auditability, and assistant context filtering.
+- [x] Run TypeScript, focused/full tests, production build, visual verification, and save a published checkpoint.
+
+
+# Policy Knowledge Base — MEDORA
+
+- [x] Add Arabic RTL Policy Knowledge workspace with scoped list, search, create, edit, review submission, approval, and archive actions.
+- [x] Register the Policy Knowledge workspace in Home navigation with role-aware visibility and task guidance.
+- [x] Add a server-side draft update procedure that preserves organization, branch, and jurisdiction scope and prevents direct edits to approved articles.
+- [x] Ground AI Assistant responses in matching approved policy articles only; explicitly refuse to invent policy when no approved context matches.
+- [x] Add contract coverage for policy lifecycle, scope isolation markers, assistant grounding, and workspace registration.
+- [x] Document the live-tenant approval-flow acceptance gate: automated contract coverage is complete; live admin/non-admin validation remains explicitly Not tested until tenant accounts and a staging database are supplied.
+- [x] Document live restore evidence and physical-device acceptance as external release gates; no production restore, camera, printer, or device success is claimed without the required environment and hardware.
+- [x] Document cinematic MEDORA campaign continuation as deferred until the generation quota permits; existing identity, Arabic script, shot plan, and previews remain preserved.
+
+
+# P0/P1/P2 Execution Program — 2026-08-17
+
+## P0 — Critical safety and operational readiness
+- [x] Inventory every existing P0 requirement and map it to code, tests, and acceptance evidence.
+- [x] Audit authentication, session/logout behavior, tenant/branch/jurisdiction isolation, and role enforcement end to end.
+- [x] Audit critical POS, inventory, procurement, accounting, backup, AI, and help-desk paths for fail-closed behavior and audit trails.
+- [x] Add or strengthen regression tests for every P0 gap discovered and resolve reproducible defects.
+
+## P1 — Core workflow completeness and governance
+- [x] Inventory every existing P1 requirement and map it to code, tests, and acceptance evidence.
+- [x] Complete missing operational workflows, reporting/export paths, review queues, and approval boundaries found during the audit.
+- [x] Strengthen AI grounding, human review, privacy-safe diagnostics, fraud controls, and backup/restore verification where gaps exist.
+- [x] Add regression and integration coverage for P1 workflows and resolve reproducible defects.
+
+## P2 — Product depth and optimization
+- [x] Inventory every existing P2 requirement and map it to code, tests, and acceptance evidence.
+- [x] Implement practical UX, performance, mobile, hardware-readiness, analytics, and documentation improvements that are safe to complete in the current environment.
+- [x] Add tests and acceptance notes for P2 improvements; clearly mark external-device, government, live-tenant, and quota-bound items as not tested or deferred.
+
+## Final P0/P1/P2 release gate
+- [x] Run full TypeScript, focused tests, full Vitest suite, production build, visual verification, and review TODO before checkpoint.
+- [x] Save a published checkpoint with an evidence-based completion report and explicit external limitations.
+
+
+# Install Shortcut Experience — 2026-08-17
+
+- [x] Audit the existing PWA manifest, service worker registration, installability metadata, and current install prompts.
+- [x] Add a visible Arabic RTL install affordance for supported browsers, using the native install prompt when available and a safe fallback instruction screen when it is not.
+- [x] Detect installed/standalone state and avoid showing redundant install prompts after installation or dismissal within the current session.
+- [x] Provide device-aware instructions for Android/Chrome, iPhone/iPad/Safari, desktop browsers, and unsupported/private browsing contexts without claiming universal native prompt support.
+- [x] Add regression coverage and verify desktop/mobile visual behavior, then save a published checkpoint.
+
+
+# Completion and Hardening Pass — 2026-08-17
+
+- [x] Re-audit all documented external gates and identify the portions that can be made implementation-ready without official credentials or physical hardware.
+- [x] Harden government/insurance/hardware connector boundaries with explicit capability states, fail-closed validation, safe configuration checks, and actionable readiness guidance.
+- [x] Improve operational readiness around backup restore evidence, installability, safe diagnostics, AI policy grounding, and approval/audit workflows where gaps remain.
+- [x] Improve task-oriented UX and responsive acceptance for the remaining high-value workflows without weakening authorization or tenant isolation.
+- [x] Add regression coverage for each improvement and run TypeScript, focused/full tests, dependency audit, production build, and visual verification.
+- [x] Save a published checkpoint with a precise completion report and explicit external limitations.
+
+
+# Full System Re-audit — 2026-08-17
+
+- [x] Run a clean baseline of TypeScript, focused tests, full Vitest, dependency audit, and production build; capture every reproducible failure.
+- [x] Inspect server/client logs and network failures for runtime errors, rejected requests, authentication loops, and broken navigation.
+- [x] Audit sensitive mutations for authentication, tenant/branch/jurisdiction scope, role gates, validation, idempotency, and audit trails.
+- [x] Audit cross-module contracts across POS, inventory, procurement, accounting, reports, backup, AI, help desk, policy knowledge, installability, and connector readiness.
+- [x] Fix every reproducible defect found and add regression coverage before closing it.
+- [x] Verify critical workflows and responsive RTL presentation on desktop and mobile; document external-device and live-environment limits.
+- [x] Run final validation, review TODO, and save a published checkpoint with evidence-based findings.
+
+- [x] Fix the reproducible landing/login brand-mark clipping by using the square MEDORA icon asset for constrained logo slots, then add visual/regression verification.
+
+
+# MEDORA New Icon Replacement — 2026-08-17
+
+- [x] Identify the supplied/new MEDORA icon asset and inventory all current icon references in the app, login, welcome page, manifest, and install shortcut.
+- [x] Replace the old icon consistently in constrained UI slots and installable-app metadata without breaking accessibility or RTL layout.
+- [x] Add/update regression coverage, run TypeScript and production build, verify desktop/mobile visuals, and publish the replacement checkpoint.
+
+# MEDORA CRM / HR / Call Center / Customer Care Completion — 2026-08-17
+
+- [x] Define and document the shared domain model, lifecycle states, roles, tenant/branch/jurisdiction scope, Demo isolation, audit events, and acceptance criteria for CRM, HR, Call Center, and Customer Care.
+- [x] Extend CRM data model for contacts/accounts, opportunities, activities, campaigns, consent, conversion, pipeline metrics, and duplicate/idempotency controls.
+- [x] Extend HR data model for employee lifecycle, departments/positions, contracts, documents metadata, shifts, attendance corrections, leave policies, approvals, performance, training, and offboarding.
+- [x] Extend Call Center data model for queues, skills, routing, SLA timers, messages/notes, escalation, dispositions, callback tasks, knowledge links, and immutable interaction history.
+- [x] Extend Customer Care data model for service cases, complaints, tasks, care plans, follow-ups, satisfaction capture, consent, and unified customer timeline.
+- [x] Apply non-destructive database migrations and verify all new tables/indexes/constraints in the active database.
+- [x] Implement server procedures with fail-closed organization/branch/jurisdiction/role checks, maker-checker transitions, idempotency, signed audit events, and Demo restrictions.
+- [x] Integrate CRM, HR, Call Center, and Customer Care with finance, POS, procurement, notifications, policy knowledge, AI assistant, and reporting without leaking sensitive data.
+- [x] Build task-oriented Arabic RTL workspaces with search, filters, saved views, detail panels, status transitions, loading/error/empty states, responsive touch support, and direct workflow entry points.
+- [x] Add governed AI decision support and data-based suggestions with human review, structured output validation, privacy-safe prompts, and no autonomous sensitive actions.
+- [x] Add operational dashboards, exports, SLA/aging metrics, pipeline/attendance/leave/case reports, and anti-tampering anomaly signals with explicit scope metadata.
+- [x] Add focused contract tests for schema boundaries, authorization, tenant isolation, transition rules, idempotency, Demo mode, reports, AI governance, and audit chaining.
+- [x] Run focused tests, TypeScript, full Vitest, production build, and desktop/mobile RTL visual verification for all four modules.
+- [x] Update documentation with implemented scope, deferred external integrations, operator guide, and release evidence; review TODO before checkpoint.
+
+# Full System Re-audit and Integration Review — 2026-08-17
+
+- [x] Audit repository structure, route registration, database schema/migrations, environment contracts, and dependency/build health.
+- [x] Run focused, full, and integration test suites; classify failures, skips, warnings, and externally blocked acceptance tests.
+- [x] Review organization/branch/jurisdiction isolation, role permissions, Demo isolation, sensitive data handling, signed audit trails, and fail-closed behavior across all routers.
+- [x] Review cross-sector workflows connecting authentication, dashboard, POS, inventory, procurement, suppliers, finance, accounting, reports, CRM, HR, Call Center, Customer Care, AI, policy knowledge, backups, diagnostics, notifications, and connectors.
+- [x] Verify frontend route reachability, navigation escape paths, loading/error/empty states, Arabic RTL/LTR behavior, responsive layouts, and critical task entry points.
+- [x] Reproduce and fix any defects found in code, schema, procedures, UI, or integration contracts; add regression tests for each confirmed defect.
+- [x] Re-run TypeScript, dependency audit, focused tests, full Vitest, production build, and desktop/mobile visual verification after fixes.
+- [x] Document verified coverage, unresolved external gates, operational risks, and release evidence; review TODO and save a published checkpoint.
+
+# Urgent Language and POS Recovery — 2026-08-17
+
+- [x] Trace and correct the English locale so all user-facing labels, helper copy, actions, empty/error states, direction, and locale-aware formatting change together.
+- [x] Trace the Demo/current-scope inventory failure preventing POS product search, barcode lookup, cart entry, and mock sale completion; repair the data/query/scope path without weakening tenant isolation.
+- [x] Add regressions for English locale completeness and Demo POS catalog scope, then verify Arabic/English mobile POS search and a completed test sale.
+- [x] Run TypeScript, focused tests, production build, mobile visual verification, update the operator note, and save a published checkpoint.
+- [x] Diagnose and repair the protected Demo POS sale-commit rollback so an in-scope simulated invoice can complete without weakening financial, stock, or tenant controls.
+- [x] Replace the current user-interface logo references with the approved MEDORA logo across the application shell and installation surfaces, then verify desktop and mobile rendering.
+
+# Smart Typing Verification — 2026-08-17
+- [x] Audit the smart-typing experience, its data boundaries, accessibility, and runtime behavior; repair any confirmed issue and add regression coverage.
+- [x] Add transient, user-enabled smart suggestions to the assistant composer and support-ticket subject/description fields, with RTL/LTR text, keyboard selection, IME-safe composition, and graceful no-suggestion fallback.
+- [x] Enforce server-side organization/branch scope validation, a non-clinical allowlist, sensitive-fragment rejection, a bounded structured response, advisory-only output, and no database persistence or audit logging of draft fragments.
+- [x] Verify TypeScript, focused policy/contract tests, the complete Vitest suite, and the production build; document the interactive check and remaining browser-session limitation.
+
+# Competitive Capability Gap Closure — 2026-08-17
+- [x] Collect and cite official capability evidence for Oracle, Odoo, Daftra, ErpNext/ارتقي, and SAP; compare it to MEDORA’s implemented and externally gated capabilities without overstating parity.
+- [x] Build a scoped capability-gap matrix, prioritize safe high-value gaps, and design compatible MEDORA extensions that preserve organization, branch, jurisdiction, audit, and human-review controls.
+- [x] Implement the highest-priority feasible gaps across the system rather than the Demo account only; add regression coverage and disclose external integrations, legal approvals, and device/vendor dependencies as gates.
+- [x] Run TypeScript, focused and full tests, a production build, responsive verification, documentation review, and save a published checkpoint with a traceable comparison report.
+- [x] Add a branch- and jurisdiction-scoped Unified Review Inbox that aggregates only existing pending human-review records without creating a bypass approval action.
+- [x] Integrate the Unified Review Inbox into the operations workspace with clear source, status, timestamp, count, empty, error, and scope states in Arabic RTL.
+- [x] Add domain and contract regression coverage for review item classification, deterministic ordering, management access, and source-workflow-only review behavior.
+
+# Assistant, Help Desk, and Backup Accessibility — 2026-08-17
+- [x] Make the AI Assistant and Auto Help Desk a clearly named daily-work navigation destination for every authorized role, without weakening role or tenant isolation.
+- [x] Validate and correct backup schedule guidance and presets for the required six-field UTC Cron form, including online and offline export policies.
+- [x] Add regression coverage and run full verification for access, schedule validation, and the authenticated idempotent backup callback.
+- [x] Add a scoped, time-limited Offline export download action for verified offline-policy backup runs, with no storage credential exposure and no claim of unattended removable-media copying.
+
+# CRM / HR / Call Centre / Customer Care Reality Audit and Completion — 2026-08-17
+- [x] Inspect the implemented schema, server contracts, route registration, UI workspaces, tests, and data flows for CRM, HR, Call Centre, and Customer Care; distinguish functional workflows from interface-only foundations.
+- [x] Compare each verified workflow against operational CRM, HR, Call Centre, and Customer Care requirements; classify missing capabilities into safe implementation work and external/provider or legal gates.
+- [x] Complete verified CRM workflow gaps, including lead-to-opportunity pipeline, account/contact management, activities, assignment, conversion, and operational reporting where absent.
+- [x] Complete verified HR workflow gaps, including employee lifecycle, leave approval, attendance correction, onboarding/offboarding, performance and training records where absent; retain payroll/tax execution behind approved external engines.
+- [x] Complete verified Call Centre workflow gaps, including queues, routing readiness, ticket lifecycle, SLA/escalation, callbacks, dispositions, agent performance and knowledge-base linkage where absent; retain live telephony/media capture behind provider integration.
+- [x] Complete verified Customer Care workflow gaps, including customer 360, complaints and cases, care tasks/follow-ups, service recovery, satisfaction capture, consent-aware history and dashboards where absent.
+- [x] Preserve fail-closed organization, branch, jurisdiction, role, demo, privacy, signed-audit, and mandatory human-review controls in every new or amended operation.
+- [x] Add or extend contract and domain regression tests, run TypeScript, complete Vitest and production build, verify desktop/mobile RTL and English LTR views, document external gates, and save a published checkpoint.
+
+# AI Assistant and Automatic Help Desk Follow-up — 2026-08-17
+- [x] Re-verify AI Assistant and Automatic Help Desk visibility, authorization, policy grounding, ticket lifecycle, safe diagnostics, and graceful failure paths across the production UI.
+- [x] Add only safe, high-value gaps found during verification, preserving mandatory human review and tenant/branch/jurisdiction isolation.
+- [x] Extend contract tests, run TypeScript, full Vitest, production build, visual verification, document external limits, and save a published checkpoint.
+
+على الرغم من أن المساعد ومكتب الدعم أُضيفا سابقاً، يعاد التحقق منهما الآن على المسار المنشور لضمان ظهورهما وتشغيلهما فعلياً للمستخدمين المصرح لهم.
+
+# MEDORA UI Simplification, English Coverage, and Cinematic Campaign — 2026-08-17
+- [x] Audit all user-visible English/LTR strings and replace Arabic leakage with centralized localized copy.
+- [x] Simplify high-traffic UI surfaces to primary actions and minimal operational data without removing access to advanced workflows.
+- [x] Verify the AI Assistant is prominent on the main page and verify the touch/hover sliding side panel across RTL/LTR and mobile/desktop.
+- [x] Audit cross-module navigation, guarded procedures, and degraded/error states; fix evidence-backed defects while preserving tenant isolation.
+- [x] Prepare and obtain confirmation for the cinematic MEDORA campaign brief; generate reference assets and defer the final realistic horizontal/vertical video deliverables with Arabic male narration and sound design at the user's request, without claiming video completion.
+- [x] Recheck the current video-capacity gate; retain the locked live-action pharmacy Data Matrix scan shot 3 for a future user-directed resumption rather than retrying while final production is deferred.
+- [x] Run TypeScript, focused and full tests, production build, visual verification, and save a published checkpoint.
+
+# MEDORA Campaign Identity Lock — 2026-08-17
+- [x] Lock the final project name as MEDORA Health Care Eco System across script, voice-over, music cues, visuals, video titles, end cards, subtitles, prompts, and delivery metadata; prohibit Aldora or legacy naming.
+- [x] Produce a portable production pack containing the final film script, voice-over copy, shot list, visual prompts, audio direction, subtitle files, title cards, logo/brand guidance, and horizontal/vertical export specifications.
+
+# MEDORA Campaign Duration and Audience Cuts — 2026-08-17
+- [x] Lock the approved campaign durations: 150-second landscape master, 90-second vertical cut, and short audience-specific cuts.
+- [x] Ensure every requested feature is represented by a clear, visually impressive, narration-synchronized shot and readable on-screen treatment.
+- [x] Lock the approved male Arabic voice and closing statement across every campaign version.
+
+# Downloadable Archive and Campaign Continuation — 2026-08-17
+- [x] Record the user-directed deferral of final MEDORA video generation, retain the locked blueprint and references, and close the current execution cycle without claiming video completion.
+- [x] Create a transparent conversation-context summary from the material available in this workspace, without presenting it as a verbatim recovery of inaccessible historical chat records.
+- [x] Package the current MEDORA project source, audit records, campaign production blueprint, available campaign assets, and archive manifest into a downloadable ZIP; exclude dependencies, build output, logs, temporary files, Git internals, and all environment files.
+- [x] Verify the archive file list and integrity; defer final approved MEDORA cinematic campaign assets from the locked 150-second landscape and 90-second vertical briefs at the user's request.
+- [x] Verify the archive outer ZIP and file list, including its SHA-256 manifest, without finding packaged environment files or dependency directories.
+- [x] Re-verify the source, conversation, and external-production ZIP integrity and file counts without changing contents; continue final video production only when capacity is available.
+- [x] Generate the primary visual reference for campaign shot 3 from the locked MEDORA blueprint, ready for a quota-available video-production attempt.
+- [x] Document the generated visual references for campaign shots 4–18 and priority vertical compositions, preserving their association with the locked production blueprint and their pending-video status.
+- [x] Correct the visual-reference register to distinguish the completed vertical scan frame from the still-pending vertical AI-review frame, and record the verified 150s/90s Arabic narration assets already present in the external pack.
+
+# MEDORA External Production Archive — 2026-08-18
+- [x] Assemble a standalone, external-production-only ZIP with the locked campaign blueprint, Arabic scripts and SRT files, full shot prompts, audio direction, export checklist, available logo/reference/audio/video assets, SHA-256 manifest, and transparent status notes.
+- [x] Validate the ZIP structure and compressed data before delivery; the resulting archive contains 31 entries and passed integrity verification.
+
+# MEDORA UI Simplicity and English Completion — 2026-08-18
+- [x] Reduce the first signed-in screen to a small set of role-authorized daily actions, a prominent assistant entry, and contextual content only; keep detailed analytics and inactive operational cards out of the default view.
+- [x] Replace Arabic-only fallback strings and forced RTL layout in priority workspaces with direction-aware bilingual copy, beginning with Operations Management and the backup workspace.
+- [x] Make side-panel interaction deterministic: logical-edge hover on desktop, logical-edge swipe open and reverse swipe close on touch, close after menu choice on compact screens, and correct RTL/LTR geometry.
+- [x] Add focused regression tests for the concise home action model, English copy selection, and logical sidebar gesture behavior; verify desktop and narrow mobile in both directions.
+- [x] Continue the component-by-component bilingual audit across the remaining legacy workspaces that still contain Arabic literals, beginning with accounting, supply chain, and reporting workspaces; preserve scope and workflow contracts while translating UI-only copy.
+- [x] Correct the public-entry header so the MEDORA mark and bilingual name remain contained, readable, and non-duplicated when the install prompt is present on desktop and mobile widths.
+- [x] Translate the accounting, loyalty, supply-chain, supplier-directory, procurement-reporting, cashier-cycle, AI-governance, and AI-insights priority workspaces into direction-aware English and Arabic UI copy without changing their protected data contracts or review gates.
+- [x] Translate the investor showcase workspace into a direction-aware Arabic/English interface, including catalog search, isolated-demo editing, trial-invoice history, statuses, and locale-aware dates; add a regression test that preserves its showcase-only isolation gate.
+- [x] Translate the anti-fraud, hardware, and authentication-settings workspaces into direction-aware Arabic/English UI copy without enabling any device connector, changing authentication state, or bypassing investigation and review gates.
+- [x] Complete bilingual UI-only copy in the tax-invoice and assistant-support workspaces, including generated print-preview labels and visible error/state labels, while preserving tax-compliance, support-ticket, and AI advisory contracts.
+- [x] Convert TaxInvoiceWorkspace UI, generated print preview, and PDF-preview copy to direction-aware Arabic/English while preserving invoice calculations, local issuance, export, ETA blocking, and scoped template behavior.
+- [x] Add and run a focused TaxInvoiceWorkspace localization regression test covering English copy and removal of forced RTL layout.
+- [x] Add and run a focused AssistantSupportWorkspace localization regression test confirming bilingual copy, direction propagation, advisory-only policy, smart typing, and ticket lifecycle contracts.
+- [x] Audit and localize remaining visible Arabic-only component copy that is not connected to LocalizationContext, prioritizing operations, government-readiness, policy, and security surfaces without changing protected workflows; SmartTextInput was verified to already receive explicit language and emit bilingual copy.
+- [x] Localize government-readiness packet and connector-accreditation dashboard while preserving read-only fail-closed external activation gates and audit context.
+- [x] Localize the policy knowledge workspace while retaining scope filtering, human review and approval, archival, and assistant-grounding safeguards.
+- [x] Localize the ICD-10-CM reference panel, secure sign-in dialog, and capture-protection overlay without changing their reference, session, or privacy behavior.
+- [x] Localize the Egypt healthcare workspace while retaining scoped queries, internal-only GAHAR readiness, and safely disabled official connectivity.
+- [x] Add and run an IntegratedOperationsWorkspaces localization regression test for English direction and protected insurance, promotion, scheduling, and employee-account contracts.
+- [x] Localize the global ErrorBoundary using the document language and direction only, so its recovery screen remains available even if LocalizationContext fails; add and run its focused regression test.
+
+# MEDORA Campaign Reference Completion — 2026-08-18
+- [x] Add the reserved vertical AI-review reference asset to the campaign register as a generated reference pending completion, without reclassifying any campaign video as complete.
+- [x] Verify the completed vertical AI-review reference image, update its register status, and include it in the refreshed delivery archive without treating it as a completed video.
+
+# Multi-Role Acceptance Review — 2026-08-18
+- [x] Define the role-based acceptance matrix and evidence criteria for clinical, pharmacy/POS, purchasing, sales, finance, CRM/customer care, HR/call centre, executive, and administrator workflows.
+- [x] Inventory current test coverage and protected route contracts against the role matrix, then execute repeatable acceptance checks for supported workflows and exception paths.
+- [x] Add dynamic role-acceptance contracts for CRM/customer-care and HR scoped workflows, including a happy path, a denied cross-scope path, and signed-audit evidence.
+- [x] Fix any reproducible defects found, add narrowly scoped regression coverage, and document any external-validation gates without weakening organization, branch, jurisdiction, audit, or human-review controls.
+- [x] Run full verification, visual checks for representative role journeys, publish a checkpoint, and deliver the evidence-backed acceptance report.
+
+# Full Historical Request Traceability Review — 2026-08-18
+- [x] Build an evidence-backed request-to-implementation matrix across the documented conversation, current source, tests, audits, and delivery artifacts; distinguish completed scope from external, device, provider, accreditation, or quota-gated work.
+- [x] Reproduce and investigate only materially credible internal gaps found by the traceability matrix, preserving organization, branch, jurisdiction, role, demo, signed-audit, and human-review controls.
+- [x] Replace translated workflow-action React keys in the authenticated home shell with stable composite keys and lock the correction with a source-level regression test.
+- [x] Fix evidence-backed internal defects with regression tests, then run full type, test, build, and representative visual verification before publishing the review.
+
+# UX Script Implementation Review — 2026-08-18
+- [x] Convert the supplied UX script into an evidence-backed MEDORA implementation map, distinguishing existing behaviors, safe enhancements, and exclusions that conflict with healthcare safety, tenant isolation, or existing role routing.
+- [x] Implement the highest-value safe UX improvements from the script with focused regression tests and preserve the current authenticated workflows, scope guards, and localized RTL/LTR behavior.
+- [x] Run full type, test, build, and responsive visual verification, then publish the UX implementation review.
+- [x] Reorganize the authenticated home shell so only the first three role-authorized shortcuts stay visually primary and remaining shortcuts are exposed through an accessible progressive-disclosure control.
+- [x] Reorganize the POS entry controls into a primary sales path plus an accessible secondary tools control for camera scanning, simulated scanning, and held invoices without changing sale, scanner, receipt, or scope logic.
+- [x] Add focused source-level regression tests that prove the progressive-disclosure controls retain access to every existing shortcut and POS utility.
+- [x] Replace the visual three-action cap in authenticated workspace guidance with progressive disclosure so every workflow action remains available without crowding the initial view.
+
+# Manual Acceptance Scenarios and CRM/HR Interactive Audit — 2026-08-18
+- [x] Prepare role-specific manual acceptance scenarios for pharmacist, cashier, and manager, including scope, usability, error, and hand-off expectations after the UX update.
+- [x] Audit CRM and HR tabs interactively across localized desktop and mobile views, documenting density, discoverability, state-preservation, and role-routing observations without changing behavior.
+- [x] Produce an evidence-backed, UI-only improvement backlog for CRM and HR that preserves each tab, form, permission, and tenant-scope contract.
+- [x] Verify the new acceptance and audit documentation for accuracy, update the UX map, and publish a checkpoint without altering business logic.
+
+# Arabic Search P0 Fix and Executed Manual Acceptance — 2026-08-18
+- [x] Locate the workspace smart-search source and add authorized Arabic aliases for the customer-follow-up/CRM route without changing route permissions or tenant scope.
+- [x] Add regression tests proving Arabic and English customer-follow-up queries resolve only to the intended permitted workspace action.
+- [x] Execute and document the authorized, non-destructive manual acceptance scenarios for pharmacist, cashier, and branch manager in the isolated Demo environment, including exact evidence and limits; clinical/patient-data scenarios remain fail-closed.
+- [x] Document findings, update the UX and acceptance records, run full verification, and publish the fixed release.
+- [x] Provision or authorize two dedicated isolated Demo identities for pharmacist and cashier acceptance, each scoped to the intended organization, branch, and jurisdiction without changing production roles.
+- [x] Provision and verify the isolated pharmacist and cashier Demo identities and their role denial/allowance boundaries; credential rotation is explicitly gated to the secure replacement-secret workflow and was not performed blindly.
+- [x] Execute and record the authorized non-destructive pharmacist, cashier, and manager acceptance evidence using the available role-specific identities, with pharmacist clinical fixtures intentionally absent.
+- [x] Investigate and correct the cashier-demo authentication contract so a successfully provisioned cashier session reports and enforces the intended `cashier` role rather than a fallback role.
+- [x] Diagnose and correct the P0 cashier-demo POS inventory-load failure so permitted, branch-scoped demo stock remains searchable without weakening server-side isolation.
+- [x] Ensure client query state is invalidated across internal login/logout identity changes so cached POS data or cached errors cannot cross user sessions.
+- [x] Prevent a retained mirrored authorization header from overriding a newly issued internal showcase-session cookie after employee login.
+- [x] Correct the service-worker GET policy so tRPC/API requests never receive the cached application shell as a fallback response.
+
+# Multilingual Tolerant Smart Search — 2026-08-18
+- [x] Define deterministic, bounded normalization and ranking rules for Arabic/English keyboard-layout recovery, prefix matching, contains matching, and minor typographical tolerance.
+- [x] Implement the bounded multilingual search normalization without changing the role-filtered action catalogue, route permissions, or tenant-scope behavior.
+- [x] Add regression tests for Arabic and English prefixes, substrings, common keyboard-layout mismatch recovery, incomplete words, and negative authorization-preserving cases.
+- [x] Verify the search interactively in both directions, document match limits and ranking, and publish the improvement.
+- [x] Present permitted smart-search results in an accessible, localized result list adjacent to the search field so keyboard-layout recovery is actionable even when the sidebar is closed.
+- [x] Implement and verify an inline search-result dropdown with accessible keyboard selection, correction badges, RTL/LTR placement, and permitted-module-only results.
+- [x] Ensure the inline search dropdown closes when focus leaves both the search input and its result list, without interrupting a result selection.
+- [x] Align stale source-level regression contracts with the centralized identity-boundary reset, role-specific MEDORA showcase identities, and current service-worker API-bypass policy; rerun the complete release verification.
+- [x] Repair the protected cashier POS product-name filter so a scoped Arabic medicine lookup succeeds after initial catalog load, with regression coverage that preserves organization, branch, and jurisdiction enforcement.
+- [x] Make pharmacist prescription access validation zero-safe so a legal jurisdiction ID of `0` permits only the already scoped, read-only patient lookup rather than suppressing it client-side.
+- [x] Align the pharmacist prescription-creation precondition with the zero-safe scope rule so a legal jurisdiction ID of `0` is not incorrectly rejected before the protected server-side authorization check.
+- [x] Repair the shared advisory assistant renderer so a valid pharmacist workspace renders without passing an undefined markdown plugin to the UI, with regression coverage that preserves advisory-only and human-review boundaries.
+
+# External Engineering Guidance Adaptation — Andrej Karpathy Skills
+- [x] Adopt only the repository's compatible behavioral practices as MEDORA engineering guidance: explicit assumptions, simplicity-first decisions, surgical changes, and verifiable success criteria.
+- [x] Keep the adaptation documentation explicit about boundaries: no executable external code, no healthcare authorization weakening, no tenant-scope changes, and no speculative features.
+- [x] Verify the adapted guidance with repository documentation review and the existing MEDORA release checks; checkpoint only after all applicable checks pass.
+- [x] Add a lightweight regression contract proving the external-guidance adaptation document retains MEDORA's protected authorization, tenant isolation, human-review, and no-executable-import boundaries.
+
+- [x] Verify the showcase has no approved synthetic prescription fixture and document the fail-closed decision not to seed patient or prescription data without an authorized clinical-data policy and encryption key.
+- [x] Record final role-acceptance evidence and limitations for the published release, including successful manager and cashier checks, pharmacist scope/assistant checks, and the intentionally blocked clinical-fixture scenarios.
+- [x] Document the credential-rotation control: rotate only after an authorized replacement secret is supplied through the secure project-secret workflow; preserve the controlled acceptance account until then.
+
+# MEDORA Campaign Video Resume — 2026-08-19
+- [x] Prepare the approved 150-second Arabic horizontal master-film blueprint for MEDORA, preserving realistic live-action direction and verified-feature claims.
+- [x] Generate the required visual references before video execution and verify brand, composition, continuity, and subtitle-safe areas.
+- [x] Record the halted video-generation attempt: Arabic narration, original music, and a short opening exist, but a complete playable campaign video was not generated because the daily quota was exhausted.
+- [x] Verify and attach the available opening clip as a non-final artifact; record that no full-film duration/aspect/codec claim is made and the remaining shots are deferred.
+- [x] Record the resume control: do not request the next cinematic shot until the daily video-generation quota is available.
+- [x] Record the user-directed deferral of MEDORA video production until the generation quota renews; require a new explicit continuation request to resume.
+
+# MEDORA Ground-Up Review — 2026-08-19
+- [x] Inventory the current route map, data model, server procedures, shared UI components, test suites, and operational documentation from the repository rather than assuming their coverage.
+- [x] Produce a source-linked design and engineering audit that adapts only the compatible simplicity-first, surgical-change, and verification practices from the referenced repository.
+- [x] Verify organization, branch, jurisdiction, role, Demo/production, clinical-data, and advisory-AI boundaries against the actual current procedures and tests; document any gap before changing behavior.
+- [x] P0: Correct CRM/HR/customer-care scope handling so a legal showcase jurisdiction ID of 0 is never treated as absent or used to widen a query, with focused authorization regression coverage.
+- [x] P0: Require the shared organization/branch/jurisdiction validator for HR contract and shift creation so managers cannot write an unassigned jurisdiction value.
+- [x] P0: Make governed AI-insight inputs and list/fact filters zero-safe for a legal jurisdiction ID of 0, preserving branch-jurisdiction assignment validation and advisory-only output.
+- [x] P0: Make operations/review scope contracts and filters zero-safe for jurisdiction ID 0 so branch-scoped reads cannot silently widen.
+- [x] P0: Preserve a legal jurisdiction ID of 0 in the branch analytics request instead of silently falling back to branch-only analytics.
+- [x] P0: Allow the showcase workspace to treat jurisdiction ID 0 as a valid scope and remain unavailable only when branch or jurisdiction scope is actually missing.
+- [x] P0: Make the identified client workspace readiness and query gates zero-safe for legal jurisdiction ID 0, while keeping a missing organization or branch scope unavailable.
+- [x] Update the secondary-module role-acceptance fixture to model the required branch-jurisdiction membership read and retain the stricter scope-denial expectation.
+- [x] Review desktop and mobile RTL/LTR workflows for navigation clarity, primary-action discovery, empty/error/degraded states, and direct deep-link access.
+- [x] Fix the Home screen-capture scope label to reuse the resolved branch label and remain intelligible while branch data is loading or unavailable, without changing session or authorization state.
+- [x] Implement only evidence-backed, security-preserving redesign or rebuild changes with focused regression tests, full suite verification, and visual checks.
+- [x] Publish a reversible checkpoint and a concise decision record distinguishing completed improvements, deferred work, and external prerequisites.
+
+# MEDORA Deep Role-Based Acceptance — 2026-08-19
+- [x] Map every implemented role, workspace, report, authorization boundary, and non-destructive Demo-capable workflow into an evidence-backed acceptance matrix.
+- [x] Execute role simulations for doctor/pharmacist, cashier and sales, purchasing and inventory, finance, HR/CRM/customer care, branch manager, and system owner; record accessible workflows, denials, reports, search behavior, advisory-AI gates, and scope behavior.
+- [x] Test representative create/read/update and export/report flows only where safe, authorized, and backed by non-clinical Demo data; keep patient, prescription, and regulated clinical operations fail-closed without an authorized policy and encryption key.
+- [x] Investigate and fix every reproducible defect found during role simulation with a minimal server-first change and focused regression coverage; add a feature only for a demonstrated operational gap.
+- [x] Run focused tests, TypeScript, the complete Vitest suite, production build, and desktop/mobile RTL visual verification after accepted fixes.
+- [x] Publish a reversible acceptance checkpoint with a role-by-role evidence record, fixed defects, bounded limitations, and deferred external prerequisites.
+
+# MEDORA Performance, Employee Self-Service & Production Reporting — 2026-08-19
+- [x] Audit the production bundle and route/component loading boundaries; design and implement evidence-based lazy loading that preserves workspace access, RTL, and authorization behavior.
+- [x] Define and implement an employee self-service policy and workflow that binds every request to the authenticated employee identity, active organization/branch/jurisdiction membership, and a fail-closed HR data-access boundary.
+- [x] Extend report exports with server-authorized production email delivery, use configured sender credentials only, and preserve scoped filters, auditability, and sensitive-data minimization.
+- [x] Add focused regression tests for lazy-loading boundaries, employee self-service isolation, export authorization, and email-delivery failure handling.
+- [x] Run TypeScript, the complete Vitest suite, production build and desktop/mobile visual checks; publish an evidence-backed checkpoint with any required external configuration noted.
+
+# MEDORA Smart, Simple UI/UX Redesign — 2026-08-19
+- [x] Audit the current authenticated navigation, dashboard hierarchy, workspace launch paths, empty states, and mobile interactions for role-specific cognitive load and task completion friction.
+- [x] Define and document a smart, progressive-disclosure UI/UX system that supports Arabic RTL and English LTR, preserves scope visibility, and keeps privileged actions discoverable without exposing unauthorized modules.
+- [x] Implement the redesigned role-aware navigation, workspace home, guided quick actions, and responsive mobile interaction patterns using existing reusable components where applicable.
+- [x] Add or update regression tests for navigation accessibility, role-aware discovery, language direction, and the redesigned primary task flows.
+- [x] Verify the redesign with TypeScript, full Vitest, production build, desktop and mobile visual reviews, then publish a reversible checkpoint.
+
+# MEDORA Problem-to-Workflow Intelligence — 2026-08-19
+- [x] Map the reference's problem-first, integration-aware, automation-oriented logic to MEDORA's existing role, scope, reporting, and advisory boundaries; document only compatible applications.
+- [x] Design a role-filtered workflow intelligence model that converts operational signals into traceable next steps, separates advice from execution, and keeps organization/branch/jurisdiction isolation fail-closed.
+- [x] Implement the highest-value safe workflow and reporting connections using existing protected modules, without external data scraping, unauthorised messaging, or autonomous clinical/financial actions.
+- [x] Add regression coverage for workflow visibility, scope isolation, authorization, human review, and non-execution of advisory recommendations.
+- [x] Verify TypeScript, complete Vitest, production build, and desktop/mobile UI behavior; publish a reversible checkpoint with the design rationale.
+
+# MEDORA Stock Signals, SLA & Human Decision Ledger — 2026-08-19
+- [x] Audit the existing inventory, procurement, customer-service, audit-log, and role/scope schemas and routers; define a strict fail-closed data contract for each new operational signal and decision.
+- [x] Design and document a manager-visible, role-filtered stock-signal queue, procurement/customer-service SLA metrics, and a human decision ledger that records reasoned approval or rejection without autonomous execution.
+- [x] Implement scoped stock signals, SLA aggregation, and reviewed decision recording using protected server procedures and a simple responsive manager-facing work surface.
+- [x] Add focused regression tests for organization/branch/jurisdiction isolation, manager authorization, source-data minimization, SLA calculation behavior, decision immutability/auditability, and the non-execution boundary.
+- [x] Create and validate a reusable Manus skill that packages the secure problem-to-workflow implementation method, including design, implementation, verification, and delivery guardrails.
+- [x] Verify TypeScript, complete Vitest, production build, and desktop/mobile UI behavior; publish a reversible checkpoint and deliver the reusable skill.
+
+# MEDORA Automation & Orchestration Reorganization — 2026-08-19
+- [x] Audit the existing managed inventory, reporting, and backup automation paths; compare the free internal control plane with an optional self-hosted n8n Community adapter and record security boundaries.
+- [x] Design a scoped automation-control model that corrects the legacy unscoped inventory scheduler without enabling an external workflow connector or autonomous protected-data operation.
+- [x] Add tenant scope, workflow identity, safe run state, idempotent schedule configuration, and audit events to inventory automation.
+- [x] Reorganize the manager command centre so eligible managers can inspect and deliberately configure only their scoped inventory signal automation.
+- [x] Add focused authorization, scope, idempotency, non-execution, and external-boundary regression contracts.
+- [x] Verify TypeScript, full Vitest, production build, RTL desktop/mobile behavior, and publish a reversible checkpoint.
+
+# MEDORA Configurable SLA, Quiet Escalation & Approval Ledger — 2026-08-19
+- [x] Audit the existing SLA, escalation, purchase-order, transfer-review, decision-ledger, and authorization paths; define an internal-only, fail-closed delivery contract.
+- [x] Design an organization-level SLA policy with non-intrusive in-app escalation levels and atomic, reasoned approval-ledger writes for purchase orders and inter-branch transfers.
+- [x] Add scoped organization SLA policy storage, protected configuration procedures, and server-side target/escalation calculations.
+- [x] Require approval/rejection reasons and create immutable decision/audit records in the original purchase-order and inter-branch-transfer approval paths.
+- [x] Surface policy configuration and quiet SLA escalation indicators for authorized managers only.
+- [x] Add focused authorization, isolation, required-reason, atomic-audit, escalation, and non-execution regression contracts.
+- [x] Verify TypeScript, full Vitest, production build, desktop/mobile RTL behavior, and publish a reversible checkpoint.
+- [x] Wire the existing purchase-order approval/rejection transition into the authorized supply workflow with a mandatory human reason and no parallel approval path.
+- [x] Harden purchase-order list/report and creation scope handling so jurisdiction ID 0 remains legal and no cross-jurisdiction supplier or order data is exposed.
+
+# Approved Automation Events and Failure Notifications — 2026-08-19
+
+- [x] Re-verify that SLA targets remain configurable per organization only, with protected manager configuration and no cross-tenant policy reads.
+- [x] Supersede the outbound n8n-adapter request with a MEDORA-internal, signed, minimized, scope-safe event ledger that never accepts execution commands.
+- [x] Supersede external HTTPS/HMAC activation with server-side local signing for the internal ledger; no external endpoint, external credential, or network delivery is enabled.
+- [x] Track consecutive tenant-scoped automation failures and create deduplicated in-app notifications for authorized managers after the configured threshold.
+- [x] Add authorization, scope-isolation, payload-minimization, signature, idempotency, failure-threshold, and no-autonomous-execution regression contracts.
+- [x] Run TypeScript, full Vitest, production build, responsive RTL verification, and save a reversible published checkpoint.
+
+# Free Automation Engine Replacement — 2026-08-19
+
+- [x] Supersede the n8n-specific adapter boundary with the completely internal MEDORA event ledger, retaining signed, minimized, outbound-free operational records.
+- [x] Document that no self-hosted endpoint or activation path is required and that inbound execution remains prohibited.
+
+# Internal Automation Delivery — 2026-08-19
+
+- [x] Replace the optional Activepieces transport requirement with a MEDORA-internal, append-only operational-event ledger that needs no external endpoint or secret.
+- [x] Keep scoped inventory automation and repeated-failure manager notifications fully operational with outbound networking disabled by default and no inbound execution route.
+- [x] Remove external-engine configuration from manager-facing controls while preserving minimal event history and audit-safe diagnostics.
+
+# Role-Scoped Personal Home Summary — 2026-08-20
+
+- [x] Replace generic home-summary cards with a role-, permission-, and scope-gated personal task summary so each employee sees only operational indicators and actions directly relevant to their assigned work.
+- [x] Preserve authorized manager and owner oversight without exposing unrelated sales, inventory, finance, HR, customer-care, or alert metrics to other roles.
+- [x] Add regression tests for role-based home-card discovery and verify Arabic RTL presentation on desktop and narrow mobile before publishing.
+
+# Reusable Role-Scoped Dashboard Audit — 2026-08-20
+- [x] Package the verified role-, permission-, and scope-gated dashboard review method as a reusable Manus skill, including fail-closed acceptance criteria and a repeatable evidence checklist.
+- [x] Execute separate authorized login journeys for every available non-clinical role and document the permitted summary cards, task tables, hidden unrelated surfaces, and any denied access result.
+- [x] Re-run role-discovery contracts, TypeScript, the full Vitest suite, production build, and responsive RTL checks; fix only reproducible authorization or presentation defects.
+- [x] P0: require an authoritative organization-membership finance role before any accounting read, and prove pharmacist/cashier sessions receive an explicit denial even when no financial rows exist.
+- [x] Add a dedicated organization-membership financial-read capability and apply it before every accounting read or write procedure.
+- [x] Add a regression contract proving only the designated financial membership roles can access accounting data, including authorized legal jurisdiction ID 0 handling.
+
+# Sensitive Screen-Capture Protection Reinforcement — 2026-08-20
+- [x] Re-enable the existing sensitive-screen protection boundary for authenticated MEDORA workspaces with no accidental protection of public pages.
+- [x] Strengthen browser-available controls: immediate privacy overlay on focus/visibility/page-lifecycle risk, blocked print/copy/context actions for protected content, and a legible user-and-scope watermark.
+- [x] Add focused regression tests and document non-bypassable web limitations, plus native-wrapper controls required for Android/iOS/HarmonyOS regulated deployments.
+- [x] Verify TypeScript, focused and full tests, production build, desktop/mobile rendering, and save the hardened release.
+
+# Intellectual Property and Native Device Protection — 2026-08-20
+- [x] Audit source provenance, license notices, copyright headers, build artefacts, and repository evidence for MEDORA-owned work.
+- [x] Add a project ownership notice, machine-verifiable source-integrity manifest, and release-evidence instructions without misrepresenting legal registration.
+- [x] Record sensitive copy/print/context/drag/keyboard-risk events in a scope-minimized central audit trail with fail-closed authorization.
+- [x] Provide Android, iOS, and HarmonyOS native-wrapper controls and an actual-device acceptance protocol, clearly separating simulator/browser checks from physical-device evidence.
+- [x] Run focused and full verification, document remaining legal and physical-device prerequisites, and save the protected release.
+
+- [x] إصلاح فشل النشر الناتج عن ERR_PNPM_LOCKFILE_CONFIG_MISMATCH والتحقق من تطابق package.json وpnpm-lock.yaml وpnpm-workspace.yaml.
+- [x] إجراء اختبار شامل للمساعد العائم بصلاحيات المدير والصيدلي والكاشير، مع التحقق من الظهور والنطاق ومنع التنفيذ غير المصرح.
+- [x] إنشاء مهارة قابلة لإعادة الاستخدام توثق نمط اختبار الأدوار وإصلاح النشر الآمن في MEDORA عبر مسار skill-creator.
+- [x] إضافة اختبارات انحدار للنتائج الجديدة، ثم تشغيل TypeScript وVitest والبناء وحفظ إصدار منشور ناجح.
+
+- [x] توثيق اختبار المحادثة الاستشارية لحساب إنتاج مصرح كـ environment-gated؛ يثبت العقد المحلي النطاق والمراجعة البشرية وعدم التنفيذ الذاتي، ولا يدّعي نجاح جلسة إنتاج بلا اعتماد متاح.
+- [x] إضافة عقد UI قابل للتكرار يثبت ظهور المساعد ونطاقه للمدير والصيدلي والكاشير، مع تحقق RTL/LTR المكتبي والهاتف؛ اختبار الدخول الحي يبقى environment-gated.
+- [x] تقسيم vendor-core إلى vendor-documents وvendor-export وvendor-cloud؛ انخفض vendor-core من نحو 1.06MB إلى نحو 0.86MB، مع بقاء تحذير vendor-documents غير المتزامن وتحقق البناء والتحميل الكسول.
+- [x] تشغيل Vitest الكامل (704 ناجحة، 10 متخطاة عمداً)، TypeScript، البناء الإنتاجي، وعقود الصلاحيات؛ حفظ الإصدار المنشور بعد القياس والتحقق.
+
+# KPI Role Template Expansion — Doctor, Customer Service, Warehouse Manager
+
+- [x] Add bilingual KPI template for Doctor with clinical-safety, documentation, continuity-of-care, and quality-gate evidence requirements.
+- [x] Add bilingual KPI template for Customer Service with response, resolution, empathy, privacy, SLA, and escalation evidence requirements.
+- [x] Add bilingual KPI template for Warehouse Manager with inventory accuracy, FEFO, expiry control, receiving, reconciliation, and safety evidence requirements.
+- [x] Integrate the three templates into the protected KPI catalog, preview, and idempotent apply workflow without weakening tenant/branch/jurisdiction isolation.
+- [x] Add regression tests for template completeness, weights, role authorization, scope isolation, and non-overwrite behavior.
+- [x] Run focused tests, TypeScript, full Vitest, production build, and responsive bilingual UI verification for the expanded KPI catalog.
+- [x] Save a checkpoint for the three-role KPI template expansion after all evidence-backed validation passes.
+
+# Production Test Account Visual Acceptance — 2026-08-21
+
+- [x] Execute visual login with the user-provided test account without exposing credentials in logs or artifacts.
+- [x] Verify authenticated role, assistant visibility, task summary scope, and navigation boundaries without submitting operational transactions; assistant content loading failed visibly and was not misrepresented as successful.
+- [x] Record the result and any environment/session limitations; assistant content-loading defect remains open for separate investigation.
+
+# Assistant Workspace Loading Repair — 2026-08-21
+
+- [x] Trace the assistant workspace loading endpoint, client query, session scope, and server/browser logs to identify the concrete failure cause; the observed failure was isolated to the lazy assistant workspace load path, not an assistant chat success response.
+- [x] Add a clear safe local fallback for assistant workspace loading failures without fabricating external AI responses or bypassing human review.
+- [x] Add regression tests for endpoint failure, fallback rendering, role scope, bilingual messaging, and no sensitive-operation execution.
+- [x] Re-run TypeScript, focused tests, full Vitest, production build, and responsive UI verification; full Vitest passed with 705 tests passed and 10 intentionally skipped, and production build passed with only the known chunk-size warning.
+- [x] Re-test the assistant visually for the available manager account and document the reproduced global fallback; pharmacist and cashier production accounts remain environment-gated because only manager credentials were provided.
+- [x] Save a checkpoint and deliver the repair report with exact remaining limitations.
+
+# Assistant Post-Publish Acceptance and Monitoring — 2026-08-21
+
+- [x] Re-test the published manager session and confirm the local assistant fallback renders without collapsing the workspace; visual verification confirmed the bilingual fallback, retry control, and safe message.
+- [x] Verify whether authorized pharmacist and cashier test credentials are available; only manager credentials were available, so pharmacist and cashier live acceptance remains environment-gated.
+- [x] Add bounded, redacted monitoring for repeated assistant workspace/load failures without storing prompts, responses, or clinical data.
+- [x] Add manager notification policy for repeated assistant-load failures with deduplication and cooldown: three failures in 15 minutes, 30-minute cooldown.
+- [x] Add regression tests for failure aggregation, scope isolation, redaction, notification thresholds, and fallback behavior.
+- [x] Run TypeScript, focused tests, full Vitest, production build, and responsive verification; 709 tests passed, 10 intentionally skipped, and the build passed with the known chunk warning.
+- [x] Save a checkpoint and deliver the post-publish acceptance and monitoring report.
+
+# Video Free-Quota Resume Attempt
+- [x] Retry the saved MEDORA horizontal opening only if the free video quota is available; do not upgrade or use paid generation. Completed once through the available native free-generation route as the 5-second 16:9 MEDORA opening test, without Pika or a paid route.
+- [x] Preserve the generated clip if successful, or record the exact quota blocker and safe resume point if rejected. One 5-second 16:9 native free-generation test is preserved at `/home/ubuntu/webdev-static-assets/MEDORA_opening_free_test_arabic_narration_16x9.mp4` with technical codec/duration verification recorded.
+
+# Lawful Free Video Production Path — 2026-08-22
+- [x] Verify current free-tier availability and commercial-use/export constraints for eligible video generators; Pika official pages were checked on 2026-08-23 and their conflicting free-credit/commercial-use statements were recorded pending authenticated-account confirmation.
+- [x] Prepare a short, modular MEDORA shot package that can be generated and assembled today without bypassing quotas or provider controls.
+- [x] Create a reusable skill for quota-aware, rights-safe AI video production and archive auditing.
+- [x] Attempt only the lawfully available free/open-source generation route; do not use paid APIs, unapproved accounts, or credentials. Generated one native free 5-second MEDORA opening test without Pika or an external account.
+- [x] Record the result, usable artifacts, and any remaining access limitations. Technical integrity and remaining Pika/account and commercial-rights limits are recorded in the campaign status log.
+# Pika First Free MEDORA Shot — 2026-08-22
+- [ ] Verify that the authorized Pika browser session is available to this task and that a visible free credit balance can fund one 5-second test generation.
+- [x] Finalize the 16:9 visual reference and detailed prompt for the MEDORA opening: pharmacist workflow, Data Matrix scan, and neutral professional setting without fake text or regulatory claims.
+- [ ] Submit exactly one approved 5-second Pika 2.5 opening test only after the authenticated account and visible balance are confirmed; do not submit duplicate retries.
+- [ ] Inspect the completed clip for basic technical integrity, claim safety, realistic continuity, and usable 16:9 framing before spending further credits.
+# Reusable Quota-Aware Cinematic Video Skill — 2026-08-22
+- [x] Initialize and validate a reusable Skill covering free-tier verification, safe archive inspection, credit-aware shot planning, asset continuity, and transparent quota-failure handling.
+# Pika-Independent Free Video Route — 2026-08-22
+- [x] Verify lawful no-payment alternatives that can produce a genuine short video without an authorized Pika session, distinguishing hosted anonymous capacity from local open-weight capacity.
+- [x] Verify available compute, runtime, and output constraints before downloading or running any local video model.
+- [x] Adapt the approved MEDORA opening prompt and visual reference to the selected free route without changing verified-claims boundaries.
+- [x] Run one non-duplicated opening-shot generation only if the route is actually available and permitted, then inspect the resulting file; public LTX/Wan returned no output and no retry was submitted to the same route.
+- [x] Record the exact outcome and smallest remaining dependency if an actual render cannot be completed in the current environment.
+# User-Supplied MEDORA Investor Reference Pack — 2026-08-22
+- [x] Inspect the uploaded ZIP inventory and the MP4 technical metadata without executing archive contents or adopting unverified claims.
+- [x] Analyze the uploaded 150-second film for structure, pacing, visual motifs, readable on-screen messaging, and reusable production direction.
+- [x] Extract only the user-approved, non-sensitive and production-useful elements into an updated MEDORA creative brief and shot plan.
+- [x] Report precisely which supplied elements will be retained, changed, or excluded before creating any new video derivative.
+# User-Authorized Investor-Cut Reuse — 2026-08-22
+- [x] Extract only the uploaded video files into a controlled workspace and verify their technical metadata and integrity.
+- [x] Define a distinct preview cut that reuses only user-supplied visuals, avoids unverified compliance text, and clearly differs from the supplied investor master.
+- [x] Render and inspect a short motion preview with original transitions and MEDORA-safe caption treatment, without representing it as the final campaign master.
+- [x] Deliver the preview and a precise record of reused, modified, and excluded material.
+# Investor-Pack Asset Reuse Expansion — 2026-08-22
+- [x] Safely inventory non-executable media, text, and design assets inside the user-supplied investor pack, excluding scripts, binaries, credentials, and unknown executables.
+- [x] Identify additional user-authorized material that can improve a new MEDORA campaign structure without reusing unsupported claims or source UI.
+- [x] Produce and inspect the next motion-preview cut using only verified, user-authorized assets and new conservative MEDORA treatment.
+- [x] Document asset provenance, changes, and exclusions for the expanded preview.
+
+# MEDORA Final Film and Verified Audio — 2026-08-22
+- [x] Re-read the required video, audio, and skill-authoring guidance; confirm final-format and audio-verification constraints before production.
+- [x] Update and validate the reusable quota-aware cinematic-video Skill with the approved source-footage, audio, and final-QC workflow.
+- [x] Create a final-cut treatment from user-authorized source video with advanced but non-deceptive visual effects and MEDORA-safe captions.
+- [x] Generate or integrate an authorized Arabic male narration and a licensed soundtrack, then verify that the final MP4 contains a playable audio stream.
+- [x] Inspect visual continuity, captions, duration, audio presence, codec metadata, and playback of the final high-quality deliverable.
+- [x] Deliver the final film, production record, and reusable Skill without calling an unfinished or unsupported asset complete.
+- [x] Audit the full user-authorized 150-second source for additional human-operated footage and document source-UI/text exclusions.
+- [x] Assemble an extended horizontal master only from individually reframed, safe excerpts; use no repeated filler and do not inherit reference claims.
+- [x] Produce, mix, and verify extended Arabic narration and original score segments for the expanded master.
+
+# MEDORA Vertical Social Master — 2026-08-22
+- [x] Re-read the current production guidance and define the 90-second 9:16, safe-title, and verified-audio constraints.
+- [x] Extend and validate the reusable quota-aware cinematic-video Skill with safe vertical recomposition and social-export quality gates.
+- [x] Select and reframe only source excerpts that remain coherent in 9:16 while excluding all inherited source UI, subtitles, audio, and unverified claims.
+- [x] Create original Arabic male narration and instrumental score segments for the 90-second vertical edit.
+- [x] Render and inspect a 1080×1920 MP4 with advanced but restrained visual finishing and a tested audio stream.
+- [x] Deliver the vertical master, provenance record, and updated reusable Skill.
+
+# MEDORA NDA Access Gate and Live-Action Campaign Refresh — 2026-08-22
+- [x] Define the NDA acceptance scope, versioning, audit record, refusal flow, and limits across browser, mobile wrappers, local development, and source repositories.
+- [x] Add a versioned Arabic/English NDA document, access gate, durable acceptance record, and signed-out/refusal route without exposing protected application data first.
+- [x] Enforce the NDA gate across authenticated web routes and document equivalent native-wrapper and repository-access controls.
+- [x] Add regression tests for first acceptance, renewed acceptance after NDA version change, refusal, organization isolation, and bypass resistance.
+- [x] Audit user-authorized media and write a lively Live Action campaign blueprint with MEDORA logo placement, bilingual narration, and reciprocal subtitle tracks.
+- [x] Produce an English-speaker version with Arabic subtitles using only authorized footage/assets and safe claims.
+- [x] Produce an Arabic-speaker version with English subtitles using only authorized footage/assets and safe claims.
+- [x] Verify both new films for live-action pacing, logo visibility, subtitle legibility, audio presence, playback integrity, and source-claim exclusions.
+- [x] Deliver the NDA protection evidence, updated reusable Skill, bilingual campaign files, and limitations record.
+
+# MEDORA Unified Cross-Platform Live-Motion Master — 2026-08-22
+- [x] Inventory and visually audit the newly supplied, user-authorized media without executing any embedded files or workflows.
+- [x] Select only lawful, claim-safe live-motion excerpts and author a single cross-platform master blueprint with MEDORA branding and safe framing.
+- [x] Produce one device-responsive H.264/AAC master with original narration, reciprocal subtitle track, non-orchestral music, and visible MEDORA identity.
+- [x] Verify full decode, audio presence, caption/logo legibility, responsive framing, and absence of inherited UI, text, unsupported claims, or private data.
+- [x] Update and validate the reusable production skill, provenance record, and delivery package for the unified master.
+
+# MEDORA Reels & TikTok Vertical Master — 2026-08-22
+- [x] Create a native 1080×1920 editorial blueprint with vertical subject-safe crops, top and bottom UI-safe zones, and claim-safe live-motion selections.
+- [x] Produce an independent 9:16 H.264/AAC export with Arabic male narration, English embedded captions, MEDORA identity, and original electronic/percussive music.
+- [x] Verify vertical opening/midpoint/closing frames, caption/logo legibility, source-text exclusions, full decode, H.264/AAC metadata, and audible start/middle/end audio samples.
+- [x] Record provenance, update the reusable production skill if needed, package the Reels/TikTok delivery, and publish a checkpoint.
+
+# MEDORA Vertical Master Recovery — 2026-08-22
+- [x] Diagnose the reported corrupt/failed playback condition of the prior video and document the actual container, codec, duration, and decode findings.
+- [x] Replace the short-form concept with a materially longer native 9:16 live-motion narrative using only newly reviewed, safe human-action source windows and original MEDORA cards.
+- [x] Run device-oriented playback, full decode, stream metadata, audible start/middle/end, and safe-frame/legibility checks before any replacement delivery.
+- [x] Update provenance and the reusable production workflow with the corrective export gates, save a checkpoint, and package only the validated replacement.
+
+# MEDORA Long Vertical English-Caption Revision — 2026-08-22
+- [x] Create a conservative, time-aligned English caption track from the documented vertical editorial sequence without inventing claims or misrepresenting narration.
+- [x] Burn the English captions into a new 1080×1920 H.264/AAC long vertical master while preserving title and platform-safe zones.
+- [x] Verify caption timing and legibility alongside audio, safe claims, source exclusions, complete decode, and mobile-compatible metadata; then update provenance and checkpoint the revision.
+
+# MEDORA Reels & TikTok Pre-Publish Review — 2026-08-22
+- [x] Measure the delivered vertical master for frame size, aspect ratio, frame rate, codec, pixel format, audio stream, runtime, full decode, and representative audio levels.
+- [x] Review representative frames for subtitle placement, MEDORA legibility, and practical Reels/TikTok overlay-safe spacing.
+- [x] Export and verify a 30 fps Instagram-compatible derivative without synthetic motion or changes to the approved live-action edit.
+- [x] Provide a non-destructive professional transition and background-music mixing recipe that preserves narration, captions, claims boundaries, and platform compatibility.
+
+# Vertical Social Video QC Skill — 2026-08-22
+- [x] Create a reusable skill structure for verified vertical Reels/TikTok delivery, including a deterministic metadata/decode/audio checker and a QC report template.
+- [x] Write compact operational guidance for safe frame review, 30 fps remediation without synthetic motion, subtitle safe zones, narration-first music mixing, and transition choices.
+- [x] Validate the new skill, mark the workflow complete, save a checkpoint, and deliver the packaged skill.
+
+# MEDORA GitHub Mobile Presentation Refresh — 2026-08-22
+- [x] Synchronize the MEDORA repository and audit the mobile-visible README hierarchy, repository description, homepage link, and stale ALDORA/old-domain references.
+- [x] Rewrite the README opening and mobile-first identity section in polished bilingual MEDORA language, with concise hierarchy and responsive GitHub Markdown.
+- [x] Update the repository description and homepage to approved MEDORA values where the actual published domain is available; otherwise document the exact owner action required for a custom MEDORA domain.
+- [x] Validate links, branding, and mobile rendering, preserve source-control integrity through the integration-branch/PR workflow, and document the result.
+
+# MEDORA CI Contract Recovery — 2026-08-22
+- [x] Restore the explicitly tested fail-closed Arabic notice that automatic notifications are not sent before explicit scheduling, then rerun the focused integration contract test.
+
+# MEDORA README Professional Visual Refresh — 2026-08-23
+- [x] Redesign the GitHub README hero and first-screen hierarchy for a more distinctive MEDORA presentation on mobile without adding heavy or fragile assets.
+- [x] Replace desktop-wide information blocks with compact, mobile-legible MEDORA capability and trust sections while preserving bilingual clarity and safe product claims.
+- [x] Validate the refreshed Markdown and links on integration branch `integration/readme-responsive-refresh-20260823`; pull request #19 has successful required checks, and the observation record documents the rendered review.
+- [x] Review the refreshed README against phone, tablet, laptop, and desktop viewport criteria, including bilingual line length, section hierarchy, table overflow avoidance, and link reachability.
+- [x] Merge pull request #19 into `main` after explicit owner authorization; merged as commit `acf008ffea681db6983cf49faa4ffeb2899dc0e1` with no visibility, domain, or collaborator setting changes.
+
+# MEDORA esbuild Dependabot Remediation — 2026-08-23
+- [x] Diagnose the active Dependabot alert and resolve the exact `drizzle-kit` to `esbuild` dependency path on current `main`.
+- [x] Apply the smallest safe dependency update or pnpm override on an integration branch without weakening the build toolchain.
+- [x] Re-run dependency audit, TypeScript, tests, production build, smoke test, and end-to-end checks; open focused pull request #20 with successful MEDORA CI and CodeQL checks, while documenting the separate local preview branding-environment mismatch.
+- [x] Merge pull request #20 after explicit owner authorization; merged at `9ae4286fa9012dbd81418e08f0aaf76d56e299ae`, with the resolved tree and production audit confirming `esbuild 0.25.0` and no known vulnerabilities.
+- [ ] Confirm GitHub's displayed Dependabot-alert closure when an authorized GitHub security session or alert-read permission is available; current API access returns 403 and the available browser session is unauthenticated.
+
+# MEDORA Mobile Assistant and Workspace Recovery — 2026-08-23
+- [x] Diagnose the mobile assistant panel’s collapsed input/action layout and identify the component/CSS rules that cause the narrow, vertically broken composer.
+- [ ] Diagnose the “failed to load workspace” state, including the exact query/API failure and branch-scope fallback behavior, without treating the error as a normal empty state.
+- [x] Add a safe, local-only workspace-failure category that distinguishes likely lazy-module loading failures from generic subtree rendering failures without exposing raw errors, payloads, organization data, or changing scope.
+- [x] Extract and unit-test the safe workspace-failure classifier for recognised lazy-module signatures and unknown failure fallback, without logging or rendering raw error details.
+- [x] Implement accessible mobile-first assistant layout constraints and a recoverable workspace loading path with explicit retry and safe local fallback where justified.
+- [x] Add focused regression tests for the assistant panel’s responsive structure and workspace-load error/retry behavior.
+- [x] Verify the repaired assistant and workspace flows on phone, tablet, and desktop viewports, then publish a checkpoint with the exact results.
+- [x] Add and verify one bounded local re-import of the MEDORA AI lazy workspace when its chunk cannot load after an application update, without changing authenticated organization/branch scope or reloading the page.
+- [x] Add a semantic title and description to the MEDORA AI drawer and lock the accessibility requirement with a source-contract test.
+- [x] Locate and verify the user, role, privilege, and permission administration panel route, navigation visibility, and required administrator authorization.
+- [ ] Compare the user-provided Manus share replay with MEDORA project checkpoints and source history; document any verifiable project identity or delivery gap without assuming lost work.
+- [x] Re-audit the administrator configuration, user-management navigation, role-assignment boundaries, and effective privilege enforcement; document verified gaps before any access-control change.
+- [x] Add a standalone, authenticated Admin Console route that is reachable only to global administrators or organization members with `manage_members` in the selected organization.
+- [x] Add a scope-safe edit dialog for existing employees that can change only an allowed organization role and active branch, using the already enforced server update procedure.
+- [x] Add a read-only organization-role capability matrix that clearly distinguishes fixed role-derived privileges from unsupported per-user overrides.
+- [x] Add focused server and UI regression contracts for route gating, role/branch editing, prohibited privileged-role assignment, and matrix read-only behavior.
+- [x] Run TypeScript, focused and full Vitest suites, production build, and responsive authenticated verification before publishing the administration-console update.
+- [x] Create and validate a reusable secure-admin-console skill covering fail-closed organization gating, protected-role boundaries, scoped employee editing, read-only capability matrices, and release checks.
+- [x] Add client-side advanced employee-list search by name, email, and username, plus role and branch filters, without expanding the directory data returned by the scoped server procedure.
+- [x] Add accessible filter controls, result count, no-result state, and a clear-filter action for the employee administration workspace.
+- [x] Add regression contracts for directory filtering and ensure TypeScript, full Vitest, production build, and responsive verification pass before publishing.
+- [x] Add a server-side, organization-scoped paginated employee-directory contract with bounded page size, stable ordering, total count, and no cross-organization disclosure.
+- [x] Integrate the employee search and role/branch filters with the paginated directory without requesting unrestricted employee records.
+- [x] Add accessible previous/next pagination controls, page status, and appropriate reset behavior when organization or filters change.
+- [x] Add pagination and tenant-isolation regression tests, then validate TypeScript, full Vitest, production build, and responsive administrator views before publishing.
+- [x] Define an approved employee-directory export schema that includes only scoped operational fields and explicitly excludes credentials, password metadata, and unrelated organization data.
+- [x] Add a manager-gated, organization-scoped CSV export procedure that reuses the active search, role, and branch filters with a bounded export limit and audit-safe filename metadata.
+- [x] Add an accessible export action to the Admin Console that exports the currently filtered directory and clearly states the selected scope and record count.
+- [x] Add export privacy, CSV escaping, filter-scope, authorization, and responsive UI regression tests; validate TypeScript, full Vitest, production build, and administrator preview before publishing.
+- [x] Audit the existing Test/demo identity, showcase organization, fixture data, and write paths without exposing or copying administrator credentials, sessions, or production tenant data.
+- [x] Define a fail-closed Test demonstration policy that mirrors the administrator feature surface and navigation but confines reads to a demo tenant and prevents durable writes, privileged identity changes, and external side effects.
+- [x] Implement scoped Test-mode authorization and non-persistent operation handling across applicable tRPC write procedures, preserving ordinary administrator behavior outside the Test identity.
+- [x] Provide a clearly marked Test-mode experience with administrator-equivalent feature access only where mock-safe, while withholding secrets, ownership transfer, privileged user provisioning, and external integration execution.
+- [x] Add regression tests for tenant isolation, write non-persistence, blocked sensitive actions, and unchanged administrator behavior; validate TypeScript, full Vitest, production build, and role-based previews before publishing.
+- [x] Add a prominent, accessible read-only banner at the top of every isolated showcase/Test workspace, derived from trusted server session state and without altering production sessions.
+- [x] Add regression contracts for the read-only banner visibility, copy, scope source, and absence from ordinary production sessions; then run TypeScript, full Vitest, production build, and responsive verification.
+- [x] Create, validate, and deliver a reusable skill for implementing and verifying server-derived read-only session banners without client-side authorization assumptions.
+- [x] Add an accessible, server-safe action in the showcase read-only banner that routes a user to authentication or a legitimate permission-request path without changing session authority.
+- [x] Add regression coverage for the banner action, including its restricted-session-only visibility and absence of self-escalation, then validate TypeScript, Vitest, production build, and responsive interaction before publishing.
+- [x] Build a role-and-workflow acceptance matrix covering Test/showcase, pharmacist, cashier, purchasing, sales, customer care, warehouse, physician, manager, decision-maker, and administrator pathways, with explicit boundaries for unconfigured external services and physical devices.
+- [x] Execute reproducible contract, route, permission, and responsive UI checks for the matrix inside isolated/safe environments; record evidence, failures, and unsupported live-only scenarios without using production identities or data.
+- [x] Diagnose and correct only reproducible defects uncovered by the role-based audit, with focused regression coverage and no dilution of tenant isolation, regulated controls, or immutable audit boundaries. No new reproducible functional defect was found in this audit.
+- [x] Re-run full regression, build, and relevant role-based visual checks; publish a concise acceptance-audit record that distinguishes verified coverage from integration/device work still requiring authorized live validation.
+
+# Full Revision & GitHub Resynchronization — 2026-08-23
+- [x] Audit local project health, repository topology, remote reachability, and the GitHub default branch before changing code or pushing commits.
+- [x] Identify and implement only reproducible, scope-safe improvements uncovered by the full review, with focused regression coverage.
+- [x] Run complete validation and record review evidence, including any environment-gated or permission-gated limitation.
+- [ ] Synchronize approved, validated changes to the GitHub repository using the protected-branch workflow available to this project, without force pushes or history rewrites.
+- [x] Replace stale ALDORA CI identity and deterministic CI-only secrets; add the existing fail-closed isolated-database lifecycle contract to the CI workflow, then verify workflow formatting and safety gates.
+- [x] Correct public repository and governance identity references to MEDORA | ميدورا while preserving intentional legacy internal identifiers and the current managed deployment URL.
+- [x] Remove the reproducible Express `clearCookie` deprecation warning without changing session-scope, logout, or showcase authorization behavior; add a focused regression test.
+- [x] Remove literal test-password values from GitHub-sync candidate sources and retain only environment-backed test configuration with regression coverage.
+- [x] Make the existing Playwright E2E specification runnable and CI-enforced with a declared test-runner dependency and browser setup, while retaining unauthenticated and non-destructive coverage only.

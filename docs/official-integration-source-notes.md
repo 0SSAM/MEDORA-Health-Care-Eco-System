@@ -1,6 +1,6 @@
 # Official Integration Source Notes
 
-**Audit date:** 14 August 2026. These notes record source discovery only; they do not constitute legal advice, regulatory approval, certification, or proof that MEDORA is authorized to connect.
+**Audit date:** 14 August 2026. These notes record source discovery only; they do not constitute legal advice, regulatory approval, certification, or proof that ALDO is authorized to connect.
 
 | Jurisdiction / domain | Official source finding | Engineering implication |
 |---|---|---|
@@ -11,7 +11,7 @@
 
 ## Source interpretation
 
-The sources confirm that official portals and technical exchange surfaces exist, but they do not provide MEDORA with credentials, facility registration, contractual authority, or a universal API. The project therefore keeps government and payer connectors disabled and exposes only policy boundaries until the responsible organization supplies the required approvals and secrets.
+The sources confirm that official portals and technical exchange surfaces exist, but they do not provide ALDO with credentials, facility registration, contractual authority, or a universal API. The project therefore keeps government and payer connectors disabled and exposes only policy boundaries until the responsible organization supplies the required approvals and secrets.
 
 ## References
 

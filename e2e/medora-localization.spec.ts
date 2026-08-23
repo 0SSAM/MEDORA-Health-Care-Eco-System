@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-test.describe("MEDORA Arabic and English experience", () => {
+test.describe("MEDORA public Arabic and English experience", () => {
   test.beforeEach(async ({ page }) => {
     await page.goto("/");
     await page.evaluate(() => localStorage.clear());
@@ -14,7 +14,7 @@ test.describe("MEDORA Arabic and English experience", () => {
     await expect(html).toHaveAttribute("lang", "ar");
     await expect(html).toHaveAttribute("dir", "rtl");
     await expect(main).toHaveAttribute("dir", "rtl");
-    await expect(page.getByText("ميدورا | منظومة الرعاية الصحية المتكاملة").first()).toBeVisible();
+    await expect(page.getByRole("link", { name: "MEDORA | منظومة الرعاية الصحية المتكاملة" })).toBeVisible();
     await expect(page.getByRole("heading", { name: "مساحة تشغيل آمنة وموحّدة لدورة الرعاية الصحية." })).toBeVisible();
 
     await page.getByRole("button", { name: "تغيير اللغة إلى English" }).click();
@@ -23,7 +23,7 @@ test.describe("MEDORA Arabic and English experience", () => {
     await expect(html).toHaveAttribute("dir", "ltr");
     await expect(main).toHaveAttribute("dir", "ltr");
     await expect(page.getByRole("heading", { name: "One secure operating space for the healthcare journey." })).toBeVisible();
-    await expect(page.getByText("MEDORA | INTEGRATED HEALTH SYSTEM").first()).toBeVisible();
+    await expect(page.getByRole("link", { name: "MEDORA | Health Care Eco System" })).toBeVisible();
     await expect(page.getByRole("button", { name: "تغيير اللغة إلى العربية" })).toBeVisible();
   });
 
@@ -39,7 +39,7 @@ test.describe("MEDORA Arabic and English experience", () => {
     await expect(page.getByRole("heading", { name: "One secure operating space for the healthcare journey." })).toBeVisible();
   });
 
-  test("keeps RTL layout geometry stable for the Arabic surface", async ({ page }) => {
+  test("keeps RTL geometry stable for the Arabic landing surface", async ({ page }) => {
     const main = page.locator("main");
     const header = page.locator("header");
     const languageButton = page.getByRole("button", { name: "تغيير اللغة إلى English" });

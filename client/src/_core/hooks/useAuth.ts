@@ -1,11 +1,7 @@
-// MEDORA | ميدورا — Integrated Health Care System
-// Copyright (c) 2026 Hossam Naeim Osman | حسام نعيم عثمان. All rights reserved.
-// Proprietary and confidential. Unauthorized copying, distribution, or use of this
-// software, or of any portion of it, is strictly prohibited.
-// Source: https://github.com/0SSAM/MEDORA-Health-Care-Eco-System
 import { startLogin } from "@/const";
 import { trpc } from "@/lib/trpc";
-import { clearSessionAuthHeaderCache } from "@/lib/sessionAuth";
+import { resetIdentityBoundClientState } from "@/lib/identitySessionBoundary";
+import { useQueryClient } from "@tanstack/react-query";
 import { TRPCClientError } from "@trpc/client";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
@@ -23,6 +19,7 @@ export function useAuth(options?: UseAuthOptions) {
   // desync it from an in-flight login's `state`.
   const { redirectOnUnauthenticated = false, redirectPath } = options ?? {};
   const utils = trpc.useUtils();
+  const queryClient = useQueryClient();
 
   const meQuery = trpc.auth.me.useQuery(undefined, {
     retry: false,
@@ -81,18 +78,23 @@ export function useAuth(options?: UseAuthOptions) {
       try {
         sessionStorage.removeItem("manus-cookie");
       } catch {}
-      clearSessionAuthHeaderCache();
+      resetIdentityBoundClientState(queryClient);
       utils.auth.me.setData(undefined, null);
-      await utils.auth.me.invalidate();
     }
-  }, [internalLogoutMutation, logoutMutation, utils]);
+  }, [internalLogoutMutation, logoutMutation, queryClient, utils]);
 
-  const state = useMemo(() => ({
+  const state = useMemo(() => {
+    localStorage.setItem(
+      "manus-runtime-user-info",
+      JSON.stringify(meQuery.data)
+    );
+    return {
       user: meQuery.data ?? null,
       loading: (meQuery.isLoading && !authCheckTimedOut) || internalLogoutMutation.isPending || logoutMutation.isPending,
       error: meQuery.error ?? logoutMutation.error ?? null,
       isAuthenticated: Boolean(meQuery.data),
-  }), [
+    };
+  }, [
     meQuery.data,
     meQuery.error,
     meQuery.isLoading,

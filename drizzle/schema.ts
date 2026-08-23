@@ -33,6 +33,20 @@ export const users = mysqlTable("users", {
   lastSignedIn: timestamp("lastSignedIn").defaultNow().notNull(),
 });
 
+export const ndaAcceptances = mysqlTable("nda_acceptances", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  documentVersion: varchar("documentVersion", { length: 32 }).notNull(),
+  documentHash: varchar("documentHash", { length: 64 }).notNull(),
+  locale: mysqlEnum("locale", ["ar", "en"]).notNull(),
+  declaredSurface: mysqlEnum("declaredSurface", ["web", "mobile_webview", "desktop_wrapper", "unknown"]).default("unknown").notNull(),
+  acceptanceMethod: varchar("acceptanceMethod", { length: 64 }).default("explicit_checkbox").notNull(),
+  acceptedAt: timestamp("acceptedAt").defaultNow().notNull(),
+}, table => ({
+  userDocumentIdx: uniqueIndex("nda_acceptances_user_document_idx").on(table.userId, table.documentVersion),
+  userAcceptedIdx: index("nda_acceptances_user_accepted_idx").on(table.userId, table.acceptedAt),
+}));
+
 export const branches = mysqlTable("branches", {
   id: int("id").autoincrement().primaryKey(),
   organizationId: int("organizationId").notNull(),
@@ -125,6 +139,19 @@ export const saleItems = mysqlTable("sale_items", {
   unitPrice: decimal("unitPrice", { precision: 14, scale: 2 }).notNull(),
 });
 
+export const heldInvoices = mysqlTable("held_invoices", {
+  id: int("id").autoincrement().primaryKey(),
+  organizationId: int("organizationId").notNull(),
+  branchId: int("branchId").notNull(),
+  jurisdictionId: int("jurisdictionId").notNull(),
+  cashierId: int("cashierId").notNull(),
+  invoiceNumber: varchar("invoiceNumber", { length: 80 }).notNull(),
+  paymentMethod: mysqlEnum("paymentMethod", ["cash", "meeza", "instapay", "insurance"]).notNull(),
+  payloadJson: text("payloadJson").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+}, table => ({ scopeIdx: index("held_invoices_scope_idx").on(table.organizationId, table.branchId, table.jurisdictionId, table.createdAt), cashierIdx: index("held_invoices_cashier_idx").on(table.cashierId, table.createdAt) }));
+
 export const salesReturns = mysqlTable("sales_returns", {
   id: int("id").autoincrement().primaryKey(),
   organizationId: int("organizationId").notNull(),
@@ -193,22 +220,137 @@ export const auditLogs = mysqlTable("audit_logs", {
   userId: int("userId"),
   organizationId: int("organizationId"),
   branchId: int("branchId"),
+  jurisdictionId: int("jurisdictionId"),
   action: varchar("action", { length: 80 }).notNull(),
   entityType: varchar("entityType", { length: 80 }).notNull(),
   entityId: varchar("entityId", { length: 80 }),
   previousHash: varchar("previousHash", { length: 128 }),
   recordHash: varchar("recordHash", { length: 128 }).notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
-}, table => ({ auditTimeIdx: index("audit_logs_time_idx").on(table.createdAt) }));
+}, table => ({
+  auditTimeIdx: index("audit_logs_time_idx").on(table.createdAt),
+  scopeTimeIdx: index("audit_logs_scope_time_idx").on(table.organizationId, table.branchId, table.jurisdictionId, table.createdAt),
+}));
+
+/** Immutable human-review outcomes. Recording a decision never changes the source entity state. */
+export const decisionLogs = mysqlTable("decision_logs", {
+  id: int("id").autoincrement().primaryKey(),
+  organizationId: int("organizationId").notNull(),
+  branchId: int("branchId").notNull(),
+  jurisdictionId: int("jurisdictionId").notNull(),
+  entityType: varchar("entityType", { length: 80 }).notNull(),
+  entityId: int("entityId").notNull(),
+  decision: mysqlEnum("decision", ["approved", "rejected", "deferred"]).notNull(),
+  reason: varchar("reason", { length: 1000 }).notNull(),
+  decidedByUserId: int("decidedByUserId").notNull(),
+  decidedAt: timestamp("decidedAt").defaultNow().notNull(),
+}, table => ({
+  scopeTimeIdx: index("decision_logs_scope_time_idx").on(table.organizationId, table.branchId, table.jurisdictionId, table.decidedAt),
+  entityScopeIdx: index("decision_logs_entity_scope_idx").on(table.organizationId, table.branchId, table.jurisdictionId, table.entityType, table.entityId),
+}));
+
+/** Organization-owned operating targets. These settings affect read-only SLA indicators, never source workflow execution. */
+export const organizationSlaPolicies = mysqlTable("organization_sla_policies", {
+  id: int("id").autoincrement().primaryKey(),
+  organizationId: int("organizationId").notNull(),
+  procurementTargetHours: int("procurementTargetHours").notNull().default(48),
+  customerCareTargetHours: int("customerCareTargetHours").notNull().default(24),
+  escalationGraceHours: int("escalationGraceHours").notNull().default(24),
+  escalationEnabled: int("escalationEnabled").notNull().default(1),
+  updatedByUserId: int("updatedByUserId").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+}, table => ({
+  organizationIdx: uniqueIndex("organization_sla_policies_organization_idx").on(table.organizationId),
+}));
 
 export const scheduledJobs = mysqlTable("scheduled_jobs", {
   id: int("id").autoincrement().primaryKey(),
   name: varchar("name", { length: 120 }).notNull(),
+  workflowKey: varchar("workflowKey", { length: 80 }).notNull().default("legacy"),
+  organizationId: int("organizationId"),
+  branchId: int("branchId"),
+  jurisdictionId: int("jurisdictionId"),
   scheduleCronTaskUid: varchar("schedule_cron_task_uid", { length: 65 }),
   cronExpression: varchar("cronExpression", { length: 40 }).notNull(),
   active: int("active").default(1).notNull(),
   lastRunAt: timestamp("lastRunAt"),
-}, table => ({ taskUidIdx: uniqueIndex("scheduled_jobs_task_uid_idx").on(table.scheduleCronTaskUid) }));
+  lastRunStatus: mysqlEnum("lastRunStatus", ["never", "succeeded", "failed", "skipped"]).default("never").notNull(),
+  lastRunEvaluatedCount: int("lastRunEvaluatedCount").default(0).notNull(),
+  lastRunQueuedCount: int("lastRunQueuedCount").default(0).notNull(),
+  lastErrorCode: varchar("lastErrorCode", { length: 80 }),
+  outboundEventsEnabled: int("outboundEventsEnabled").default(0).notNull(),
+  automationFailureNotificationThreshold: int("automationFailureNotificationThreshold").default(3).notNull(),
+  consecutiveFailureCount: int("consecutiveFailureCount").default(0).notNull(),
+  lastFailureNotificationCount: int("lastFailureNotificationCount").default(0).notNull(),
+  lastOutboundEventAt: timestamp("lastOutboundEventAt"),
+  lastOutboundDeliveryStatus: mysqlEnum("lastOutboundDeliveryStatus", ["never", "succeeded", "failed", "disabled"]).default("never").notNull(),
+  lastInternalEventAt: timestamp("lastInternalEventAt"),
+  lastInternalEventStatus: mysqlEnum("lastInternalEventStatus", ["never", "recorded", "failed"]).default("never").notNull(),
+  createdByUserId: int("createdByUserId"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+}, table => ({
+  taskUidIdx: uniqueIndex("scheduled_jobs_task_uid_idx").on(table.scheduleCronTaskUid),
+  scopeWorkflowIdx: uniqueIndex("scheduled_jobs_scope_workflow_idx").on(table.organizationId, table.branchId, table.jurisdictionId, table.workflowKey),
+  scopeStatusIdx: index("scheduled_jobs_scope_status_idx").on(table.organizationId, table.branchId, table.jurisdictionId, table.active),
+}));
+
+export const automationOutboundEvents = mysqlTable("automation_outbound_events", {
+  id: int("id").autoincrement().primaryKey(),
+  scheduledJobId: int("scheduledJobId").notNull(),
+  organizationId: int("organizationId").notNull(),
+  branchId: int("branchId").notNull(),
+  jurisdictionId: int("jurisdictionId").notNull(),
+  eventId: varchar("eventId", { length: 180 }).notNull(),
+  eventType: varchar("eventType", { length: 100 }).notNull(),
+  status: mysqlEnum("status", ["succeeded", "failed", "disabled"]).notNull(),
+  attempts: int("attempts").default(1).notNull(),
+  occurredAt: timestamp("occurredAt").notNull(),
+  deliveredAt: timestamp("deliveredAt"),
+  recordedAt: timestamp("recordedAt"),
+  safeErrorCode: varchar("safeErrorCode", { length: 80 }),
+  auditPayloadJson: text("auditPayloadJson"),
+  signatureHex: varchar("signatureHex", { length: 64 }),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+}, table => ({
+  eventIdx: uniqueIndex("automation_outbound_events_event_idx").on(table.eventId),
+  scopeStatusIdx: index("automation_outbound_events_scope_status_idx").on(table.organizationId, table.branchId, table.jurisdictionId, table.status, table.createdAt),
+}));
+
+export const backupPolicies = mysqlTable("backup_policies", {
+  id: int("id").autoincrement().primaryKey(),
+  organizationId: int("organizationId").notNull(),
+  branchId: int("branchId"),
+  name: varchar("name", { length: 160 }).notNull(),
+  destinationType: mysqlEnum("destinationType", ["online", "offline_export"]).notNull(),
+  storagePrefix: varchar("storagePrefix", { length: 320 }),
+  cronExpression: varchar("cronExpression", { length: 40 }).notNull(),
+  retentionDays: int("retentionDays").default(30).notNull(),
+  encryptionMode: mysqlEnum("encryptionMode", ["platform_managed", "customer_key_required"]).default("platform_managed").notNull(),
+  active: int("active").default(1).notNull(),
+  scheduleCronTaskUid: varchar("scheduleCronTaskUid", { length: 65 }),
+  createdByUserId: int("createdByUserId").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+}, table => ({ scopeIdx: index("backup_policies_scope_idx").on(table.organizationId, table.branchId, table.active), taskUidIdx: uniqueIndex("backup_policies_task_uid_idx").on(table.scheduleCronTaskUid) }));
+
+export const backupRuns = mysqlTable("backup_runs", {
+  id: int("id").autoincrement().primaryKey(),
+  policyId: int("policyId").notNull(),
+  organizationId: int("organizationId").notNull(),
+  branchId: int("branchId"),
+  taskUid: varchar("taskUid", { length: 65 }),
+  idempotencyKey: varchar("idempotencyKey", { length: 160 }).notNull(),
+  status: mysqlEnum("status", ["queued", "running", "succeeded", "failed", "verified"]).default("queued").notNull(),
+  manifestKey: varchar("manifestKey", { length: 500 }),
+  manifestSha256: varchar("manifestSha256", { length: 64 }),
+  recordCount: int("recordCount").default(0).notNull(),
+  errorCode: varchar("errorCode", { length: 80 }),
+  startedAt: timestamp("startedAt"),
+  completedAt: timestamp("completedAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+}, table => ({ policyTimeIdx: index("backup_runs_policy_time_idx").on(table.policyId, table.createdAt), idempotencyIdx: uniqueIndex("backup_runs_idempotency_idx").on(table.policyId, table.idempotencyKey), scopeIdx: index("backup_runs_scope_idx").on(table.organizationId, table.branchId, table.status) }));
 
 export type User = typeof users.$inferSelect;
 export type InsertUser = typeof users.$inferInsert;
@@ -242,6 +384,22 @@ export const notifications = mysqlTable("notifications", {
   active: int("active").default(1).notNull(),
 }, table => ({ scopeIdx: index("notifications_scope_idx").on(table.organizationId, table.branchId, table.active, table.createdAt) }));
 
+export const assistantFailureEvents = mysqlTable("assistant_failure_events", {
+  id: int("id").autoincrement().primaryKey(),
+  organizationId: int("organizationId").notNull(),
+  branchId: int("branchId"),
+  failureKey: varchar("failureKey", { length: 80 }).notNull(),
+  failureCount: int("failureCount").default(0).notNull(),
+  windowStartedAt: timestamp("windowStartedAt").notNull(),
+  lastFailedAt: timestamp("lastFailedAt").notNull(),
+  lastAlertedAt: timestamp("lastAlertedAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+}, table => ({
+  scopeKeyIdx: uniqueIndex("assistant_failure_scope_key_idx").on(table.organizationId, table.branchId, table.failureKey),
+  recentIdx: index("assistant_failure_recent_idx").on(table.organizationId, table.branchId, table.lastFailedAt),
+}));
+
 export const notificationReads = mysqlTable("notification_reads", {
   id: int("id").autoincrement().primaryKey(),
   notificationId: int("notificationId").notNull(),
@@ -250,6 +408,31 @@ export const notificationReads = mysqlTable("notification_reads", {
 }, table => ({ readIdx: uniqueIndex("notification_reads_unique_idx").on(table.notificationId, table.userId), userIdx: index("notification_reads_user_idx").on(table.userId, table.readAt) }));
 
 export type Notification = typeof notifications.$inferSelect;
+
+/** Approved policy knowledge used by the assistant; unapproved content must never enter assistant context. */
+export const policyKnowledgeArticles = mysqlTable("policy_knowledge_articles", {
+  id: int("id").autoincrement().primaryKey(),
+  organizationId: int("organizationId").notNull(),
+  branchId: int("branchId"),
+  jurisdictionId: int("jurisdictionId"),
+  title: varchar("title", { length: 220 }).notNull(),
+  category: varchar("category", { length: 100 }).notNull(),
+  content: text("content").notNull(),
+  version: int("version").default(1).notNull(),
+  status: mysqlEnum("status", ["draft", "pending_review", "approved", "archived"]).default("draft").notNull(),
+  effectiveFrom: timestamp("effectiveFrom"),
+  effectiveTo: timestamp("effectiveTo"),
+  supersedesId: int("supersedesId"),
+  sourceReference: varchar("sourceReference", { length: 500 }),
+  createdByUserId: int("createdByUserId").notNull(),
+  reviewedByUserId: int("reviewedByUserId"),
+  reviewedAt: timestamp("reviewedAt"),
+  reviewNote: varchar("reviewNote", { length: 1000 }),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+}, table => ({ scopeStatusIdx: index("policy_knowledge_scope_status_idx").on(table.organizationId, table.branchId, table.status), categoryIdx: index("policy_knowledge_category_idx").on(table.organizationId, table.category, table.status), versionIdx: index("policy_knowledge_version_idx").on(table.organizationId, table.supersedesId, table.version) }));
+
+export type PolicyKnowledgeArticle = typeof policyKnowledgeArticles.$inferSelect;
 
 export const prescriptionIntakes = mysqlTable("prescription_intakes", {
   id: int("id").autoincrement().primaryKey(),
@@ -331,6 +514,7 @@ export const callTickets = mysqlTable("call_tickets", {
   organizationId: int("organizationId").notNull(),
   customerId: int("customerId"),
   branchId: int("branchId"),
+  queueId: int("queueId"),
   assignedUserId: int("assignedUserId"),
   channel: mysqlEnum("channel", ["phone", "whatsapp", "web", "in_person"]).notNull(),
   direction: mysqlEnum("direction", ["inbound", "outbound"]).notNull(),
@@ -339,12 +523,15 @@ export const callTickets = mysqlTable("call_tickets", {
   status: mysqlEnum("status", ["open", "pending", "resolved", "closed"]).default("open").notNull(),
   disposition: varchar("disposition", { length: 120 }),
   callbackAt: timestamp("callbackAt"),
+  slaDueAt: timestamp("slaDueAt"),
+  firstRespondedAt: timestamp("firstRespondedAt"),
+  resolvedAt: timestamp("resolvedAt"),
   escalationAt: timestamp("escalationAt"),
   recordingRef: varchar("recordingRef", { length: 255 }),
   createdByUserId: int("createdByUserId").notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
-}, table => ({ statusIdx: index("call_tickets_status_idx").on(table.status, table.priority) }));
+}, table => ({ statusIdx: index("call_tickets_status_idx").on(table.status, table.priority), queueSlaIdx: index("call_tickets_queue_sla_idx").on(table.organizationId, table.branchId, table.queueId, table.slaDueAt) }));
 
 export const catalogItems = mysqlTable("catalog_items", {
   id: int("id").autoincrement().primaryKey(),
@@ -487,6 +674,26 @@ export const offlineDrafts = mysqlTable("offline_drafts", {
 
 export type OfflineDraft = typeof offlineDrafts.$inferSelect;
 
+
+export const reportTemplates = mysqlTable("report_templates", {
+  id: int("id").autoincrement().primaryKey(),
+  organizationId: int("organizationId").notNull(),
+  branchId: int("branchId").notNull(),
+  jurisdictionId: int("jurisdictionId").notNull(),
+  reportKey: varchar("reportKey", { length: 100 }).notNull(),
+  name: varchar("name", { length: 180 }).notNull(),
+  title: varchar("title", { length: 180 }).notNull(),
+  subtitle: varchar("subtitle", { length: 240 }),
+  columnsJson: text("columnsJson").notNull(),
+  footer: varchar("footer", { length: 300 }),
+  active: int("active").default(1).notNull(),
+  updatedByUserId: int("updatedByUserId").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+}, table => ({
+  scopeReportIdx: uniqueIndex("report_templates_scope_report_idx").on(table.organizationId, table.branchId, table.jurisdictionId, table.reportKey),
+  scopeIdx: index("report_templates_scope_idx").on(table.organizationId, table.branchId, table.jurisdictionId),
+}));
 
 export const reportDefinitions = mysqlTable("report_definitions", {
   id: int("id").autoincrement().primaryKey(),
@@ -1051,3 +1258,434 @@ export const crmLeads = mysqlTable("crm_leads", {
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 }, table => ({ scopeStageIdx: index("crm_leads_scope_stage_idx").on(table.organizationId, table.branchId, table.stage, table.nextFollowUpAt), contactHashIdx: index("crm_leads_contact_hash_idx").on(table.organizationId, table.contactReferenceHash) }));
+
+
+/** Cashier shift lifecycle: one open drawer per cashier and branch at a time. */
+export const cashierShifts = mysqlTable("cashier_shifts", {
+  id: int("id").autoincrement().primaryKey(),
+  organizationId: int("organizationId").notNull(),
+  branchId: int("branchId").notNull(),
+  jurisdictionId: int("jurisdictionId").notNull(),
+  cashierId: int("cashierId").notNull(),
+  status: mysqlEnum("status", ["open", "closed", "pending_review"]).default("open").notNull(),
+  openingAmount: decimal("openingAmount", { precision: 14, scale: 2 }).default("0").notNull(),
+  openedAt: timestamp("openedAt").defaultNow().notNull(),
+  closedAt: timestamp("closedAt"),
+  closedByUserId: int("closedByUserId"),
+  closingAmount: decimal("closingAmount", { precision: 14, scale: 2 }),
+  expectedAmount: decimal("expectedAmount", { precision: 14, scale: 2 }),
+  varianceAmount: decimal("varianceAmount", { precision: 14, scale: 2 }),
+  closingNote: varchar("closingNote", { length: 800 }),
+}, table => ({ scopeStatusIdx: index("cashier_shifts_scope_status_idx").on(table.organizationId, table.branchId, table.status, table.openedAt), cashierStatusIdx: index("cashier_shifts_cashier_status_idx").on(table.cashierId, table.status) }));
+export const cashClosures = mysqlTable("cash_closures", {
+  id: int("id").autoincrement().primaryKey(),
+  shiftId: int("shiftId").notNull(),
+  organizationId: int("organizationId").notNull(),
+  branchId: int("branchId").notNull(),
+  jurisdictionId: int("jurisdictionId").notNull(),
+  countedCash: decimal("countedCash", { precision: 14, scale: 2 }).notNull(),
+  expectedCash: decimal("expectedCash", { precision: 14, scale: 2 }).notNull(),
+  varianceCash: decimal("varianceCash", { precision: 14, scale: 2 }).notNull(),
+  status: mysqlEnum("status", ["submitted", "approved", "rejected"]).default("submitted").notNull(),
+  submittedByUserId: int("submittedByUserId").notNull(),
+  approvedByUserId: int("approvedByUserId"),
+  approvedAt: timestamp("approvedAt"),
+  note: varchar("note", { length: 800 }),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+}, table => ({ scopeTimeIdx: index("cash_closures_scope_time_idx").on(table.organizationId, table.branchId, table.createdAt), shiftIdx: uniqueIndex("cash_closures_shift_idx").on(table.shiftId) }));
+
+/** Minimal double-entry foundation; posting remains separated from operational sales. */
+export const generalLedgerAccounts = mysqlTable("general_ledger_accounts", {
+  id: int("id").autoincrement().primaryKey(),
+  organizationId: int("organizationId").notNull(),
+  branchId: int("branchId"),
+  parentAccountId: int("parentAccountId"),
+  code: varchar("code", { length: 40 }).notNull(),
+  nameAr: varchar("nameAr", { length: 180 }).notNull(),
+  nameEn: varchar("nameEn", { length: 180 }),
+  accountType: mysqlEnum("accountType", ["asset", "liability", "equity", "revenue", "expense"]).notNull(),
+  normalBalance: mysqlEnum("normalBalance", ["debit", "credit"]).default("debit").notNull(),
+  level: int("level").default(0).notNull(),
+  isPostingAllowed: int("isPostingAllowed").default(1).notNull(),
+  active: int("active").default(1).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+}, table => ({ scopeCodeIdx: uniqueIndex("general_ledger_accounts_scope_code_idx").on(table.organizationId, table.branchId, table.code), parentIdx: index("general_ledger_accounts_parent_idx").on(table.organizationId, table.parentAccountId) }));
+export const generalLedgerEntries = mysqlTable("general_ledger_entries", {
+  id: int("id").autoincrement().primaryKey(),
+  organizationId: int("organizationId").notNull(),
+  branchId: int("branchId"),
+  accountId: int("accountId").notNull(),
+  entryGroupId: varchar("entryGroupId", { length: 80 }).notNull(),
+  debitAmount: decimal("debitAmount", { precision: 14, scale: 2 }).default("0").notNull(),
+  creditAmount: decimal("creditAmount", { precision: 14, scale: 2 }).default("0").notNull(),
+  sourceType: varchar("sourceType", { length: 60 }).notNull(),
+  sourceId: varchar("sourceId", { length: 80 }).notNull(),
+  periodStatus: mysqlEnum("periodStatus", ["open", "closed"]).default("open").notNull(),
+  createdByUserId: int("createdByUserId").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+}, table => ({ groupIdx: index("general_ledger_entries_group_idx").on(table.organizationId, table.entryGroupId), accountTimeIdx: index("general_ledger_entries_account_time_idx").on(table.organizationId, table.accountId, table.createdAt), sourceIdx: index("general_ledger_entries_source_idx").on(table.organizationId, table.sourceType, table.sourceId) }));
+
+export const accountingFiscalPeriods = mysqlTable("accounting_fiscal_periods", {
+  id: int("id").autoincrement().primaryKey(), organizationId: int("organizationId").notNull(), branchId: int("branchId"),
+  name: varchar("name", { length: 120 }).notNull(), startsAt: timestamp("startsAt").notNull(), endsAt: timestamp("endsAt").notNull(),
+  status: mysqlEnum("status", ["open", "soft_closed", "closed"]).default("open").notNull(), closedByUserId: int("closedByUserId"), closedAt: timestamp("closedAt"), createdByUserId: int("createdByUserId").notNull(), createdAt: timestamp("createdAt").defaultNow().notNull(),
+}, table => ({ scopePeriodIdx: index("accounting_fiscal_periods_scope_period_idx").on(table.organizationId, table.branchId, table.startsAt, table.endsAt), scopeNameIdx: uniqueIndex("accounting_fiscal_periods_scope_name_idx").on(table.organizationId, table.branchId, table.name) }));
+export const costCenters = mysqlTable("cost_centers", {
+  id: int("id").autoincrement().primaryKey(), organizationId: int("organizationId").notNull(), branchId: int("branchId"), parentCostCenterId: int("parentCostCenterId"), code: varchar("code", { length: 40 }).notNull(), nameAr: varchar("nameAr", { length: 180 }).notNull(), nameEn: varchar("nameEn", { length: 180 }), active: int("active").default(1).notNull(), createdByUserId: int("createdByUserId").notNull(), createdAt: timestamp("createdAt").defaultNow().notNull(),
+}, table => ({ scopeCodeIdx: uniqueIndex("cost_centers_scope_code_idx").on(table.organizationId, table.branchId, table.code), parentIdx: index("cost_centers_parent_idx").on(table.organizationId, table.parentCostCenterId) }));
+export const otherExpenses = mysqlTable("other_expenses", {
+  id: int("id").autoincrement().primaryKey(), organizationId: int("organizationId").notNull(), branchId: int("branchId").notNull(), jurisdictionId: int("jurisdictionId").notNull(), fiscalPeriodId: int("fiscalPeriodId"), costCenterId: int("costCenterId"), expenseAccountId: int("expenseAccountId").notNull(), paymentAccountId: int("paymentAccountId").notNull(), amount: decimal("amount", { precision: 14, scale: 2 }).notNull(), currency: varchar("currency", { length: 3 }).default("EGP").notNull(), expenseDate: timestamp("expenseDate").notNull(), title: varchar("title", { length: 180 }).notNull(), justification: varchar("justification", { length: 1200 }).notNull(), status: mysqlEnum("status", ["draft", "pending_review", "approved", "rejected", "posted"]).default("pending_review").notNull(), journalEntryGroupId: varchar("journalEntryGroupId", { length: 100 }), createdByUserId: int("createdByUserId").notNull(), approvedByUserId: int("approvedByUserId"), approvedAt: timestamp("approvedAt"), createdAt: timestamp("createdAt").defaultNow().notNull(),
+}, table => ({ scopeDateIdx: index("other_expenses_scope_date_idx").on(table.organizationId, table.branchId, table.expenseDate), statusIdx: index("other_expenses_status_idx").on(table.organizationId, table.status), journalIdx: uniqueIndex("other_expenses_journal_idx").on(table.journalEntryGroupId) }));
+export const expenseDocuments = mysqlTable("expense_documents", {
+  id: int("id").autoincrement().primaryKey(), expenseId: int("expenseId").notNull(), organizationId: int("organizationId").notNull(), branchId: int("branchId").notNull(), fileKey: varchar("fileKey", { length: 500 }).notNull(), fileUrl: varchar("fileUrl", { length: 1000 }).notNull(), fileName: varchar("fileName", { length: 255 }).notNull(), mimeType: varchar("mimeType", { length: 120 }).notNull(), fileSize: int("fileSize").notNull(), sha256: varchar("sha256", { length: 64 }).notNull(), createdByUserId: int("createdByUserId").notNull(), createdAt: timestamp("createdAt").defaultNow().notNull(),
+}, table => ({ expenseIdx: index("expense_documents_expense_idx").on(table.organizationId, table.branchId, table.expenseId), digestIdx: uniqueIndex("expense_documents_digest_idx").on(table.organizationId, table.branchId, table.sha256) }));
+export const interBranchTransfers = mysqlTable("inter_branch_transfers", {
+  id: int("id").autoincrement().primaryKey(), organizationId: int("organizationId").notNull(), sourceBranchId: int("sourceBranchId").notNull(), destinationBranchId: int("destinationBranchId").notNull(), jurisdictionId: int("jurisdictionId").notNull(), transferType: mysqlEnum("transferType", ["financial", "inventory", "mixed"]).notNull(), amount: decimal("amount", { precision: 14, scale: 2 }), justification: varchar("justification", { length: 1000 }).notNull(), status: mysqlEnum("status", ["draft", "pending_review", "approved", "rejected", "completed"]).default("pending_review").notNull(), sourceJournalGroupId: varchar("sourceJournalGroupId", { length: 100 }), destinationJournalGroupId: varchar("destinationJournalGroupId", { length: 100 }), createdByUserId: int("createdByUserId").notNull(), approvedByUserId: int("approvedByUserId"), completedByUserId: int("completedByUserId"), createdAt: timestamp("createdAt").defaultNow().notNull(),
+}, table => ({ routeIdx: index("inter_branch_transfers_route_idx").on(table.organizationId, table.sourceBranchId, table.destinationBranchId, table.createdAt), statusIdx: index("inter_branch_transfers_status_idx").on(table.organizationId, table.status) }));
+export const interBranchTransferLines = mysqlTable("inter_branch_transfer_lines", {
+  id: int("id").autoincrement().primaryKey(), transferId: int("transferId").notNull(), organizationId: int("organizationId").notNull(), productId: int("productId"), quantity: decimal("quantity", { precision: 14, scale: 3 }), unitValue: decimal("unitValue", { precision: 14, scale: 2 }), note: varchar("note", { length: 500 }),
+}, table => ({ transferIdx: index("inter_branch_transfer_lines_transfer_idx").on(table.organizationId, table.transferId) }));
+export const membershipPlans = mysqlTable("membership_plans", {
+  id: int("id").autoincrement().primaryKey(),
+  organizationId: int("organizationId").notNull(),
+  nameAr: varchar("nameAr", { length: 180 }).notNull(),
+  price: decimal("price", { precision: 14, scale: 2 }).notNull(),
+  durationDays: int("durationDays").notNull(),
+  pointsMultiplier: decimal("pointsMultiplier", { precision: 6, scale: 2 }).default("1").notNull(),
+  active: int("active").default(1).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+}, table => ({ orgNameIdx: uniqueIndex("membership_plans_org_name_idx").on(table.organizationId, table.nameAr) }));
+export const loyaltyMembers = mysqlTable("loyalty_members", {
+  id: int("id").autoincrement().primaryKey(),
+  organizationId: int("organizationId").notNull(),
+  customerId: int("customerId").notNull(),
+  pointsBalance: decimal("pointsBalance", { precision: 14, scale: 2 }).default("0").notNull(),
+  status: mysqlEnum("status", ["active", "suspended"]).default("active").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+}, table => ({ customerIdx: uniqueIndex("loyalty_members_customer_idx").on(table.organizationId, table.customerId) }));
+export const loyaltyTransactions = mysqlTable("loyalty_transactions", {
+  id: int("id").autoincrement().primaryKey(),
+  organizationId: int("organizationId").notNull(),
+  branchId: int("branchId").notNull(),
+  memberId: int("memberId").notNull(),
+  saleId: int("saleId"),
+  pointsDelta: decimal("pointsDelta", { precision: 14, scale: 2 }).notNull(),
+  reasonCode: varchar("reasonCode", { length: 80 }).notNull(),
+  createdByUserId: int("createdByUserId").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+}, table => ({ memberTimeIdx: index("loyalty_transactions_member_time_idx").on(table.organizationId, table.memberId, table.createdAt) }));
+export const customerMemberships = mysqlTable("customer_memberships", {
+  id: int("id").autoincrement().primaryKey(),
+  organizationId: int("organizationId").notNull(),
+  customerId: int("customerId").notNull(),
+  planId: int("planId").notNull(),
+  status: mysqlEnum("status", ["active", "expired", "cancelled"]).default("active").notNull(),
+  startsAt: timestamp("startsAt").defaultNow().notNull(),
+  endsAt: timestamp("endsAt").notNull(),
+  createdByUserId: int("createdByUserId").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+}, table => ({ customerStatusIdx: index("customer_memberships_customer_status_idx").on(table.organizationId, table.customerId, table.status, table.endsAt) }));
+
+
+/** Supplier and receivable/payable primitives for scoped procurement and credit workflows. */
+export const suppliers = mysqlTable("suppliers", {
+  id: int("id").autoincrement().primaryKey(),
+  organizationId: int("organizationId").notNull(),
+  branchId: int("branchId"),
+  jurisdictionId: int("jurisdictionId"),
+  name: varchar("name", { length: 240 }).notNull(),
+  supplierCode: varchar("supplierCode", { length: 80 }),
+  contactPerson: varchar("contactPerson", { length: 180 }),
+  phone: varchar("phone", { length: 40 }),
+  email: varchar("email", { length: 240 }),
+  address: varchar("address", { length: 500 }),
+  city: varchar("city", { length: 120 }),
+  countryCode: varchar("countryCode", { length: 2 }).default("EG"),
+  taxRegistrationNumber: varchar("taxRegistrationNumber", { length: 80 }),
+  paymentTermsDays: int("paymentTermsDays").default(0).notNull(),
+  creditLimit: decimal("creditLimit", { precision: 14, scale: 2 }).default("0.00").notNull(),
+  creditCurrencyCode: varchar("creditCurrencyCode", { length: 3 }).default("EGP").notNull(),
+  creditApprovalStatus: mysqlEnum("creditApprovalStatus", ["not_requested", "pending", "approved", "rejected"]).default("not_requested").notNull(),
+  creditApprovedByUserId: int("creditApprovedByUserId"),
+  creditApprovedAt: timestamp("creditApprovedAt"),
+  notes: text("notes"),
+  active: int("active").default(1).notNull(),
+  createdByUserId: int("createdByUserId").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+}, table => ({ scopeNameIdx: index("suppliers_scope_name_idx").on(table.organizationId, table.branchId, table.name) }));
+
+export const purchaseOrders = mysqlTable("purchase_orders", {
+  id: int("id").autoincrement().primaryKey(),
+  organizationId: int("organizationId").notNull(),
+  branchId: int("branchId").notNull(),
+  jurisdictionId: int("jurisdictionId"),
+  supplierId: int("supplierId").notNull(),
+  orderNumber: varchar("orderNumber", { length: 80 }).notNull(),
+  status: mysqlEnum("status", ["draft", "submitted", "approved", "partially_received", "received", "cancelled"]).default("draft").notNull(),
+  currencyCode: varchar("currencyCode", { length: 3 }).default("EGP").notNull(),
+  totalAmount: decimal("totalAmount", { precision: 14, scale: 2 }).default("0").notNull(),
+  createdByUserId: int("createdByUserId").notNull(),
+  approvedByUserId: int("approvedByUserId"),
+  approvedAt: timestamp("approvedAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+}, table => ({ orderScopeNumberIdx: uniqueIndex("purchase_orders_scope_number_idx").on(table.organizationId, table.branchId, table.orderNumber), queueIdx: index("purchase_orders_scope_status_idx").on(table.organizationId, table.branchId, table.status, table.createdAt) }));
+
+export const purchaseOrderLines = mysqlTable("purchase_order_lines", {
+  id: int("id").autoincrement().primaryKey(),
+  purchaseOrderId: int("purchaseOrderId").notNull(),
+  productId: int("productId").notNull(),
+  orderedQuantity: decimal("orderedQuantity", { precision: 14, scale: 3 }).notNull(),
+  receivedQuantity: decimal("receivedQuantity", { precision: 14, scale: 3 }).default("0").notNull(),
+  unitCost: decimal("unitCost", { precision: 14, scale: 2 }).notNull(),
+  batchNumber: varchar("batchNumber", { length: 80 }),
+  expiryDate: timestamp("expiryDate"),
+});
+
+export const goodsReceipts = mysqlTable("goods_receipts", {
+  id: int("id").autoincrement().primaryKey(),
+  organizationId: int("organizationId").notNull(),
+  branchId: int("branchId").notNull(),
+  jurisdictionId: int("jurisdictionId"),
+  purchaseOrderId: int("purchaseOrderId").notNull(),
+  receiptNumber: varchar("receiptNumber", { length: 80 }).notNull(),
+  idempotencyKey: varchar("idempotencyKey", { length: 180 }).notNull(),
+  status: mysqlEnum("status", ["draft", "posted", "reversed"]).default("draft").notNull(),
+  receivedByUserId: int("receivedByUserId").notNull(),
+  postedAt: timestamp("postedAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+}, table => ({ receiptScopeNumberIdx: uniqueIndex("goods_receipts_scope_number_idx").on(table.organizationId, table.branchId, table.receiptNumber), idempotencyIdx: uniqueIndex("goods_receipts_idempotency_idx").on(table.organizationId, table.branchId, table.idempotencyKey) }));
+
+export const goodsReceiptLines = mysqlTable("goods_receipt_lines", {
+  id: int("id").autoincrement().primaryKey(),
+  goodsReceiptId: int("goodsReceiptId").notNull(),
+  purchaseOrderLineId: int("purchaseOrderLineId").notNull(),
+  productId: int("productId").notNull(),
+  batchNumber: varchar("batchNumber", { length: 80 }).notNull(),
+  expiryDate: timestamp("expiryDate").notNull(),
+  quantity: decimal("quantity", { precision: 14, scale: 3 }).notNull(),
+  unitCost: decimal("unitCost", { precision: 14, scale: 2 }).notNull(),
+});
+
+export const balanceLedgerEntries = mysqlTable("balance_ledger_entries", {
+  id: int("id").autoincrement().primaryKey(),
+  organizationId: int("organizationId").notNull(),
+  branchId: int("branchId"),
+  jurisdictionId: int("jurisdictionId"),
+  partyType: mysqlEnum("partyType", ["supplier", "customer"]).notNull(),
+  supplierId: int("supplierId"),
+  customerId: int("customerId"),
+  direction: mysqlEnum("direction", ["debit", "credit"]).notNull(),
+  amount: decimal("amount", { precision: 14, scale: 2 }).notNull(),
+  sourceType: varchar("sourceType", { length: 80 }).notNull(),
+  sourceId: varchar("sourceId", { length: 80 }).notNull(),
+  approvalStatus: mysqlEnum("approvalStatus", ["not_required", "pending", "approved", "rejected"]).default("pending").notNull(),
+  createdByUserId: int("createdByUserId").notNull(),
+  approvedByUserId: int("approvedByUserId"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+}, table => ({ partyScopeIdx: index("balance_ledger_party_scope_idx").on(table.organizationId, table.branchId, table.partyType, table.createdAt), sourceIdx: uniqueIndex("balance_ledger_source_idx").on(table.organizationId, table.sourceType, table.sourceId) }));
+
+export const creditRequests = mysqlTable("credit_requests", {
+  id: int("id").autoincrement().primaryKey(),
+  organizationId: int("organizationId").notNull(),
+  branchId: int("branchId"),
+  jurisdictionId: int("jurisdictionId"),
+  customerId: int("customerId").notNull(),
+  requestedLimit: decimal("requestedLimit", { precision: 14, scale: 2 }).notNull(),
+  outstandingAmount: decimal("outstandingAmount", { precision: 14, scale: 2 }).default("0").notNull(),
+  status: mysqlEnum("status", ["pending", "approved", "rejected", "expired"]).default("pending").notNull(),
+  requestedByUserId: int("requestedByUserId").notNull(),
+  approvedByUserId: int("approvedByUserId"),
+  approvedAt: timestamp("approvedAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+}, table => ({ creditScopeIdx: index("credit_requests_scope_status_idx").on(table.organizationId, table.branchId, table.status, table.createdAt) }));
+
+export type Supplier = typeof suppliers.$inferSelect;
+export type PurchaseOrder = typeof purchaseOrders.$inferSelect;
+export type PurchaseOrderLine = typeof purchaseOrderLines.$inferSelect;
+export type GoodsReceipt = typeof goodsReceipts.$inferSelect;
+export type GoodsReceiptLine = typeof goodsReceiptLines.$inferSelect;
+export type BalanceLedgerEntry = typeof balanceLedgerEntries.$inferSelect;
+export type CreditRequest = typeof creditRequests.$inferSelect;
+
+/** CRM relationship records; contact data remains consent-aware and scope-bound. */
+export const crmContacts = mysqlTable("crm_contacts", {
+  id: int("id").autoincrement().primaryKey(),
+  organizationId: int("organizationId").notNull(),
+  branchId: int("branchId"),
+  jurisdictionId: int("jurisdictionId"),
+  leadId: int("leadId"),
+  displayLabel: varchar("displayLabel", { length: 180 }).notNull(),
+  contactReferenceHash: varchar("contactReferenceHash", { length: 128 }),
+  consentStatus: mysqlEnum("consentStatus", ["unknown", "granted", "withdrawn", "not_required"]).default("unknown").notNull(),
+  lifecycle: mysqlEnum("lifecycle", ["prospect", "active", "dormant", "archived"]).default("prospect").notNull(),
+  ownerUserId: int("ownerUserId"),
+  createdByUserId: int("createdByUserId").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+}, table => ({ scopeLifecycleIdx: index("crm_contacts_scope_lifecycle_idx").on(table.organizationId, table.branchId, table.lifecycle, table.updatedAt), contactHashIdx: index("crm_contacts_hash_idx").on(table.organizationId, table.contactReferenceHash) }));
+
+export const crmOpportunities = mysqlTable("crm_opportunities", {
+  id: int("id").autoincrement().primaryKey(),
+  organizationId: int("organizationId").notNull(),
+  branchId: int("branchId"),
+  jurisdictionId: int("jurisdictionId"),
+  contactId: int("contactId"),
+  title: varchar("title", { length: 220 }).notNull(),
+  stage: mysqlEnum("stage", ["discovery", "qualified", "proposal", "negotiation", "won", "lost"]).default("discovery").notNull(),
+  amount: decimal("amount", { precision: 14, scale: 2 }),
+  currencyCode: varchar("currencyCode", { length: 3 }).default("EGP").notNull(),
+  probability: int("probability").default(0).notNull(),
+  expectedCloseAt: timestamp("expectedCloseAt"),
+  ownerUserId: int("ownerUserId"),
+  createdByUserId: int("createdByUserId").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+}, table => ({ scopeStageIdx: index("crm_opportunities_scope_stage_idx").on(table.organizationId, table.branchId, table.stage, table.expectedCloseAt) }));
+
+export const crmActivities = mysqlTable("crm_activities", {
+  id: int("id").autoincrement().primaryKey(),
+  organizationId: int("organizationId").notNull(),
+  branchId: int("branchId"),
+  jurisdictionId: int("jurisdictionId"),
+  contactId: int("contactId"),
+  opportunityId: int("opportunityId"),
+  activityType: mysqlEnum("activityType", ["call", "meeting", "message", "task", "note"]).notNull(),
+  subject: varchar("subject", { length: 220 }).notNull(),
+  dueAt: timestamp("dueAt"),
+  completedAt: timestamp("completedAt"),
+  assignedToUserId: int("assignedToUserId"),
+  createdByUserId: int("createdByUserId").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+}, table => ({ scopeDueIdx: index("crm_activities_scope_due_idx").on(table.organizationId, table.branchId, table.dueAt) }));
+
+/** HR employment metadata is separated from authentication credentials. */
+export const hrContracts = mysqlTable("hr_contracts", {
+  id: int("id").autoincrement().primaryKey(),
+  organizationId: int("organizationId").notNull(),
+  branchId: int("branchId"),
+  jurisdictionId: int("jurisdictionId"),
+  employeeProfileId: int("employeeProfileId").notNull(),
+  contractType: mysqlEnum("contractType", ["permanent", "temporary", "part_time", "consultant"]).notNull(),
+  status: mysqlEnum("status", ["draft", "active", "expired", "terminated"]).default("draft").notNull(),
+  startsAt: timestamp("startsAt").notNull(),
+  endsAt: timestamp("endsAt"),
+  salaryBand: varchar("salaryBand", { length: 80 }),
+  documentRef: varchar("documentRef", { length: 255 }),
+  createdByUserId: int("createdByUserId").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+}, table => ({ employeeStatusIdx: index("hr_contracts_employee_status_idx").on(table.organizationId, table.employeeProfileId, table.status) }));
+
+export const hrShifts = mysqlTable("hr_shifts", {
+  id: int("id").autoincrement().primaryKey(),
+  organizationId: int("organizationId").notNull(),
+  branchId: int("branchId").notNull(),
+  jurisdictionId: int("jurisdictionId"),
+  employeeProfileId: int("employeeProfileId").notNull(),
+  shiftDate: timestamp("shiftDate").notNull(),
+  startsAt: timestamp("startsAt").notNull(),
+  endsAt: timestamp("endsAt").notNull(),
+  status: mysqlEnum("status", ["planned", "confirmed", "cancelled", "completed"]).default("planned").notNull(),
+  createdByUserId: int("createdByUserId").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+}, table => ({ employeeDateIdx: uniqueIndex("hr_shifts_employee_date_idx").on(table.organizationId, table.employeeProfileId, table.shiftDate), branchDateIdx: index("hr_shifts_branch_date_idx").on(table.organizationId, table.branchId, table.shiftDate) }));
+
+export const hrPerformanceReviews = mysqlTable("hr_performance_reviews", {
+  id: int("id").autoincrement().primaryKey(),
+  organizationId: int("organizationId").notNull(),
+  branchId: int("branchId"),
+  employeeProfileId: int("employeeProfileId").notNull(),
+  reviewPeriod: varchar("reviewPeriod", { length: 32 }).notNull(),
+  status: mysqlEnum("status", ["draft", "submitted", "approved"]).default("draft").notNull(),
+  score: int("score"),
+  goalsSummary: text("goalsSummary"),
+  reviewedByUserId: int("reviewedByUserId"),
+  createdByUserId: int("createdByUserId").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+}, table => ({ employeePeriodIdx: uniqueIndex("hr_reviews_employee_period_idx").on(table.organizationId, table.employeeProfileId, table.reviewPeriod) }));
+
+/** Contact-center routing and immutable interaction metadata. */
+export const callQueues = mysqlTable("call_queues", {
+  id: int("id").autoincrement().primaryKey(),
+  organizationId: int("organizationId").notNull(),
+  branchId: int("branchId"),
+  name: varchar("name", { length: 160 }).notNull(),
+  skill: varchar("skill", { length: 100 }),
+  slaMinutes: int("slaMinutes").default(60).notNull(),
+  active: int("active").default(1).notNull(),
+  createdByUserId: int("createdByUserId").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+}, table => ({ scopeActiveIdx: index("call_queues_scope_active_idx").on(table.organizationId, table.branchId, table.active) }));
+
+export const callQueueMembers = mysqlTable("call_queue_members", {
+  id: int("id").autoincrement().primaryKey(),
+  organizationId: int("organizationId").notNull(),
+  branchId: int("branchId").notNull(),
+  queueId: int("queueId").notNull(),
+  userId: int("userId").notNull(),
+  skill: varchar("skill", { length: 100 }),
+  active: int("active").default(1).notNull(),
+  createdByUserId: int("createdByUserId").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+}, table => ({ memberUniqueIdx: uniqueIndex("call_queue_members_unique_idx").on(table.queueId, table.userId), scopeIdx: index("call_queue_members_scope_idx").on(table.organizationId, table.branchId, table.active) }));
+
+export const callInteractions = mysqlTable("call_interactions", {
+  id: int("id").autoincrement().primaryKey(),
+  organizationId: int("organizationId").notNull(),
+  branchId: int("branchId"),
+  ticketId: int("ticketId").notNull(),
+  userId: int("userId").notNull(),
+  interactionType: mysqlEnum("interactionType", ["note", "message", "status_change", "assignment", "escalation", "callback"]).notNull(),
+  summary: text("summary").notNull(),
+  metadataHash: varchar("metadataHash", { length: 128 }),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+}, table => ({ ticketTimelineIdx: index("call_interactions_ticket_timeline_idx").on(table.organizationId, table.ticketId, table.createdAt) }));
+
+/** Customer-care case management, separate from the basic customer profile. */
+export const customerCareCases = mysqlTable("customer_care_cases", {
+  id: int("id").autoincrement().primaryKey(),
+  organizationId: int("organizationId").notNull(),
+  branchId: int("branchId"),
+  jurisdictionId: int("jurisdictionId"),
+  customerId: int("customerId").notNull(),
+  caseNumber: varchar("caseNumber", { length: 80 }).notNull(),
+  category: mysqlEnum("category", ["question", "complaint", "follow_up", "chronic_care", "service_request"]).notNull(),
+  priority: mysqlEnum("priority", ["low", "normal", "high", "urgent"]).default("normal").notNull(),
+  status: mysqlEnum("status", ["new", "in_progress", "waiting_customer", "resolved", "closed"]).default("new").notNull(),
+  subject: varchar("subject", { length: 220 }).notNull(),
+  summary: text("summary").notNull(),
+  assignedToUserId: int("assignedToUserId"),
+  nextActionAt: timestamp("nextActionAt"),
+  createdByUserId: int("createdByUserId").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+}, table => ({ caseNumberIdx: uniqueIndex("customer_care_cases_number_idx").on(table.organizationId, table.caseNumber), scopeStatusIdx: index("customer_care_cases_scope_status_idx").on(table.organizationId, table.branchId, table.status, table.priority) }));
+
+export const customerCareTasks = mysqlTable("customer_care_tasks", {
+  id: int("id").autoincrement().primaryKey(),
+  organizationId: int("organizationId").notNull(),
+  branchId: int("branchId"),
+  caseId: int("caseId").notNull(),
+  assignedToUserId: int("assignedToUserId"),
+  title: varchar("title", { length: 220 }).notNull(),
+  status: mysqlEnum("status", ["open", "in_progress", "done", "cancelled"]).default("open").notNull(),
+  dueAt: timestamp("dueAt"),
+  completedAt: timestamp("completedAt"),
+  createdByUserId: int("createdByUserId").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+}, table => ({ scopeDueIdx: index("customer_care_tasks_scope_due_idx").on(table.organizationId, table.branchId, table.status, table.dueAt) }));
+
+export const customerCareSatisfaction = mysqlTable("customer_care_satisfaction", {
+  id: int("id").autoincrement().primaryKey(),
+  organizationId: int("organizationId").notNull(),
+  branchId: int("branchId"),
+  caseId: int("caseId").notNull(),
+  score: int("score").notNull(),
+  comment: text("comment"),
+  capturedAt: timestamp("capturedAt").defaultNow().notNull(),
+  capturedByUserId: int("capturedByUserId").notNull(),
+}, table => ({ caseUniqueIdx: uniqueIndex("customer_care_satisfaction_case_idx").on(table.organizationId, table.caseId) }));

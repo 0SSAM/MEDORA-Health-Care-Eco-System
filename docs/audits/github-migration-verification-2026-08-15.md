@@ -2,8 +2,8 @@
 
 The migrated GitHub repository is reachable through the configured GitHub connector.
 
-- Repository: `MEDORA-Health-Care-Eco-System/MEDORA-Health-Care-Eco-System`
-- URL: https://github.com/MEDORA-Health-Care-Eco-System/MEDORA-Health-Care-Eco-System
+- Repository: `ALDO-Health-Care-Eco-System/ALDO-Health-Care-Eco-System`
+- URL: https://github.com/ALDO-Health-Care-Eco-System/ALDO-Health-Care-Eco-System
 - Default branch: `main`
 - Visibility reported by GitHub: public
 - Secret values were not read or recorded.

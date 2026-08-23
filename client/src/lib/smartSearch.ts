@@ -1,8 +1,3 @@
-// MEDORA | ميدورا — Integrated Health Care System
-// Copyright (c) 2026 Hossam Naeim Osman | حسام نعيم عثمان. All rights reserved.
-// Proprietary and confidential. Unauthorized copying, distribution, or use of this
-// software, or of any portion of it, is strictly prohibited.
-// Source: https://github.com/0SSAM/MEDORA-Health-Care-Eco-System
 export type SearchableRecord = Record<string, unknown>;
 
 const arabicDiacritics = /[\u0610-\u061A\u064B-\u065F\u0670\u06D6-\u06ED]/g;
@@ -45,12 +40,55 @@ export type SearchResult<T> = {
   item: T;
   score: number;
   matchedBy: "direct" | "keyboard-layout";
+  matchKind: "exact" | "prefix" | "contains" | "tolerant";
   queryUsed: string;
 };
 
+function boundedEditDistance(left: string, right: string, limit: number): number {
+  if (Math.abs(left.length - right.length) > limit) return limit + 1;
+  let previous = Array.from({ length: right.length + 1 }, (_, index) => index);
+  for (let leftIndex = 1; leftIndex <= left.length; leftIndex += 1) {
+    const current = [leftIndex];
+    let rowMinimum = current[0];
+    for (let rightIndex = 1; rightIndex <= right.length; rightIndex += 1) {
+      const cost = left[leftIndex - 1] === right[rightIndex - 1] ? 0 : 1;
+      const next = Math.min(
+        previous[rightIndex] + 1,
+        current[rightIndex - 1] + 1,
+        previous[rightIndex - 1] + cost,
+      );
+      current.push(next);
+      rowMinimum = Math.min(rowMinimum, next);
+    }
+    if (rowMinimum > limit) return limit + 1;
+    previous = current;
+  }
+  return previous[right.length];
+}
+
+function maxTypoDistance(value: string): number {
+  if (value.length >= 9) return 2;
+  if (value.length >= 4) return 1;
+  return 0;
+}
+
+function findMatch(haystack: string, query: string): Pick<SearchResult<unknown>, "matchKind" | "score"> | null {
+  const tokens = haystack.split(" ").filter(Boolean);
+  if (haystack === query || tokens.includes(query)) return { matchKind: "exact", score: 400 };
+  if (tokens.some(token => token.startsWith(query))) return { matchKind: "prefix", score: 300 };
+  if (haystack.includes(query)) return { matchKind: "contains", score: 200 };
+
+  const typoLimit = maxTypoDistance(query);
+  if (!typoLimit) return null;
+  const closestDistance = tokens.reduce((best, token) => Math.min(best, boundedEditDistance(query, token, typoLimit)), typoLimit + 1);
+  return closestDistance <= typoLimit
+    ? { matchKind: "tolerant", score: 100 - closestDistance * 10 }
+    : null;
+}
+
 export function smartSearch<T extends SearchableRecord>(items: T[], query: string, fields: string[]): SearchResult<T>[] {
   const directQuery = normalizeSearchText(query);
-  if (!directQuery) return items.map(item => ({ item, score: 0, matchedBy: "direct", queryUsed: "" }));
+  if (!directQuery) return items.map(item => ({ item, score: 0, matchedBy: "direct", matchKind: "contains", queryUsed: "" }));
   const alternatives = keyboardLayoutCandidates(query);
   const queries: Array<{ value: string; matchedBy: "direct" | "keyboard-layout" }> = [
     { value: directQuery, matchedBy: "direct" },
@@ -60,16 +98,15 @@ export function smartSearch<T extends SearchableRecord>(items: T[], query: strin
     const haystack = fields.map(field => String(item[field] ?? "")).map(normalizeSearchText).filter(Boolean).join(" ");
     let best: SearchResult<T> | null = null;
     for (const candidate of queries) {
-      if (!haystack.includes(candidate.value)) continue;
-      const exact = haystack === candidate.value ? 100 : 0;
-      const tokenBonus = haystack.split(" ").some(token => token.startsWith(candidate.value)) ? 20 : 0;
-      const score = exact + tokenBonus + Math.min(candidate.value.length, 40);
-      if (!best || score > best.score) best = { item, score, matchedBy: candidate.matchedBy, queryUsed: candidate.value };
+      const match = findMatch(haystack, candidate.value);
+      if (!match) continue;
+      const score = match.score + Math.min(candidate.value.length, 40) + (candidate.matchedBy === "direct" ? 5 : 0);
+      if (!best || score > best.score) best = { item, score, matchedBy: candidate.matchedBy, matchKind: match.matchKind, queryUsed: candidate.value };
     }
     return best;
   }).filter((result): result is SearchResult<T> => Boolean(result)).sort((a, b) => b.score - a.score);
 }
 
-export function describeSearchMatch(result: Pick<SearchResult<unknown>, "matchedBy">): string {
+export function describeSearchMatch(result: Pick<SearchResult<unknown>, "matchedBy" | "matchKind">): string {
   return result.matchedBy === "keyboard-layout" ? "تم تصحيح تبديل لغة لوحة المفاتيح" : "مطابقة مباشرة";
 }

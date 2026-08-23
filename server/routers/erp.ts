@@ -1,18 +1,22 @@
 import { TRPCError } from "@trpc/server";
 import { parse as parseCookie } from "cookie";
 import { createHash } from "node:crypto";
-import { and, desc, eq, gte, inArray, isNull, like, lt, or, sql } from "drizzle-orm";
+import { and, desc, eq, gte, inArray, isNull, like, lt, lte, or, sql } from "drizzle-orm";
 import { COOKIE_NAME } from "@shared/const";
-import { prescriptionIntakes, ePrescriptions, ePrescriptionLines, healthcarePatients, scheduledJobs, customerProfiles, careInteractions, callTickets, catalogItems, catalogSyncQueue, offlineDrafts, salesReturns, taxInvoices, taxInvoiceTemplates, complianceEvidence, compliancePacks, jurisdictionProfiles, branchJurisdictions, branchUsers, inventoryBatches, products, promotions, sales, saleItems, branches, organizationMemberships, auditLogs } from "../../drizzle/schema";
-import { getDb } from "../db";
+import { prescriptionIntakes, ePrescriptions, ePrescriptionLines, healthcarePatients, scheduledJobs, customerProfiles, careInteractions, callTickets, catalogItems, catalogSyncQueue, offlineDrafts, salesReturns, taxInvoices, taxInvoiceTemplates, complianceEvidence, compliancePacks, jurisdictionProfiles, branchJurisdictions, branchUsers, inventoryBatches, products, promotions, sales, saleItems, branches, organizations, organizationMemberships, auditLogs, decisionLogs, heldInvoices, cashierShifts, cashClosures, generalLedgerAccounts, generalLedgerEntries, accountingFiscalPeriods, costCenters, otherExpenses, expenseDocuments, interBranchTransfers, interBranchTransferLines, loyaltyMembers, loyaltyTransactions, membershipPlans, customerMemberships } from "../../drizzle/schema";
+import { getDb, seedShowcaseDemoData } from "../db";
 import { createHeartbeatJob } from "../_core/heartbeat";
 import { z } from "zod";
+import { sortAvailableStockByExpiry } from "../domain/pos-stock-order";
+import { availableStockInputSchema } from "../domain/pos-stock-input";
 import { invokeLLM } from "../_core/llm";
-import { protectedProcedure, router } from "../_core/trpc";
+import { isolatedDemoMutationProcedure, protectedProcedure as baseProtectedProcedure, router } from "../_core/trpc";
+import type { TrpcContext } from "../_core/context";
 import { enforceDiscount, selectFefoBatches, type AppRole } from "../domain/rules";
 import { assertPrescriptionConfirmed, preparePosSale, validatePrescriptionUpload } from "../domain/erp";
 import { generateInvoiceDocument } from "../domain/invoicing-policy";
 import { assertCompliancePackUsable, assertJurisdictionProfileReady } from "../domain/regional-engine";
+import { assertIsolatedShowcaseSalePolicy } from "../domain/showcase-sale-policy";
 import { assertBranchAssignmentReady } from "../domain/branch-compliance";
 import { storageGetSignedUrl, storagePut } from "../storage";
 import { activeCatalogFields, assertCatalogEvidence, assertConsumableCatalogContext } from "../domain/catalog-policy";
@@ -26,6 +30,8 @@ import { assertDeviceTrustReady } from "../domain/device-trust-policy";
 import { hashAuditRecord } from "../domain/internal-auth";
 import { assertVatInvoiceReady, calculateVatInvoice } from "../domain/vat-invoice-policy";
 import { assessConsumerReturn, assertReturnPolicyConfigured } from "../domain/consumer-returns-policy";
+import { safeErrorLabel } from "../domain/safe-error";
+import { canViewFinancialData } from "../domain/organization-access";
 
 async function getUserBranchIds(db: NonNullable<Awaited<ReturnType<typeof getDb>>>, userId: number, role: string) {
   if (role === "admin") return null;
@@ -44,6 +50,31 @@ async function getUserOrganizationIds(db: NonNullable<Awaited<ReturnType<typeof 
   return memberships.map((membership) => membership.organizationId);
 }
 
+async function assertFinancialOrganizationAccess(db: NonNullable<Awaited<ReturnType<typeof getDb>>>, userId: number, userRole: string, organizationId: number) {
+  const memberships = await db.select({ organizationId: organizationMemberships.organizationId, active: organizationMemberships.active, organizationRole: organizationMemberships.organizationRole }).from(organizationMemberships).where(and(eq(organizationMemberships.userId, userId), eq(organizationMemberships.active, 1)));
+  if (!canViewFinancialData(userRole, memberships, organizationId)) throw new TRPCError({ code: "FORBIDDEN", message: "Financial access requires an authorized organization membership" });
+}
+
+const protectedProcedure = baseProtectedProcedure.use(async ({ ctx, next, path, getRawInput }) => {
+  if (!path.startsWith("erp.accounting.") || ctx.user.role === "admin") return next();
+  const db = await getDb();
+  if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
+  const rawInput = await getRawInput();
+  const input = rawInput && typeof rawInput === "object" && !Array.isArray(rawInput)
+    ? rawInput as { organizationId?: unknown; expenseId?: unknown; transferId?: unknown }
+    : undefined;
+  let organizationId = typeof input?.organizationId === "number" ? input.organizationId : undefined;
+  if (organizationId === undefined && typeof input?.expenseId === "number") {
+    organizationId = (await db.select({ organizationId: otherExpenses.organizationId }).from(otherExpenses).where(eq(otherExpenses.id, input.expenseId)).limit(1))[0]?.organizationId;
+  }
+  if (organizationId === undefined && typeof input?.transferId === "number") {
+    organizationId = (await db.select({ organizationId: interBranchTransfers.organizationId }).from(interBranchTransfers).where(eq(interBranchTransfers.id, input.transferId)).limit(1))[0]?.organizationId;
+  }
+  if (organizationId === undefined) throw new TRPCError({ code: "FORBIDDEN", message: "Accounting access requires an explicit authorized organization scope" });
+  await assertFinancialOrganizationAccess(db, ctx.user.id, ctx.user.role, organizationId);
+  return next();
+});
+
 async function assertUserBranchAccess(db: NonNullable<Awaited<ReturnType<typeof getDb>>>, userId: number, role: string, branchId: number) {
   const branchIds = await getUserBranchIds(db, userId, role);
   if (branchIds !== null && canAccessBranch(role, branchIds, branchId) || branchIds === null) return;
@@ -60,6 +91,77 @@ async function assertUserJurisdictionAccess(db: NonNullable<Awaited<ReturnType<t
   }
   if (canAccessJurisdiction(role, assignments, jurisdictionId)) return;
   throw new TRPCError({ code: "FORBIDDEN", message: "User is not assigned to this jurisdiction" });
+}
+
+const commitSaleSchema = z.object({
+  branchId: z.number().int().positive(),
+  invoiceNumber: z.string().min(3).max(80),
+  paymentMethod: z.enum(["cash", "meeza", "instapay", "insurance"]),
+  discountAmount: z.number().nonnegative(),
+  promotionCode: z.string().regex(/^[A-Z0-9_-]{3,48}$/).optional(),
+  items: z.array(z.object({ productId: z.number().int().positive(), batchId: z.number().int().positive(), quantity: z.number().positive(), unit: z.string().min(1).max(24), unitPrice: z.number().nonnegative() })).min(1),
+});
+
+type CommitSaleInput = z.infer<typeof commitSaleSchema>;
+type AuthenticatedTrpcContext = TrpcContext & { user: NonNullable<TrpcContext["user"]> };
+
+async function persistScopedSale({ ctx, input, allowShowcasePersistence }: { ctx: AuthenticatedTrpcContext; input: CommitSaleInput; allowShowcasePersistence: boolean }) {
+  const db = await getDb();
+  if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
+  const assignment = (await db.select().from(branchJurisdictions).where(eq(branchJurisdictions.branchId, input.branchId)).limit(1))[0];
+  try { assertBranchAssignmentReady(assignment); await assertUserBranchAccess(db, ctx.user.id, ctx.user.role, input.branchId); await assertUserJurisdictionAccess(db, ctx.user.id, ctx.user.role, assignment.jurisdictionId); } catch (error) { throw new TRPCError({ code: error instanceof TRPCError ? error.code : "PRECONDITION_FAILED", message: "Scoped branch access rejected" }); }
+  const organizationId = await getBranchOrganizationId(db, input.branchId);
+  const organization = (await db.select({ environment: organizations.environment }).from(organizations).where(eq(organizations.id, organizationId)).limit(1))[0];
+  const isShowcaseOrganization = organization?.environment === "showcase";
+  if (isShowcaseOrganization !== allowShowcasePersistence) throw new TRPCError({ code: "FORBIDDEN", message: "Sale route is not valid for the active organization environment" });
+  if (allowShowcasePersistence && ctx.internalSession?.session.sessionMode !== "showcase") throw new TRPCError({ code: "FORBIDDEN", message: "Showcase sale route requires an isolated showcase session" });
+  if (isShowcaseOrganization) await seedShowcaseDemoData({ organizationId, branchId: input.branchId, jurisdictionId: assignment.jurisdictionId, createdByUserId: ctx.user.id });
+  const profile = (await db.select().from(jurisdictionProfiles).where(eq(jurisdictionProfiles.id, assignment.jurisdictionId)).limit(1))[0];
+  const pack = (await db.select().from(compliancePacks).where(and(eq(compliancePacks.jurisdictionId, assignment.jurisdictionId), eq(compliancePacks.status, "approved"))).orderBy(desc(compliancePacks.createdAt)).limit(1))[0];
+  const evidence = pack ? await db.select().from(complianceEvidence).where(and(eq(complianceEvidence.packId, pack.id), eq(complianceEvidence.verificationStatus, "verified"))) : [];
+  if (!profile || !pack) throw new TRPCError({ code: "PRECONDITION_FAILED", message: "Approved current sale compliance pack required" });
+  try {
+    const rules = JSON.parse(pack.rulesJson) as Record<string, boolean>;
+    if (isShowcaseOrganization) assertIsolatedShowcaseSalePolicy({ organizationEnvironment: "showcase", taxProfile: profile.taxProfile, pack: { packVersion: pack.packVersion, authorityName: pack.authorityName, sourceUrl: pack.sourceUrl, status: pack.status, effectiveFrom: pack.effectiveFrom, reviewDueAt: pack.reviewDueAt, rules }, evidence });
+    else assertCompliancePackUsable({ countryCode: profile.countryCode, active: profile.active === 1, legalAuthorityProfile: profile.legalAuthorityProfile, language: profile.language, defaultLocale: profile.defaultLocale, currencyCode: profile.currencyCode, timezone: profile.timezone, taxProfile: profile.taxProfile, dateFormat: profile.dateFormat, numberSystem: profile.numberSystem }, { jurisdictionId: pack.jurisdictionId, packVersion: pack.packVersion, status: pack.status, effectiveFrom: pack.effectiveFrom, reviewDueAt: pack.reviewDueAt, rules, evidenceCount: evidence.length }, "sale");
+  } catch (error) { throw new TRPCError({ code: "PRECONDITION_FAILED", message: "ERP policy validation rejected the request" }); }
+  const subtotal = input.items.reduce((sum, item) => sum + item.quantity * item.unitPrice, 0);
+  let appliedPromotionId: number | null = null;
+  if (input.promotionCode) {
+    const promotion = (await db.select().from(promotions).where(and(eq(promotions.organizationId, organizationId), eq(promotions.jurisdictionId, assignment.jurisdictionId), eq(promotions.code, input.promotionCode), eq(promotions.status, "active"))).limit(1))[0];
+    if (!promotion) throw new TRPCError({ code: "BAD_REQUEST", message: "Promotion is not available in this scope" });
+    try { const evaluated = evaluatePromotion({ status: promotion.status, discountType: promotion.discountType, discountValue: Number(promotion.discountValue), startsAt: promotion.startsAt, endsAt: promotion.endsAt, usageLimit: promotion.usageLimit, usageCount: promotion.usageCount, now: new Date(), subtotal }); if (Math.abs(evaluated.discountAmount - input.discountAmount) > 0.01) throw new Error("Promotion discount does not match the requested discount"); appliedPromotionId = promotion.id; } catch (error) { throw new TRPCError({ code: "BAD_REQUEST", message: "ERP policy validation rejected the request" }); }
+  }
+  const discount = enforceDiscount(subtotal, input.discountAmount);
+  if (!discount.allowed) throw new TRPCError({ code: "BAD_REQUEST", message: discount.reason });
+  const checkedItems: Array<{ productId: number; batchId: number; quantity: number; unit: string; unitPrice: number; remaining: number }> = [];
+  for (const item of input.items) {
+    const product = (await db.select().from(products).where(and(eq(products.id, item.productId), eq(products.organizationId, organizationId), eq(products.jurisdictionId, assignment.jurisdictionId))).limit(1))[0];
+    const batch = (await db.select().from(inventoryBatches).where(and(eq(inventoryBatches.id, item.batchId), eq(inventoryBatches.organizationId, organizationId), eq(inventoryBatches.jurisdictionId, assignment.jurisdictionId))).limit(1))[0];
+    if (!product || !batch || batch.branchId !== input.branchId || batch.productId !== item.productId || batch.jurisdictionId !== assignment.jurisdictionId || product.jurisdictionId !== assignment.jurisdictionId) throw new TRPCError({ code: "PRECONDITION_FAILED", message: "Product or batch is outside the branch organization or jurisdiction" });
+    if (!product.catalogItemId) throw new TRPCError({ code: "PRECONDITION_FAILED", message: "Product requires a verified jurisdiction catalog record before regulated sale" });
+    const catalogItem = (await db.select().from(catalogItems).where(and(eq(catalogItems.id, product.catalogItemId), eq(catalogItems.jurisdictionId, assignment.jurisdictionId), eq(catalogItems.organizationId, organizationId))).limit(1))[0];
+    if (!catalogItem || catalogItem.verificationStatus !== "VERIFIED") throw new TRPCError({ code: "PRECONDITION_FAILED", message: "Catalog record is not verified for this jurisdiction" });
+    const catalogEvidence = await db.select().from(complianceEvidence).where(and(eq(complianceEvidence.packId, pack.id), eq(complianceEvidence.jurisdictionId, assignment.jurisdictionId), eq(complianceEvidence.operation, "catalog"), eq(complianceEvidence.verificationStatus, "verified")));
+    try { assertConsumableCatalogContext({ productCatalogItemId: product.catalogItemId, catalogItemId: catalogItem.id, productJurisdictionId: product.jurisdictionId, catalogJurisdictionId: catalogItem.jurisdictionId!, catalogStatus: catalogItem.verificationStatus === "VERIFIED" ? "approved" : catalogItem.verificationStatus === "REJECTED" ? "rejected" : "pending", category: catalogItem.category, item: catalogItem, evidence: catalogEvidence }); } catch (error) { throw new TRPCError({ code: "PRECONDITION_FAILED", message: "ERP policy validation rejected the request" }); }
+    const remaining = Number(batch.quantityOnHand);
+    if (!Number.isFinite(remaining) || remaining < item.quantity) throw new TRPCError({ code: "BAD_REQUEST", message: "Insufficient stock" });
+    checkedItems.push({ ...item, remaining });
+  }
+  try {
+    const saleId = await db.transaction(async (tx) => {
+      const inserted = await tx.insert(sales).values({ organizationId, branchId: input.branchId, jurisdictionId: assignment.jurisdictionId, cashierId: ctx.user.id, invoiceNumber: input.invoiceNumber, subtotal: subtotal.toFixed(2), discountAmount: input.discountAmount.toFixed(2), totalAmount: (subtotal - input.discountAmount).toFixed(2), discountValidation: "MOH_7_PERCENT", paymentMethod: input.paymentMethod, etaStatus: "pending", saleStatus: "completed" });
+      const persistedSaleId = Number(inserted[0].insertId);
+      await tx.insert(saleItems).values(checkedItems.map((item) => ({ saleId: persistedSaleId, productId: item.productId, batchId: item.batchId, unit: item.unit, quantity: item.quantity.toFixed(3), unitPrice: item.unitPrice.toFixed(2) })));
+      for (const item of checkedItems) { const updatedBatch = await tx.update(inventoryBatches).set({ quantityOnHand: (item.remaining - item.quantity).toFixed(3) }).where(and(eq(inventoryBatches.id, item.batchId), eq(inventoryBatches.organizationId, organizationId), eq(inventoryBatches.branchId, input.branchId), eq(inventoryBatches.jurisdictionId, assignment.jurisdictionId))).execute(); if (Number(updatedBatch[0]?.affectedRows ?? 0) !== 1) throw new Error("Inventory batch could not be reserved"); }
+      if (appliedPromotionId !== null) { const updated = await tx.update(promotions).set({ usageCount: sql`${promotions.usageCount} + 1` }).where(and(eq(promotions.id, appliedPromotionId), eq(promotions.status, "active"), or(isNull(promotions.usageLimit), lt(promotions.usageCount, promotions.usageLimit)))).execute(); if (Number(updated[0]?.affectedRows ?? 0) !== 1) throw new Error("Promotion usage could not be reserved"); }
+      return persistedSaleId;
+    });
+    return { saleId, jurisdictionId: assignment.jurisdictionId, status: "COMMITTED" as const };
+  } catch (error) {
+    console.error("[POS] Sale transaction rolled back", { error: safeErrorLabel(error), branchId: input.branchId, organizationId, jurisdictionId: assignment.jurisdictionId });
+    throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Sale could not be completed safely" });
+  }
 }
 
 const pharmacistProcedure = protectedProcedure.use(({ ctx, next }) => {
@@ -183,6 +285,28 @@ export const erpRouter = router({
         return Array.from(byProduct.entries()).map(([productId, values]) => ({ productId, historyDays: dayKeys.map(day => values.get(day) ?? 0), observedDays: dayKeys.filter(day => values.has(day)).length, historyStart: dayKeys[0], historyEnd: dayKeys[dayKeys.length - 1], scope: { organizationId, branchId: input.branchId, jurisdictionId: input.jurisdictionId } }));
       }),
   }),
+  analytics: router({
+    branchOverview: protectedProcedure
+      .input(z.object({ branchId: z.number().int().positive(), jurisdictionId: z.number().int().positive().optional(), days: z.number().int().min(1).max(31).default(7) }))
+      .query(async ({ ctx, input }) => {
+        const db = await getDb();
+        if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
+        await assertUserBranchAccess(db, ctx.user.id, ctx.user.role, input.branchId);
+        const organizationId = await getBranchOrganizationId(db, input.branchId);
+        if (ctx.user.role !== "admin" && !(await getUserOrganizationIds(db, ctx.user.id)).includes(organizationId)) throw new TRPCError({ code: "FORBIDDEN", message: "Analytics is outside the active organization scope" });
+        const assignment = input.jurisdictionId ? (await db.select().from(branchJurisdictions).where(and(eq(branchJurisdictions.branchId, input.branchId), eq(branchJurisdictions.jurisdictionId, input.jurisdictionId))).limit(1))[0] : (await db.select().from(branchJurisdictions).where(eq(branchJurisdictions.branchId, input.branchId)).limit(1))[0];
+        const start = new Date(Date.now() - (input.days - 1) * 24 * 60 * 60 * 1000);
+        const scopeFilters = [eq(sales.organizationId, organizationId), eq(sales.branchId, input.branchId), eq(sales.saleStatus, "completed"), gte(sales.createdAt, start), ...(input.jurisdictionId ? [eq(sales.jurisdictionId, input.jurisdictionId)] : [])];
+        const summaryRows = await db.select({ salesCount: sql<string>`COUNT(*)`, totalSales: sql<string>`COALESCE(SUM(${sales.totalAmount}), 0)`, averageSale: sql<string>`COALESCE(AVG(${sales.totalAmount}), 0)` }).from(sales).where(and(...scopeFilters));
+        const paymentRows = await db.select({ paymentMethod: sales.paymentMethod, total: sql<string>`COALESCE(SUM(${sales.totalAmount}), 0)`, count: sql<string>`COUNT(*)` }).from(sales).where(and(...scopeFilters)).groupBy(sales.paymentMethod);
+        const trendRows = await db.select({ day: sql<string>`DATE(${sales.createdAt})`, total: sql<string>`COALESCE(SUM(${sales.totalAmount}), 0)`, count: sql<string>`COUNT(*)` }).from(sales).where(and(...scopeFilters)).groupBy(sql`DATE(${sales.createdAt})`).orderBy(sql`DATE(${sales.createdAt})`);
+        const inventoryFilters = [eq(inventoryBatches.organizationId, organizationId), eq(inventoryBatches.branchId, input.branchId), ...(input.jurisdictionId ? [eq(inventoryBatches.jurisdictionId, input.jurisdictionId)] : [])];
+        const inventoryRows = await db.select({ productId: products.id, nameAr: products.nameAr, sku: products.sku, quantityOnHand: sql<string>`COALESCE(SUM(${inventoryBatches.quantityOnHand}), 0)`, reorderPoint: sql<string>`COALESCE(MAX(${inventoryBatches.reorderPoint}), 0)`, nearestExpiry: sql<Date | null>`MIN(${inventoryBatches.expiryDate})` }).from(inventoryBatches).innerJoin(products, eq(products.id, inventoryBatches.productId)).where(and(...inventoryFilters, eq(products.organizationId, organizationId), eq(products.active, 1))).groupBy(products.id, products.nameAr, products.sku).orderBy(sql`SUM(${inventoryBatches.quantityOnHand}) ASC`).limit(100);
+        const now = Date.now();
+        const inventoryAlerts = inventoryRows.map(row => { const quantityOnHand = Number(row.quantityOnHand ?? 0); const reorderPoint = Number(row.reorderPoint ?? 0); const expiry = row.nearestExpiry ? new Date(row.nearestExpiry).getTime() : null; const daysToExpiry = expiry === null ? null : Math.ceil((expiry - now) / 86400000); const severity = quantityOnHand <= 0 ? "critical" : daysToExpiry !== null && daysToExpiry <= 30 ? "warning" : quantityOnHand <= reorderPoint ? "warning" : "normal"; return { productId: row.productId, nameAr: row.nameAr, sku: row.sku, quantityOnHand, reorderPoint, nearestExpiry: row.nearestExpiry, daysToExpiry, severity }; }).filter(item => item.severity !== "normal").sort((a, b) => (a.severity === "critical" ? -1 : 1) - (b.severity === "critical" ? -1 : 1) || a.quantityOnHand - b.quantityOnHand);
+        return { scope: { organizationId, branchId: input.branchId, jurisdictionId: assignment?.jurisdictionId ?? input.jurisdictionId ?? null }, period: { days: input.days, start }, summary: { salesCount: Number(summaryRows[0]?.salesCount ?? 0), totalSales: Number(summaryRows[0]?.totalSales ?? 0), averageSale: Number(summaryRows[0]?.averageSale ?? 0) }, paymentMix: paymentRows.map(row => ({ paymentMethod: row.paymentMethod, total: Number(row.total ?? 0), count: Number(row.count ?? 0) })), trend: trendRows.map(row => ({ day: String(row.day).slice(0, 10), total: Number(row.total ?? 0), count: Number(row.count ?? 0) })), inventory: { totalTrackedProducts: inventoryRows.length, alertCount: inventoryAlerts.length, criticalCount: inventoryAlerts.filter(item => item.severity === "critical").length, alerts: inventoryAlerts.slice(0, 20) }, refreshedAt: new Date() };
+      }),
+  }),
   policy: router({
     validateDiscount: protectedProcedure
       .input(z.object({ officialPrice: z.number().nonnegative(), discountAmount: z.number().nonnegative() }))
@@ -225,6 +349,134 @@ export const erpRouter = router({
           throw new TRPCError({ code: "BAD_REQUEST", message: "Invoice validation rejected the request" });
         }
       }),
+    availableStock: protectedProcedure
+      .input(availableStockInputSchema)
+      .query(async ({ ctx, input }) => {
+        const db = await getDb();
+        if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
+        const assignment = (await db.select().from(branchJurisdictions).where(and(eq(branchJurisdictions.branchId, input.branchId), eq(branchJurisdictions.jurisdictionId, input.jurisdictionId))).limit(1))[0];
+        try { assertBranchAssignmentReady(assignment); await assertUserBranchAccess(db, ctx.user.id, ctx.user.role, input.branchId); await assertUserJurisdictionAccess(db, ctx.user.id, ctx.user.role, input.jurisdictionId); } catch (error) { throw new TRPCError({ code: error instanceof TRPCError ? error.code : "PRECONDITION_FAILED", message: "Scoped branch access rejected" }); }
+        const organizationId = await getBranchOrganizationId(db, input.branchId);
+        const organization = (await db.select({ environment: organizations.environment }).from(organizations).where(eq(organizations.id, organizationId)).limit(1))[0];
+        if (organization?.environment === "showcase") {
+          await seedShowcaseDemoData({ organizationId, branchId: input.branchId, jurisdictionId: input.jurisdictionId, createdByUserId: ctx.user.id });
+        }
+        const productFilters = [eq(products.organizationId, organizationId), eq(products.jurisdictionId, input.jurisdictionId), eq(products.active, 1), ...(input.query.trim() ? [or(like(products.nameAr, `%${input.query.trim()}%`), like(products.nameEn, `%${input.query.trim()}%`), like(products.sku, `%${input.query.trim()}%`), like(products.barcode, `%${input.query.trim()}%`))] : [])];
+        const productRows = await db.select().from(products).where(and(...productFilters)).limit(100);
+        const result: Array<{ productId: number; batchId: number; sku: string; barcode: string | null; nameAr: string; nameEn: string | null; unitPrice: number; batchNumber: string; expiryDate: Date; quantityOnHand: number; unit: string }> = [];
+        for (const product of productRows) {
+          if (!product.catalogItemId) continue;
+          const catalog = (await db.select({ verificationStatus: catalogItems.verificationStatus }).from(catalogItems).where(and(eq(catalogItems.id, product.catalogItemId), eq(catalogItems.organizationId, organizationId), eq(catalogItems.jurisdictionId, input.jurisdictionId))).limit(1))[0];
+          if (!catalog || catalog.verificationStatus !== "VERIFIED") continue;
+          const batches = await db.select().from(inventoryBatches).where(and(eq(inventoryBatches.productId, product.id), eq(inventoryBatches.organizationId, organizationId), eq(inventoryBatches.branchId, input.branchId), eq(inventoryBatches.jurisdictionId, input.jurisdictionId), sql`${inventoryBatches.quantityOnHand} > 0`)).orderBy(inventoryBatches.expiryDate).limit(8);
+          for (const batch of batches) result.push({ productId: product.id, batchId: batch.id, sku: product.sku, barcode: product.barcode, nameAr: product.nameAr, nameEn: product.nameEn, unitPrice: Number(product.officialPrice), batchNumber: batch.batchNumber, expiryDate: batch.expiryDate, quantityOnHand: Number(batch.quantityOnHand), unit: "وحدة" });
+        }
+        // MySQL drivers may return DATETIME values as strings at runtime even when the
+        // Drizzle type is Date. Normalize after the fully scoped query so a valid
+        // showcase catalog cannot fail the entire POS request on date conversion.
+        return sortAvailableStockByExpiry(result).slice(0, 100);
+      }),
+    demoCatalog: router({
+      list: protectedProcedure
+        .input(z.object({ branchId: z.number().int().positive(), jurisdictionId: z.number().int().positive(), query: z.string().trim().max(120).default(""), activeOnly: z.boolean().default(false) }))
+        .query(async ({ ctx, input }) => {
+          const db = await getDb(); if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
+          const assignment = (await db.select().from(branchJurisdictions).where(and(eq(branchJurisdictions.branchId, input.branchId), eq(branchJurisdictions.jurisdictionId, input.jurisdictionId))).limit(1))[0];
+          try { assertBranchAssignmentReady(assignment); await assertUserBranchAccess(db, ctx.user.id, ctx.user.role, input.branchId); await assertUserJurisdictionAccess(db, ctx.user.id, ctx.user.role, input.jurisdictionId); } catch (error) { throw new TRPCError({ code: error instanceof TRPCError ? error.code : "PRECONDITION_FAILED", message: "Scoped branch access rejected" }); }
+          const organizationId = await getBranchOrganizationId(db, input.branchId);
+          const organization = (await db.select({ environment: organizations.environment }).from(organizations).where(eq(organizations.id, organizationId)).limit(1))[0];
+          if (organization?.environment !== "showcase") throw new TRPCError({ code: "FORBIDDEN", message: "Demo catalog is available only in the isolated showcase scope" });
+          await seedShowcaseDemoData({ organizationId, branchId: input.branchId, jurisdictionId: input.jurisdictionId, createdByUserId: ctx.user.id });
+          const filters = [eq(products.organizationId, organizationId), eq(products.jurisdictionId, input.jurisdictionId), ...(input.activeOnly ? [eq(products.active, 1)] : []), ...(input.query ? [or(like(products.nameAr, `%${input.query}%`), like(products.nameEn, `%${input.query}%`), like(products.sku, `%${input.query}%`), like(products.barcode, `%${input.query}%`))] : [])];
+          const rows = await db.select().from(products).where(and(...filters)).orderBy(desc(products.id)).limit(100);
+          const result = [] as Array<{ id: number; sku: string; barcode: string | null; nameAr: string; nameEn: string | null; officialPrice: number; active: boolean; stock: number }>;
+          for (const row of rows) {
+            const batches = await db.select({ quantityOnHand: inventoryBatches.quantityOnHand }).from(inventoryBatches).where(and(eq(inventoryBatches.productId, row.id), eq(inventoryBatches.organizationId, organizationId), eq(inventoryBatches.branchId, input.branchId), eq(inventoryBatches.jurisdictionId, input.jurisdictionId)));
+            result.push({ id: row.id, sku: row.sku, barcode: row.barcode, nameAr: row.nameAr, nameEn: row.nameEn, officialPrice: Number(row.officialPrice), active: row.active === 1, stock: batches.reduce((sum, batch) => sum + Number(batch.quantityOnHand), 0) });
+          }
+          return result;
+        }),
+      update: protectedProcedure
+        .input(z.object({ branchId: z.number().int().positive(), jurisdictionId: z.number().int().positive(), productId: z.number().int().positive(), nameAr: z.string().trim().min(1).max(220).optional(), nameEn: z.string().trim().max(220).nullable().optional(), barcode: z.string().trim().max(64).nullable().optional(), officialPrice: z.number().nonnegative().optional(), active: z.boolean().optional() }))
+        .mutation(async ({ ctx, input }) => {
+          const db = await getDb(); if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
+          if (!["admin", "manager"].includes(ctx.user.role)) throw new TRPCError({ code: "FORBIDDEN", message: "Demo catalog editing requires manager permission" });
+          const assignment = (await db.select().from(branchJurisdictions).where(and(eq(branchJurisdictions.branchId, input.branchId), eq(branchJurisdictions.jurisdictionId, input.jurisdictionId))).limit(1))[0];
+          try { assertBranchAssignmentReady(assignment); await assertUserBranchAccess(db, ctx.user.id, ctx.user.role, input.branchId); await assertUserJurisdictionAccess(db, ctx.user.id, ctx.user.role, input.jurisdictionId); } catch (error) { throw new TRPCError({ code: error instanceof TRPCError ? error.code : "PRECONDITION_FAILED", message: "Scoped branch access rejected" }); }
+          const organizationId = await getBranchOrganizationId(db, input.branchId);
+          const organization = (await db.select({ environment: organizations.environment }).from(organizations).where(eq(organizations.id, organizationId)).limit(1))[0];
+          if (organization?.environment !== "showcase") throw new TRPCError({ code: "FORBIDDEN", message: "Demo catalog is available only in the isolated showcase scope" });
+          const product = (await db.select().from(products).where(and(eq(products.id, input.productId), eq(products.organizationId, organizationId), eq(products.jurisdictionId, input.jurisdictionId))).limit(1))[0];
+          if (!product) throw new TRPCError({ code: "NOT_FOUND", message: "Demo product not found in the active scope" });
+          const patch: Partial<typeof products.$inferInsert> = {};
+          if (input.nameAr !== undefined) patch.nameAr = input.nameAr;
+          if (input.nameEn !== undefined) patch.nameEn = input.nameEn;
+          if (input.barcode !== undefined) patch.barcode = input.barcode || null;
+          if (input.officialPrice !== undefined) patch.officialPrice = input.officialPrice.toFixed(2);
+          if (input.active !== undefined) patch.active = input.active ? 1 : 0;
+          if (!Object.keys(patch).length) throw new TRPCError({ code: "BAD_REQUEST", message: "No Demo catalog changes supplied" });
+          await db.update(products).set(patch).where(and(eq(products.id, product.id), eq(products.organizationId, organizationId), eq(products.jurisdictionId, input.jurisdictionId)));
+          await db.insert(auditLogs).values({ userId: ctx.user.id, organizationId, branchId: input.branchId, action: "demo_catalog_updated", entityType: "product", entityId: String(product.id), previousHash: null, recordHash: hashAuditRecord({ eventType: "demo_catalog_updated", organizationId, branchId: input.branchId, jurisdictionId: input.jurisdictionId, requestId: String(product.id), createdAt: new Date().toISOString() }) });
+          return { productId: product.id, updated: true as const };
+        }),
+    }),
+    demoTrialInvoices: protectedProcedure
+      .input(z.object({ branchId: z.number().int().positive(), jurisdictionId: z.number().int().positive(), query: z.string().trim().max(120).default(""), limit: z.number().int().min(1).max(100).default(50) }))
+      .query(async ({ ctx, input }) => {
+        const db = await getDb(); if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
+        const assignment = (await db.select().from(branchJurisdictions).where(and(eq(branchJurisdictions.branchId, input.branchId), eq(branchJurisdictions.jurisdictionId, input.jurisdictionId))).limit(1))[0];
+        try { assertBranchAssignmentReady(assignment); await assertUserBranchAccess(db, ctx.user.id, ctx.user.role, input.branchId); await assertUserJurisdictionAccess(db, ctx.user.id, ctx.user.role, input.jurisdictionId); } catch (error) { throw new TRPCError({ code: error instanceof TRPCError ? error.code : "PRECONDITION_FAILED", message: "Scoped branch access rejected" }); }
+        const organizationId = await getBranchOrganizationId(db, input.branchId);
+        const organization = (await db.select({ environment: organizations.environment }).from(organizations).where(eq(organizations.id, organizationId)).limit(1))[0];
+        if (organization?.environment !== "showcase") throw new TRPCError({ code: "FORBIDDEN", message: "Trial invoice log is available only in the isolated showcase scope" });
+        const rows = await db.select().from(sales).where(and(eq(sales.organizationId, organizationId), eq(sales.branchId, input.branchId), eq(sales.jurisdictionId, input.jurisdictionId), ...(input.query ? [like(sales.invoiceNumber, `%${input.query}%`)] : []))).orderBy(desc(sales.createdAt)).limit(input.limit);
+        const result = [] as Array<{ id: number; invoiceNumber: string; totalAmount: number; paymentMethod: string; saleStatus: string; createdAt: Date; items: Array<{ productId: number; nameAr: string; quantity: number; unitPrice: number }> }>;
+        for (const sale of rows) {
+          const lineRows = await db.select({ productId: saleItems.productId, quantity: saleItems.quantity, unitPrice: saleItems.unitPrice }).from(saleItems).where(eq(saleItems.saleId, sale.id));
+          const items = [] as Array<{ productId: number; nameAr: string; quantity: number; unitPrice: number }>;
+          for (const line of lineRows) { const product = (await db.select({ nameAr: products.nameAr }).from(products).where(and(eq(products.id, line.productId), eq(products.organizationId, organizationId), eq(products.jurisdictionId, input.jurisdictionId))).limit(1))[0]; items.push({ productId: line.productId, nameAr: product?.nameAr ?? "صنف تجريبي", quantity: Number(line.quantity), unitPrice: Number(line.unitPrice) }); }
+          result.push({ id: sale.id, invoiceNumber: sale.invoiceNumber, totalAmount: Number(sale.totalAmount), paymentMethod: sale.paymentMethod, saleStatus: sale.saleStatus, createdAt: sale.createdAt, items });
+        }
+        return result;
+      }),
+    holdInvoice: protectedProcedure
+      .input(z.object({ branchId: z.number().int().positive(), invoiceNumber: z.string().trim().min(3).max(80), paymentMethod: z.enum(["cash", "meeza", "instapay", "insurance"]), items: z.array(z.object({ productId: z.number().int().positive(), batchId: z.number().int().positive(), sku: z.string().min(1).max(64), barcode: z.string().max(64).nullable(), nameAr: z.string().min(1).max(220), nameEn: z.string().max(220).nullable(), unitPrice: z.number().nonnegative(), batchNumber: z.string().min(1).max(80), expiryDate: z.coerce.date(), quantityOnHand: z.number().nonnegative(), unit: z.string().min(1).max(24), quantity: z.number().positive() })).min(1) }))
+      .mutation(async ({ ctx, input }) => {
+        const db = await getDb(); if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
+        const assignment = (await db.select().from(branchJurisdictions).where(eq(branchJurisdictions.branchId, input.branchId)).limit(1))[0];
+        try { assertBranchAssignmentReady(assignment); await assertUserBranchAccess(db, ctx.user.id, ctx.user.role, input.branchId); await assertUserJurisdictionAccess(db, ctx.user.id, ctx.user.role, assignment.jurisdictionId); } catch (error) { throw new TRPCError({ code: error instanceof TRPCError ? error.code : "PRECONDITION_FAILED", message: "Scoped branch access rejected" }); }
+        const organizationId = await getBranchOrganizationId(db, input.branchId);
+        const payloadJson = JSON.stringify(input.items);
+        const created = await db.insert(heldInvoices).values({ organizationId, branchId: input.branchId, jurisdictionId: assignment.jurisdictionId, cashierId: ctx.user.id, invoiceNumber: input.invoiceNumber, paymentMethod: input.paymentMethod, payloadJson });
+        const heldId = Number(created[0].insertId); const createdAt = new Date().toISOString();
+        await db.insert(auditLogs).values({ userId: ctx.user.id, organizationId, branchId: input.branchId, action: "pos_invoice_held", entityType: "held_invoice", entityId: String(heldId), previousHash: null, recordHash: hashAuditRecord({ eventType: "pos_invoice_held", userId: ctx.user.id, organizationId, branchId: input.branchId, jurisdictionId: assignment.jurisdictionId, requestId: String(heldId), createdAt }) });
+        return { heldId, status: "HELD" as const };
+      }),
+    listHeldInvoices: protectedProcedure
+      .input(z.object({ branchId: z.number().int().positive() }))
+      .query(async ({ ctx, input }) => {
+        const db = await getDb(); if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
+        const assignment = (await db.select().from(branchJurisdictions).where(eq(branchJurisdictions.branchId, input.branchId)).limit(1))[0];
+        try { assertBranchAssignmentReady(assignment); await assertUserBranchAccess(db, ctx.user.id, ctx.user.role, input.branchId); await assertUserJurisdictionAccess(db, ctx.user.id, ctx.user.role, assignment.jurisdictionId); } catch (error) { throw new TRPCError({ code: error instanceof TRPCError ? error.code : "PRECONDITION_FAILED", message: "Scoped branch access rejected" }); }
+        const organizationId = await getBranchOrganizationId(db, input.branchId);
+        const rows = await db.select().from(heldInvoices).where(and(eq(heldInvoices.organizationId, organizationId), eq(heldInvoices.branchId, input.branchId), eq(heldInvoices.jurisdictionId, assignment.jurisdictionId), eq(heldInvoices.cashierId, ctx.user.id))).orderBy(desc(heldInvoices.createdAt)).limit(100);
+        return rows.map(row => { let items: unknown[] = []; try { items = JSON.parse(row.payloadJson) as unknown[]; } catch { items = []; } return { id: row.id, invoiceNumber: row.invoiceNumber, paymentMethod: row.paymentMethod, items, createdAt: row.createdAt }; });
+      }),
+    restoreHeldInvoice: protectedProcedure
+      .input(z.object({ branchId: z.number().int().positive(), heldId: z.number().int().positive() }))
+      .mutation(async ({ ctx, input }) => {
+        const db = await getDb(); if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
+        const assignment = (await db.select().from(branchJurisdictions).where(eq(branchJurisdictions.branchId, input.branchId)).limit(1))[0];
+        try { assertBranchAssignmentReady(assignment); await assertUserBranchAccess(db, ctx.user.id, ctx.user.role, input.branchId); await assertUserJurisdictionAccess(db, ctx.user.id, ctx.user.role, assignment.jurisdictionId); } catch (error) { throw new TRPCError({ code: error instanceof TRPCError ? error.code : "PRECONDITION_FAILED", message: "Scoped branch access rejected" }); }
+        const organizationId = await getBranchOrganizationId(db, input.branchId);
+        const row = (await db.select().from(heldInvoices).where(and(eq(heldInvoices.id, input.heldId), eq(heldInvoices.organizationId, organizationId), eq(heldInvoices.branchId, input.branchId), eq(heldInvoices.jurisdictionId, assignment.jurisdictionId), eq(heldInvoices.cashierId, ctx.user.id))).limit(1))[0];
+        if (!row) throw new TRPCError({ code: "NOT_FOUND", message: "Held invoice not found in the active scope" });
+        let items: unknown[]; try { items = JSON.parse(row.payloadJson) as unknown[]; } catch { throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Held invoice payload is invalid" }); }
+        await db.delete(heldInvoices).where(and(eq(heldInvoices.id, row.id), eq(heldInvoices.organizationId, organizationId), eq(heldInvoices.branchId, input.branchId), eq(heldInvoices.jurisdictionId, assignment.jurisdictionId), eq(heldInvoices.cashierId, ctx.user.id)));
+        const createdAt = new Date().toISOString();
+        await db.insert(auditLogs).values({ userId: ctx.user.id, organizationId, branchId: input.branchId, action: "pos_invoice_restored", entityType: "held_invoice", entityId: String(row.id), previousHash: null, recordHash: hashAuditRecord({ eventType: "pos_invoice_restored", userId: ctx.user.id, organizationId, branchId: input.branchId, jurisdictionId: assignment.jurisdictionId, requestId: String(row.id), createdAt }) });
+        return { id: row.id, invoiceNumber: row.invoiceNumber, paymentMethod: row.paymentMethod, items, createdAt: row.createdAt };
+      }),
     prepareSale: protectedProcedure
       .input(z.object({ branchId: z.number().int().positive(), officialPrice: z.number().nonnegative(), quantity: z.number().positive(), discountAmount: z.number().nonnegative(), batches: z.array(z.object({ id: z.string(), jurisdictionId: z.number().int().positive(), expiryDate: z.coerce.date(), quantityOnHand: z.number().nonnegative() })) }))
       .mutation(async ({ ctx, input }) => {
@@ -243,6 +495,7 @@ export const erpRouter = router({
         } catch (error) { throw new TRPCError({ code: "PRECONDITION_FAILED", message: "ERP policy validation rejected the request" }); }
         try { return { ...preparePosSale(input), jurisdictionId: assignment.jurisdictionId }; } catch (error) { throw new TRPCError({ code: "BAD_REQUEST", message: "ERP policy validation rejected the request" }); }
       }),
+    // Production sale route: protected middleware blocks all showcase mutations.
     commitSale: protectedProcedure
       .input(z.object({ branchId: z.number().int().positive(), invoiceNumber: z.string().min(3).max(80), paymentMethod: z.enum(["cash", "meeza", "instapay", "insurance"]), discountAmount: z.number().nonnegative(), promotionCode: z.string().regex(/^[A-Z0-9_-]{3,48}$/).optional(), items: z.array(z.object({ productId: z.number().int().positive(), batchId: z.number().int().positive(), quantity: z.number().positive(), unit: z.string().min(1).max(24), unitPrice: z.number().nonnegative() })).min(1) }))
       .mutation(async ({ ctx, input }) => {
@@ -251,11 +504,16 @@ export const erpRouter = router({
         const assignment = (await db.select().from(branchJurisdictions).where(eq(branchJurisdictions.branchId, input.branchId)).limit(1))[0];
         try { assertBranchAssignmentReady(assignment); await assertUserBranchAccess(db, ctx.user.id, ctx.user.role, input.branchId); await assertUserJurisdictionAccess(db, ctx.user.id, ctx.user.role, assignment.jurisdictionId); } catch (error) { throw new TRPCError({ code: error instanceof TRPCError ? error.code : "PRECONDITION_FAILED", message: "Scoped branch access rejected" }); }
         const organizationId = await getBranchOrganizationId(db, input.branchId);
+        const organization = (await db.select({ environment: organizations.environment }).from(organizations).where(eq(organizations.id, organizationId)).limit(1))[0];
+        if (organization?.environment === "showcase") throw new TRPCError({ code: "FORBIDDEN", message: "Showcase sales must use the isolated simulation route" });
         const profile = (await db.select().from(jurisdictionProfiles).where(eq(jurisdictionProfiles.id, assignment.jurisdictionId)).limit(1))[0];
         const pack = (await db.select().from(compliancePacks).where(and(eq(compliancePacks.jurisdictionId, assignment.jurisdictionId), eq(compliancePacks.status, "approved"))).orderBy(desc(compliancePacks.createdAt)).limit(1))[0];
         const evidence = pack ? await db.select().from(complianceEvidence).where(and(eq(complianceEvidence.packId, pack.id), eq(complianceEvidence.verificationStatus, "verified"))) : [];
         if (!profile || !pack) throw new TRPCError({ code: "PRECONDITION_FAILED", message: "Approved current sale compliance pack required" });
-        try { assertCompliancePackUsable({ countryCode: profile.countryCode, active: profile.active === 1, legalAuthorityProfile: profile.legalAuthorityProfile, language: profile.language, defaultLocale: profile.defaultLocale, currencyCode: profile.currencyCode, timezone: profile.timezone, taxProfile: profile.taxProfile, dateFormat: profile.dateFormat, numberSystem: profile.numberSystem }, { jurisdictionId: pack.jurisdictionId, packVersion: pack.packVersion, status: pack.status, effectiveFrom: pack.effectiveFrom, reviewDueAt: pack.reviewDueAt, rules: JSON.parse(pack.rulesJson) as Record<string, boolean>, evidenceCount: evidence.length }, "sale"); } catch (error) { throw new TRPCError({ code: "PRECONDITION_FAILED", message: "ERP policy validation rejected the request" }); }
+        try {
+          const rules = JSON.parse(pack.rulesJson) as Record<string, boolean>;
+          assertCompliancePackUsable({ countryCode: profile.countryCode, active: profile.active === 1, legalAuthorityProfile: profile.legalAuthorityProfile, language: profile.language, defaultLocale: profile.defaultLocale, currencyCode: profile.currencyCode, timezone: profile.timezone, taxProfile: profile.taxProfile, dateFormat: profile.dateFormat, numberSystem: profile.numberSystem }, { jurisdictionId: pack.jurisdictionId, packVersion: pack.packVersion, status: pack.status, effectiveFrom: pack.effectiveFrom, reviewDueAt: pack.reviewDueAt, rules, evidenceCount: evidence.length }, "sale");
+        } catch (error) { throw new TRPCError({ code: "PRECONDITION_FAILED", message: "ERP policy validation rejected the request" }); }
         const subtotal = input.items.reduce((sum, item) => sum + item.quantity * item.unitPrice, 0);
         let appliedPromotionId: number | null = null;
         if (input.promotionCode) {
@@ -296,8 +554,21 @@ export const erpRouter = router({
             return saleId;
           });
           return { saleId: result, jurisdictionId: assignment.jurisdictionId, status: "COMMITTED" as const };
-        } catch { throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Sale could not be completed safely" }); }
+        } catch (error) {
+          console.error("[POS] Sale transaction rolled back", {
+            error: safeErrorLabel(error),
+            branchId: input.branchId,
+            organizationId,
+            jurisdictionId: assignment.jurisdictionId,
+          });
+          throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Sale could not be completed safely" });
+        }
       }),
+    // The only persistent showcase sale path. It verifies both isolated session mode
+    // and showcase organization scope before sharing the transactional sale engine.
+    commitShowcaseSale: isolatedDemoMutationProcedure
+      .input(commitSaleSchema)
+      .mutation(async ({ ctx, input }) => persistScopedSale({ ctx, input, allowShowcasePersistence: true })),
     previewReturn: protectedProcedure
       .input(z.object({ branchId: z.number().int().positive(), saleId: z.number().int().positive(), quantity: z.number().positive(), amount: z.number().nonnegative(), taxAmount: z.number().nonnegative().default(0), reason: z.enum(["defect", "wrong_item", "change_of_mind", "expired_or_damaged", "recall", "other"]), daysSinceSale: z.number().nonnegative(), itemSealed: z.boolean(), itemDispensed: z.boolean(), invoiceReferencePresent: z.boolean(), evidencePresent: z.boolean(), notes: z.string().max(500).optional() }))
       .mutation(async ({ ctx, input }) => {
@@ -797,7 +1068,7 @@ export const erpRouter = router({
         return { prescriptionId: prescription.id, status: "VERIFIED" as const };
       }),
     accessByPatientId: pharmacistProcedure
-      .input(z.object({ branchId: z.number().int().positive(), jurisdictionId: z.number().int().positive(), patientId: z.number().int().positive(), prescriptionCode: z.string().max(80).optional(), includePending: z.boolean().optional() }))
+      .input(z.object({ branchId: z.number().int().positive(), jurisdictionId: z.number().int().nonnegative(), patientId: z.number().int().positive(), prescriptionCode: z.string().max(80).optional(), includePending: z.boolean().optional() }))
       .query(async ({ ctx, input }) => {
         const db = await getDb();
         if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
@@ -837,5 +1108,111 @@ export const erpRouter = router({
         await db.update(ePrescriptions).set({ status: allDispensed ? "DISPENSED" : anyDispensed ? "PARTIALLY_DISPENSED" : prescription.status }).where(eq(ePrescriptions.id, prescription.id));
         return { prescriptionId: prescription.id, lineId: line.id, dispensedQuantity: nextDispensed, lineStatus: lineComplete ? "DISPENSED" as const : "PARTIALLY_DISPENSED" as const, prescriptionStatus: allDispensed ? "DISPENSED" as const : "PARTIALLY_DISPENSED" as const };
       }),
+  }),
+  cashier: router({
+    currentShift: protectedProcedure
+      .input(z.object({ branchId: z.number().int().positive(), jurisdictionId: z.number().int().positive() }))
+      .query(async ({ ctx, input }) => {
+        const db = await getDb(); if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
+        await assertUserBranchAccess(db, ctx.user.id, ctx.user.role, input.branchId); await assertUserJurisdictionAccess(db, ctx.user.id, ctx.user.role, input.jurisdictionId);
+        const organizationId = await getBranchOrganizationId(db, input.branchId);
+        return (await db.select().from(cashierShifts).where(and(eq(cashierShifts.organizationId, organizationId), eq(cashierShifts.branchId, input.branchId), eq(cashierShifts.jurisdictionId, input.jurisdictionId), eq(cashierShifts.cashierId, ctx.user.id), eq(cashierShifts.status, "open"))).limit(1))[0] ?? null;
+      }),
+    openShift: isolatedDemoMutationProcedure
+      .input(z.object({ branchId: z.number().int().positive(), jurisdictionId: z.number().int().positive(), openingAmount: z.coerce.number().nonnegative() }))
+      .mutation(async ({ ctx, input }) => {
+        const db = await getDb(); if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
+        if (!["admin", "manager", "cashier"].includes(ctx.user.role)) throw new TRPCError({ code: "FORBIDDEN", message: "Cashier shift permission required" });
+        await assertUserBranchAccess(db, ctx.user.id, ctx.user.role, input.branchId); await assertUserJurisdictionAccess(db, ctx.user.id, ctx.user.role, input.jurisdictionId);
+        const organizationId = await getBranchOrganizationId(db, input.branchId);
+        const existing = (await db.select({ id: cashierShifts.id }).from(cashierShifts).where(and(eq(cashierShifts.organizationId, organizationId), eq(cashierShifts.branchId, input.branchId), eq(cashierShifts.cashierId, ctx.user.id), eq(cashierShifts.status, "open"))).limit(1))[0];
+        if (existing) throw new TRPCError({ code: "CONFLICT", message: "يوجد درج بيع مفتوح لهذا الكاشير" });
+        const result = await db.insert(cashierShifts).values({ organizationId, branchId: input.branchId, jurisdictionId: input.jurisdictionId, cashierId: ctx.user.id, openingAmount: input.openingAmount.toFixed(2) });
+        return { shiftId: Number(result[0].insertId), status: "open" as const };
+      }),
+    closeShift: isolatedDemoMutationProcedure
+      .input(z.object({ shiftId: z.number().int().positive(), countedCash: z.coerce.number().nonnegative(), note: z.string().max(800).optional() }))
+      .mutation(async ({ ctx, input }) => {
+        const db = await getDb(); if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
+        const shift = (await db.select().from(cashierShifts).where(and(eq(cashierShifts.id, input.shiftId), eq(cashierShifts.cashierId, ctx.user.id), eq(cashierShifts.status, "open"))).limit(1))[0];
+        if (!shift) throw new TRPCError({ code: "NOT_FOUND", message: "وردية البيع المفتوحة غير موجودة" });
+        await assertUserBranchAccess(db, ctx.user.id, ctx.user.role, shift.branchId); await assertUserJurisdictionAccess(db, ctx.user.id, ctx.user.role, shift.jurisdictionId);
+        const cashSales = await db.select({ total: sql<string>`COALESCE(SUM(${sales.totalAmount}), 0)` }).from(sales).where(and(eq(sales.organizationId, shift.organizationId), eq(sales.branchId, shift.branchId), eq(sales.cashierId, ctx.user.id), eq(sales.paymentMethod, "cash"), eq(sales.saleStatus, "completed"), gte(sales.createdAt, shift.openedAt)));
+        const expected = Number(shift.openingAmount) + Number(cashSales[0]?.total ?? 0); const variance = input.countedCash - expected;
+        const closeStatus = Math.abs(variance) < 0.01 ? "approved" : "submitted";
+        await db.insert(cashClosures).values({ shiftId: shift.id, organizationId: shift.organizationId, branchId: shift.branchId, jurisdictionId: shift.jurisdictionId, countedCash: input.countedCash.toFixed(2), expectedCash: expected.toFixed(2), varianceCash: variance.toFixed(2), status: closeStatus, submittedByUserId: ctx.user.id, approvedByUserId: closeStatus === "approved" ? ctx.user.id : null, approvedAt: closeStatus === "approved" ? new Date() : null, note: input.note });
+        await db.update(cashierShifts).set({ status: closeStatus === "approved" ? "closed" : "pending_review", closedAt: new Date(), closedByUserId: ctx.user.id, closingAmount: input.countedCash.toFixed(2), expectedAmount: expected.toFixed(2), varianceAmount: variance.toFixed(2), closingNote: input.note }).where(eq(cashierShifts.id, shift.id));
+        return { shiftId: shift.id, status: closeStatus, expectedCash: expected, varianceCash: variance };
+      }),
+    approveClosure: isolatedDemoMutationProcedure
+      .input(z.object({ shiftId: z.number().int().positive() }))
+      .mutation(async ({ ctx, input }) => {
+        const db = await getDb(); if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
+        if (!["admin", "manager"].includes(ctx.user.role)) throw new TRPCError({ code: "FORBIDDEN", message: "Manager approval required" });
+        const shift = (await db.select().from(cashierShifts).where(and(eq(cashierShifts.id, input.shiftId), eq(cashierShifts.status, "pending_review"))).limit(1))[0]; if (!shift) throw new TRPCError({ code: "NOT_FOUND", message: "تقفيل الوردية غير موجود" });
+        await assertUserBranchAccess(db, ctx.user.id, ctx.user.role, shift.branchId); await assertUserJurisdictionAccess(db, ctx.user.id, ctx.user.role, shift.jurisdictionId);
+        await db.update(cashClosures).set({ status: "approved", approvedByUserId: ctx.user.id, approvedAt: new Date() }).where(eq(cashClosures.shiftId, shift.id));
+        await db.update(cashierShifts).set({ status: "closed" }).where(eq(cashierShifts.id, shift.id)); return { shiftId: shift.id, status: "closed" as const };
+      }),
+  }),
+  salesLedger: router({
+    listPeriod: protectedProcedure
+      .input(z.object({ branchId: z.number().int().positive(), jurisdictionId: z.number().int().positive(), from: z.coerce.date(), to: z.coerce.date(), cashierId: z.number().int().positive().optional(), status: z.enum(["completed", "voided", "cancelled"]).optional() }))
+      .query(async ({ ctx, input }) => {
+        const db = await getDb(); if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
+        await assertUserBranchAccess(db, ctx.user.id, ctx.user.role, input.branchId); await assertUserJurisdictionAccess(db, ctx.user.id, input.jurisdictionId === undefined ? ctx.user.role : ctx.user.role, input.jurisdictionId);
+        const organizationId = await getBranchOrganizationId(db, input.branchId);
+        return db.select().from(sales).where(and(eq(sales.organizationId, organizationId), eq(sales.branchId, input.branchId), eq(sales.jurisdictionId, input.jurisdictionId), gte(sales.createdAt, input.from), lt(sales.createdAt, input.to), ...(input.cashierId ? [eq(sales.cashierId, input.cashierId)] : []), ...(input.status ? [eq(sales.saleStatus, input.status)] : []))).orderBy(desc(sales.createdAt)).limit(500);
+      }),
+  }),
+  returns: router({
+    request: protectedProcedure
+      .input(z.object({ saleId: z.number().int().positive(), saleItemId: z.number().int().positive(), quantity: z.coerce.number().positive(), reasonCode: z.string().min(2).max(80), disposition: z.enum(["refund", "exchange", "credit_note", "pending_review"]).default("pending_review"), notes: z.string().max(500).optional() }))
+      .mutation(async ({ ctx, input }) => {
+        const db = await getDb(); if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
+        const sale = (await db.select().from(sales).where(eq(sales.id, input.saleId)).limit(1))[0]; const item = (await db.select().from(saleItems).where(and(eq(saleItems.id, input.saleItemId), eq(saleItems.saleId, input.saleId))).limit(1))[0];
+        if (!sale || !item || sale.saleStatus !== "completed") throw new TRPCError({ code: "NOT_FOUND", message: "الفاتورة أو صنف المرتجع غير صالح" });
+        if (input.quantity > Number(item.quantity)) throw new TRPCError({ code: "BAD_REQUEST", message: "كمية المرتجع تتجاوز الكمية المباعة" });
+        await assertUserBranchAccess(db, ctx.user.id, ctx.user.role, sale.branchId); if (sale.jurisdictionId === null) throw new TRPCError({ code: "PRECONDITION_FAILED", message: "Sale jurisdiction scope is missing" }); await assertUserJurisdictionAccess(db, ctx.user.id, ctx.user.role, sale.jurisdictionId);
+        const amount = Number(item.unitPrice) * input.quantity; const result = await db.insert(salesReturns).values({ organizationId: sale.organizationId, branchId: sale.branchId, jurisdictionId: sale.jurisdictionId, originalSaleId: sale.id, originalSaleItemId: item.id, quantity: input.quantity.toFixed(3), reasonCode: input.reasonCode, disposition: input.disposition, status: "preview", amount: amount.toFixed(2), taxAmount: "0", notes: input.notes, createdByUserId: ctx.user.id });
+        return { returnId: Number(result[0].insertId), status: "preview" as const, amount };
+      }),
+    approve: protectedProcedure
+      .input(z.object({ returnId: z.number().int().positive() }))
+      .mutation(async ({ ctx, input }) => {
+        const db = await getDb(); if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
+        if (!["admin", "manager"].includes(ctx.user.role)) throw new TRPCError({ code: "FORBIDDEN", message: "Manager approval required" });
+        const ret = (await db.select().from(salesReturns).where(and(eq(salesReturns.id, input.returnId), eq(salesReturns.status, "preview"))).limit(1))[0]; if (!ret) throw new TRPCError({ code: "NOT_FOUND", message: "طلب المرتجع غير موجود" });
+        await assertUserBranchAccess(db, ctx.user.id, ctx.user.role, ret.branchId); await assertUserJurisdictionAccess(db, ctx.user.id, ctx.user.role, ret.jurisdictionId);
+        if (!ret.originalSaleItemId) throw new TRPCError({ code: "PRECONDITION_FAILED", message: "لا يوجد صنف أصلي للمرتجع" });
+        const item = (await db.select().from(saleItems).where(eq(saleItems.id, ret.originalSaleItemId)).limit(1))[0]; if (!item) throw new TRPCError({ code: "NOT_FOUND", message: "صنف البيع غير موجود" });
+        await db.update(inventoryBatches).set({ quantityOnHand: sql`${inventoryBatches.quantityOnHand} + ${ret.quantity}` }).where(eq(inventoryBatches.id, item.batchId));
+        await db.update(salesReturns).set({ status: "completed", approvedByUserId: ctx.user.id, updatedAt: new Date() }).where(eq(salesReturns.id, ret.id)); return { returnId: ret.id, status: "completed" as const };
+      }),
+  }),
+  accounting: router({
+    accounts: protectedProcedure.input(z.object({ organizationId: z.number().int().positive().optional(), branchId: z.number().int().positive().optional() }).optional()).query(async ({ ctx, input }) => { const db = await getDb(); if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" }); const orgs = await getUserOrganizationIds(db, ctx.user.id); const scope = input?.organizationId ? eq(generalLedgerAccounts.organizationId, input.organizationId) : inArray(generalLedgerAccounts.organizationId, orgs); if (ctx.user.role !== "admin" && input?.organizationId && !orgs.includes(input.organizationId)) throw new TRPCError({ code: "FORBIDDEN", message: "Organization scope rejected" }); return db.select().from(generalLedgerAccounts).where(and(scope, eq(generalLedgerAccounts.active, 1), ...(input?.branchId ? [or(eq(generalLedgerAccounts.branchId, input.branchId), isNull(generalLedgerAccounts.branchId))] : []) )).orderBy(generalLedgerAccounts.code).limit(1000); }),
+    createAccount: protectedProcedure.input(z.object({ organizationId: z.number().int().positive(), branchId: z.number().int().positive().optional(), parentAccountId: z.number().int().positive().optional(), code: z.string().trim().min(1).max(40), nameAr: z.string().trim().min(2).max(180), nameEn: z.string().trim().max(180).optional(), accountType: z.enum(["asset", "liability", "equity", "revenue", "expense"]), normalBalance: z.enum(["debit", "credit"]), isPostingAllowed: z.boolean().default(true) })).mutation(async ({ ctx, input }) => { const db = await getDb(); if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" }); if (!["admin", "manager"].includes(ctx.user.role) || !(await getUserOrganizationIds(db, ctx.user.id)).includes(input.organizationId) && ctx.user.role !== "admin") throw new TRPCError({ code: "FORBIDDEN", message: "Account management permission required" }); if (input.branchId) await assertUserBranchAccess(db, ctx.user.id, ctx.user.role, input.branchId); let level = 0; if (input.parentAccountId) { const parent = (await db.select().from(generalLedgerAccounts).where(and(eq(generalLedgerAccounts.id, input.parentAccountId), eq(generalLedgerAccounts.organizationId, input.organizationId), eq(generalLedgerAccounts.active, 1))).limit(1))[0]; if (!parent) throw new TRPCError({ code: "NOT_FOUND", message: "الحساب الأب غير موجود" }); level = parent.level + 1; if (parent.isPostingAllowed === 1) await db.update(generalLedgerAccounts).set({ isPostingAllowed: 0 }).where(eq(generalLedgerAccounts.id, parent.id)); } const duplicate = (await db.select({ id: generalLedgerAccounts.id }).from(generalLedgerAccounts).where(and(eq(generalLedgerAccounts.organizationId, input.organizationId), eq(generalLedgerAccounts.code, input.code), input.branchId ? eq(generalLedgerAccounts.branchId, input.branchId) : isNull(generalLedgerAccounts.branchId))).limit(1))[0]; if (duplicate) throw new TRPCError({ code: "CONFLICT", message: "كود الحساب مستخدم بالفعل ضمن النطاق" }); const result = await db.insert(generalLedgerAccounts).values({ organizationId: input.organizationId, branchId: input.branchId, parentAccountId: input.parentAccountId, code: input.code, nameAr: input.nameAr, nameEn: input.nameEn || null, accountType: input.accountType, normalBalance: input.normalBalance, level, isPostingAllowed: input.isPostingAllowed ? 1 : 0 }); await db.insert(auditLogs).values({ userId: ctx.user.id, organizationId: input.organizationId, branchId: input.branchId ?? null, action: "account_created", entityType: "general_ledger_account", entityId: String(result[0].insertId), previousHash: null, recordHash: hashAuditRecord({ eventType: "account_created", organizationId: input.organizationId, branchId: input.branchId, requestId: String(result[0].insertId), createdAt: new Date().toISOString() }) }); return { accountId: Number(result[0].insertId), level }; }),
+    costCenters: protectedProcedure.input(z.object({ organizationId: z.number().int().positive(), branchId: z.number().int().positive().optional() })).query(async ({ ctx, input }) => { const db = await getDb(); if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" }); if (ctx.user.role !== "admin" && !(await getUserOrganizationIds(db, ctx.user.id)).includes(input.organizationId)) throw new TRPCError({ code: "FORBIDDEN", message: "Organization scope rejected" }); return db.select().from(costCenters).where(and(eq(costCenters.organizationId, input.organizationId), eq(costCenters.active, 1), ...(input.branchId ? [or(eq(costCenters.branchId, input.branchId), isNull(costCenters.branchId))] : []))).orderBy(costCenters.code).limit(500); }),
+    periods: protectedProcedure.input(z.object({ organizationId: z.number().int().positive(), branchId: z.number().int().positive().optional() })).query(async ({ ctx, input }) => { const db = await getDb(); if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" }); if (ctx.user.role !== "admin" && !(await getUserOrganizationIds(db, ctx.user.id)).includes(input.organizationId)) throw new TRPCError({ code: "FORBIDDEN", message: "Organization scope rejected" }); return db.select().from(accountingFiscalPeriods).where(and(eq(accountingFiscalPeriods.organizationId, input.organizationId), ...(input.branchId ? [or(eq(accountingFiscalPeriods.branchId, input.branchId), isNull(accountingFiscalPeriods.branchId))] : []))).orderBy(desc(accountingFiscalPeriods.startsAt)).limit(100); }),
+    postBalancedEntry: protectedProcedure.input(z.object({ organizationId: z.number().int().positive(), branchId: z.number().int().positive().optional(), sourceType: z.string().min(2).max(60), sourceId: z.string().min(1).max(80), lines: z.array(z.object({ accountId: z.number().int().positive(), debitAmount: z.coerce.number().nonnegative(), creditAmount: z.coerce.number().nonnegative(), costCenterId: z.number().int().positive().optional() })).min(2).max(20) })).mutation(async ({ ctx, input }) => { const db = await getDb(); if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" }); if (!["admin", "manager"].includes(ctx.user.role)) throw new TRPCError({ code: "FORBIDDEN", message: "Accounting posting permission required" }); if (ctx.user.role !== "admin" && !(await getUserOrganizationIds(db, ctx.user.id)).includes(input.organizationId)) throw new TRPCError({ code: "FORBIDDEN", message: "Organization scope rejected" }); if (input.branchId) await assertUserBranchAccess(db, ctx.user.id, ctx.user.role, input.branchId); const debit = input.lines.reduce((sum, line) => sum + line.debitAmount, 0); const credit = input.lines.reduce((sum, line) => sum + line.creditAmount, 0); if (debit <= 0 || Math.abs(debit - credit) > 0.005 || input.lines.some(line => line.debitAmount > 0 && line.creditAmount > 0)) throw new TRPCError({ code: "BAD_REQUEST", message: "القيد غير متوازن" }); const accountRows = await db.select().from(generalLedgerAccounts).where(and(eq(generalLedgerAccounts.organizationId, input.organizationId), inArray(generalLedgerAccounts.id, input.lines.map(line => line.accountId)))); if (accountRows.length !== input.lines.length || accountRows.some(account => account.isPostingAllowed !== 1 || account.active !== 1)) throw new TRPCError({ code: "PRECONDITION_FAILED", message: "لا يمكن الترحيل إلى حساب تجميعي أو غير نشط" }); const entryGroupId = `${input.sourceType}:${input.sourceId}:${Date.now()}`; await db.insert(generalLedgerEntries).values(input.lines.map(line => ({ organizationId: input.organizationId, branchId: input.branchId, accountId: line.accountId, entryGroupId, debitAmount: line.debitAmount.toFixed(2), creditAmount: line.creditAmount.toFixed(2), sourceType: input.sourceType, sourceId: input.sourceId, createdByUserId: ctx.user.id }))); await db.insert(auditLogs).values({ userId: ctx.user.id, organizationId: input.organizationId, branchId: input.branchId ?? null, action: "ledger_entry_posted", entityType: "general_ledger_entry", entityId: entryGroupId, previousHash: null, recordHash: hashAuditRecord({ eventType: "ledger_entry_posted", organizationId: input.organizationId, branchId: input.branchId, requestId: entryGroupId, createdAt: new Date().toISOString() }) }); return { entryGroupId, status: "posted" as const }; }),
+    createExpense: protectedProcedure.input(z.object({ organizationId: z.number().int().positive(), branchId: z.number().int().positive(), jurisdictionId: z.number().int().nonnegative(), expenseAccountId: z.number().int().positive(), paymentAccountId: z.number().int().positive(), costCenterId: z.number().int().positive().optional(), amount: z.coerce.number().positive(), expenseDate: z.coerce.date(), title: z.string().trim().min(2).max(180), justification: z.string().trim().min(10).max(1200), currency: z.string().trim().length(3).default("EGP") })).mutation(async ({ ctx, input }) => { const db = await getDb(); if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" }); if (!["admin", "manager", "pharmacist"].includes(ctx.user.role)) throw new TRPCError({ code: "FORBIDDEN", message: "Expense entry permission required" }); if (ctx.user.role !== "admin" && !(await getUserOrganizationIds(db, ctx.user.id)).includes(input.organizationId)) throw new TRPCError({ code: "FORBIDDEN", message: "Organization scope rejected" }); await assertUserBranchAccess(db, ctx.user.id, ctx.user.role, input.branchId); await assertUserJurisdictionAccess(db, ctx.user.id, ctx.user.role, input.jurisdictionId); const accounts = await db.select().from(generalLedgerAccounts).where(and(eq(generalLedgerAccounts.organizationId, input.organizationId), inArray(generalLedgerAccounts.id, [input.expenseAccountId, input.paymentAccountId]))); if (accounts.length !== 2 || accounts.some(account => account.isPostingAllowed !== 1 || account.active !== 1)) throw new TRPCError({ code: "PRECONDITION_FAILED", message: "حسابات المصروف أو السداد غير صالحة" }); const result = await db.insert(otherExpenses).values({ organizationId: input.organizationId, branchId: input.branchId, jurisdictionId: input.jurisdictionId, costCenterId: input.costCenterId, expenseAccountId: input.expenseAccountId, paymentAccountId: input.paymentAccountId, amount: input.amount.toFixed(2), currency: input.currency.toUpperCase(), expenseDate: input.expenseDate, title: input.title, justification: input.justification, createdByUserId: ctx.user.id }); const expenseId = Number(result[0].insertId); await db.insert(auditLogs).values({ userId: ctx.user.id, organizationId: input.organizationId, branchId: input.branchId, action: "other_expense_created", entityType: "other_expense", entityId: String(expenseId), previousHash: null, recordHash: hashAuditRecord({ eventType: "other_expense_created", organizationId: input.organizationId, branchId: input.branchId, jurisdictionId: input.jurisdictionId, requestId: String(expenseId), createdAt: new Date().toISOString() }) }); return { expenseId, status: "pending_review" as const }; }),
+    expenses: protectedProcedure.input(z.object({ organizationId: z.number().int().positive(), branchId: z.number().int().positive(), status: z.enum(["draft", "pending_review", "approved", "rejected", "posted"]).optional() })).query(async ({ ctx, input }) => { const db = await getDb(); if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" }); if (ctx.user.role !== "admin" && !(await getUserOrganizationIds(db, ctx.user.id)).includes(input.organizationId)) throw new TRPCError({ code: "FORBIDDEN", message: "Organization scope rejected" }); await assertUserBranchAccess(db, ctx.user.id, ctx.user.role, input.branchId); return db.select().from(otherExpenses).where(and(eq(otherExpenses.organizationId, input.organizationId), eq(otherExpenses.branchId, input.branchId), ...(input.status ? [eq(otherExpenses.status, input.status)] : []))).orderBy(desc(otherExpenses.createdAt)).limit(200); }),
+    reviewExpense: protectedProcedure.input(z.object({ expenseId: z.number().int().positive(), decision: z.enum(["approved", "rejected"]) })).mutation(async ({ ctx, input }) => { const db = await getDb(); if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" }); if (!["admin", "manager"].includes(ctx.user.role)) throw new TRPCError({ code: "FORBIDDEN", message: "Expense review permission required" }); const expense = (await db.select().from(otherExpenses).where(eq(otherExpenses.id, input.expenseId)).limit(1))[0]; if (!expense) throw new TRPCError({ code: "NOT_FOUND", message: "المصروف غير موجود" }); if (expense.createdByUserId === ctx.user.id) throw new TRPCError({ code: "FORBIDDEN", message: "لا يجوز اعتماد العملية لمنشئها" }); if (ctx.user.role !== "admin" && !(await getUserOrganizationIds(db, ctx.user.id)).includes(expense.organizationId)) throw new TRPCError({ code: "FORBIDDEN", message: "Organization scope rejected" }); await assertUserBranchAccess(db, ctx.user.id, ctx.user.role, expense.branchId); if (expense.status !== "pending_review") throw new TRPCError({ code: "PRECONDITION_FAILED", message: "المصروف تمت مراجعته سابقًا" }); await db.update(otherExpenses).set({ status: input.decision, approvedByUserId: ctx.user.id, approvedAt: new Date() }).where(eq(otherExpenses.id, expense.id)); return { expenseId: expense.id, status: input.decision }; }),
+    postExpense: protectedProcedure.input(z.object({ expenseId: z.number().int().positive() })).mutation(async ({ ctx, input }) => { const db = await getDb(); if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" }); if (!["admin", "manager"].includes(ctx.user.role)) throw new TRPCError({ code: "FORBIDDEN", message: "Expense posting permission required" }); const expense = (await db.select().from(otherExpenses).where(eq(otherExpenses.id, input.expenseId)).limit(1))[0]; if (!expense || expense.status !== "approved") throw new TRPCError({ code: "PRECONDITION_FAILED", message: "المصروف يجب أن يكون معتمدًا قبل الترحيل" }); if (expense.createdByUserId === ctx.user.id) throw new TRPCError({ code: "FORBIDDEN", message: "يفضل فصل المنشئ عن منفذ الترحيل" }); await assertUserBranchAccess(db, ctx.user.id, ctx.user.role, expense.branchId); const existing = expense.journalEntryGroupId ? expense.journalEntryGroupId : null; if (existing) throw new TRPCError({ code: "CONFLICT", message: "المصروف مرحل بالفعل" }); const entryGroupId = `expense:${expense.id}:${Date.now()}`; await db.transaction(async tx => { await tx.insert(generalLedgerEntries).values([{ organizationId: expense.organizationId, branchId: expense.branchId, accountId: expense.expenseAccountId, entryGroupId, debitAmount: expense.amount, creditAmount: "0.00", sourceType: "other_expense", sourceId: String(expense.id), createdByUserId: ctx.user.id }, { organizationId: expense.organizationId, branchId: expense.branchId, accountId: expense.paymentAccountId, entryGroupId, debitAmount: "0.00", creditAmount: expense.amount, sourceType: "other_expense", sourceId: String(expense.id), createdByUserId: ctx.user.id }]); await tx.update(otherExpenses).set({ status: "posted", journalEntryGroupId: entryGroupId }).where(eq(otherExpenses.id, expense.id)); }); return { expenseId: expense.id, entryGroupId, status: "posted" as const }; }),
+    interBranchTransfers: protectedProcedure.input(z.object({ organizationId: z.number().int().positive(), branchId: z.number().int().positive().optional() })).query(async ({ ctx, input }) => { const db = await getDb(); if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" }); if (ctx.user.role !== "admin" && !(await getUserOrganizationIds(db, ctx.user.id)).includes(input.organizationId)) throw new TRPCError({ code: "FORBIDDEN", message: "Organization scope rejected" }); if (input.branchId) await assertUserBranchAccess(db, ctx.user.id, ctx.user.role, input.branchId); return db.select().from(interBranchTransfers).where(and(eq(interBranchTransfers.organizationId, input.organizationId), ...(input.branchId ? [or(eq(interBranchTransfers.sourceBranchId, input.branchId), eq(interBranchTransfers.destinationBranchId, input.branchId))] : []))).orderBy(desc(interBranchTransfers.createdAt)).limit(100); }),
+    createInterBranchTransfer: protectedProcedure.input(z.object({ organizationId: z.number().int().positive(), sourceBranchId: z.number().int().positive(), destinationBranchId: z.number().int().positive(), jurisdictionId: z.number().int().nonnegative(), transferType: z.enum(["financial", "inventory", "mixed"]), amount: z.coerce.number().positive().optional(), justification: z.string().trim().min(10).max(1000), lines: z.array(z.object({ productId: z.number().int().positive().optional(), quantity: z.coerce.number().positive().optional(), unitValue: z.coerce.number().positive().optional(), note: z.string().max(500).optional() })).max(200).default([]) })).mutation(async ({ ctx, input }) => { const db = await getDb(); if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" }); if (input.sourceBranchId === input.destinationBranchId) throw new TRPCError({ code: "BAD_REQUEST", message: "يجب اختلاف الفرع المصدر عن الوجهة" }); if (!["admin", "manager"].includes(ctx.user.role)) throw new TRPCError({ code: "FORBIDDEN", message: "Transfer permission required" }); if (ctx.user.role !== "admin" && !(await getUserOrganizationIds(db, ctx.user.id)).includes(input.organizationId)) throw new TRPCError({ code: "FORBIDDEN", message: "Organization scope rejected" }); await assertUserBranchAccess(db, ctx.user.id, ctx.user.role, input.sourceBranchId); const destinationOrg = await getBranchOrganizationId(db, input.destinationBranchId); if (destinationOrg !== input.organizationId) throw new TRPCError({ code: "FORBIDDEN", message: "Destination branch scope rejected" }); const result = await db.insert(interBranchTransfers).values({ organizationId: input.organizationId, sourceBranchId: input.sourceBranchId, destinationBranchId: input.destinationBranchId, jurisdictionId: input.jurisdictionId, transferType: input.transferType, amount: input.amount?.toFixed(2) ?? null, justification: input.justification, createdByUserId: ctx.user.id }); const transferId = Number(result[0].insertId); if (input.lines.length) await db.insert(interBranchTransferLines).values(input.lines.map(line => ({ transferId, organizationId: input.organizationId, productId: line.productId, quantity: line.quantity?.toFixed(3), unitValue: line.unitValue?.toFixed(2), note: line.note }))); return { transferId, status: "pending_review" as const }; }),
+    reviewInterBranchTransfer: protectedProcedure.input(z.object({ transferId: z.number().int().positive(), decision: z.enum(["approved", "rejected"]), reason: z.string().trim().min(1).max(1000) })).mutation(async ({ ctx, input }) => { const db = await getDb(); if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" }); if (!["admin", "manager"].includes(ctx.user.role)) throw new TRPCError({ code: "FORBIDDEN", message: "Transfer review permission required" }); const transfer = (await db.select().from(interBranchTransfers).where(eq(interBranchTransfers.id, input.transferId)).limit(1))[0]; if (!transfer) throw new TRPCError({ code: "NOT_FOUND", message: "التحويل غير موجود" }); if (transfer.createdByUserId === ctx.user.id) throw new TRPCError({ code: "FORBIDDEN", message: "لا يجوز اعتماد التحويل لمنشئه" }); if (ctx.user.role !== "admin" && !(await getUserOrganizationIds(db, ctx.user.id)).includes(transfer.organizationId)) throw new TRPCError({ code: "FORBIDDEN", message: "Organization scope rejected" }); await assertUserBranchAccess(db, ctx.user.id, ctx.user.role, transfer.destinationBranchId); await assertUserJurisdictionAccess(db, ctx.user.id, ctx.user.role, transfer.jurisdictionId); if (transfer.status !== "pending_review") throw new TRPCError({ code: "PRECONDITION_FAILED", message: "التحويل تمت مراجعته سابقًا" }); const decidedAt = new Date(); await db.transaction(async tx => { await tx.update(interBranchTransfers).set({ status: input.decision, approvedByUserId: ctx.user.id }).where(eq(interBranchTransfers.id, transfer.id)); const decisionResult = await tx.insert(decisionLogs).values({ organizationId: transfer.organizationId, branchId: transfer.destinationBranchId, jurisdictionId: transfer.jurisdictionId, entityType: "inter_branch_transfer", entityId: transfer.id, decision: input.decision, reason: input.reason, decidedByUserId: ctx.user.id, decidedAt }); const decisionId = Number(decisionResult[0].insertId); await tx.insert(auditLogs).values({ userId: ctx.user.id, organizationId: transfer.organizationId, branchId: transfer.destinationBranchId, action: "inter_branch_transfer_review_recorded", entityType: "decision_log", entityId: String(decisionId), previousHash: null, recordHash: hashAuditRecord({ eventType: "inter_branch_transfer_review_recorded", organizationId: transfer.organizationId, branchId: transfer.destinationBranchId, jurisdictionId: transfer.jurisdictionId, requestId: `${transfer.id}:${decisionId}`, createdAt: decidedAt.toISOString() }) }); }); return { transferId: transfer.id, status: input.decision }; }),
+    expenseDocuments: protectedProcedure.input(z.object({ expenseId: z.number().int().positive(), organizationId: z.number().int().positive(), branchId: z.number().int().positive() })).query(async ({ ctx, input }) => { const db = await getDb(); if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" }); if (ctx.user.role !== "admin" && !(await getUserOrganizationIds(db, ctx.user.id)).includes(input.organizationId)) throw new TRPCError({ code: "FORBIDDEN", message: "Organization scope rejected" }); await assertUserBranchAccess(db, ctx.user.id, ctx.user.role, input.branchId); return db.select().from(expenseDocuments).where(and(eq(expenseDocuments.expenseId, input.expenseId), eq(expenseDocuments.organizationId, input.organizationId), eq(expenseDocuments.branchId, input.branchId))).orderBy(desc(expenseDocuments.createdAt)).limit(50); }),
+    addExpenseDocument: protectedProcedure.input(z.object({ expenseId: z.number().int().positive(), organizationId: z.number().int().positive(), branchId: z.number().int().positive(), fileKey: z.string().trim().min(5).max(500), fileUrl: z.string().trim().min(5).max(1000), fileName: z.string().trim().min(1).max(255), mimeType: z.string().trim().min(3).max(120), fileSize: z.number().int().positive().max(25 * 1024 * 1024), sha256: z.string().regex(/^[a-f0-9]{64}$/i) })).mutation(async ({ ctx, input }) => { const db = await getDb(); if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" }); if (ctx.user.role !== "admin" && !(await getUserOrganizationIds(db, ctx.user.id)).includes(input.organizationId)) throw new TRPCError({ code: "FORBIDDEN", message: "Organization scope rejected" }); await assertUserBranchAccess(db, ctx.user.id, ctx.user.role, input.branchId); const expense = (await db.select({ id: otherExpenses.id }).from(otherExpenses).where(and(eq(otherExpenses.id, input.expenseId), eq(otherExpenses.organizationId, input.organizationId), eq(otherExpenses.branchId, input.branchId))).limit(1))[0]; if (!expense) throw new TRPCError({ code: "NOT_FOUND", message: "المصروف غير موجود ضمن النطاق" }); const duplicate = (await db.select({ id: expenseDocuments.id }).from(expenseDocuments).where(and(eq(expenseDocuments.organizationId, input.organizationId), eq(expenseDocuments.branchId, input.branchId), eq(expenseDocuments.sha256, input.sha256))).limit(1))[0]; if (duplicate) throw new TRPCError({ code: "CONFLICT", message: "المستند مسجل مسبقًا" }); const result = await db.insert(expenseDocuments).values({ ...input, createdByUserId: ctx.user.id }); return { documentId: Number(result[0].insertId), status: "stored_metadata" as const }; }),
+    closePeriod: protectedProcedure.input(z.object({ organizationId: z.number().int().positive(), branchId: z.number().int().positive().optional(), throughDate: z.coerce.date() })).mutation(async ({ ctx, input }) => { const db = await getDb(); if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" }); if (!["admin", "manager"].includes(ctx.user.role)) throw new TRPCError({ code: "FORBIDDEN", message: "Period closing permission required" }); if (ctx.user.role !== "admin" && !(await getUserOrganizationIds(db, ctx.user.id)).includes(input.organizationId)) throw new TRPCError({ code: "FORBIDDEN", message: "Organization scope rejected" }); const where = and(eq(generalLedgerEntries.organizationId, input.organizationId), eq(generalLedgerEntries.periodStatus, "open"), lte(generalLedgerEntries.createdAt, input.throughDate), ...(input.branchId ? [eq(generalLedgerEntries.branchId, input.branchId)] : [])); const result = await db.update(generalLedgerEntries).set({ periodStatus: "closed" }).where(where); return { status: "closed" as const, throughDate: input.throughDate.toISOString(), changed: result[0]?.affectedRows ?? 0 }; }),
+  }),
+  loyalty: router({
+    member: protectedProcedure.input(z.object({ customerId: z.number().int().positive() })).query(async ({ ctx, input }) => { const db = await getDb(); if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" }); const orgs = await getUserOrganizationIds(db, ctx.user.id); return (await db.select().from(loyaltyMembers).where(and(eq(loyaltyMembers.customerId, input.customerId), ...(ctx.user.role === "admin" ? [] : [inArray(loyaltyMembers.organizationId, orgs)]))).limit(1))[0] ?? null; }),
+    plans: protectedProcedure.query(async ({ ctx }) => { const db = await getDb(); if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" }); const orgs = await getUserOrganizationIds(db, ctx.user.id); return db.select().from(membershipPlans).where(and(eq(membershipPlans.active, 1), ...(ctx.user.role === "admin" ? [] : [inArray(membershipPlans.organizationId, orgs)]))).orderBy(membershipPlans.nameAr).limit(200); }),
+    memberships: protectedProcedure.input(z.object({ customerId: z.number().int().positive() })).query(async ({ ctx, input }) => { const db = await getDb(); if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" }); const orgs = await getUserOrganizationIds(db, ctx.user.id); return db.select().from(customerMemberships).where(and(eq(customerMemberships.customerId, input.customerId), ...(ctx.user.role === "admin" ? [] : [inArray(customerMemberships.organizationId, orgs)]))).orderBy(desc(customerMemberships.endsAt)).limit(50); }),
+    ensureMember: protectedProcedure.input(z.object({ organizationId: z.number().int().positive(), customerId: z.number().int().positive() })).mutation(async ({ ctx, input }) => { const db = await getDb(); if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" }); if (ctx.user.role !== "admin" && !(await getUserOrganizationIds(db, ctx.user.id)).includes(input.organizationId)) throw new TRPCError({ code: "FORBIDDEN", message: "Organization scope rejected" }); const existing = (await db.select().from(loyaltyMembers).where(and(eq(loyaltyMembers.organizationId, input.organizationId), eq(loyaltyMembers.customerId, input.customerId))).limit(1))[0]; if (existing) return existing; const result = await db.insert(loyaltyMembers).values({ organizationId: input.organizationId, customerId: input.customerId, pointsBalance: "0", status: "active" }); return (await db.select().from(loyaltyMembers).where(eq(loyaltyMembers.id, result[0].insertId)).limit(1))[0]; }),
+    recordPoints: protectedProcedure.input(z.object({ organizationId: z.number().int().positive(), branchId: z.number().int().positive(), customerId: z.number().int().positive(), pointsDelta: z.coerce.number().refine(value => value !== 0, "pointsDelta cannot be zero"), reasonCode: z.string().min(2).max(80), saleId: z.number().int().positive().optional() })).mutation(async ({ ctx, input }) => { const db = await getDb(); if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" }); if (ctx.user.role !== "admin" && !(await getUserOrganizationIds(db, ctx.user.id)).includes(input.organizationId)) throw new TRPCError({ code: "FORBIDDEN", message: "Organization scope rejected" }); const member = (await db.select().from(loyaltyMembers).where(and(eq(loyaltyMembers.organizationId, input.organizationId), eq(loyaltyMembers.customerId, input.customerId))).limit(1))[0]; if (!member || member.status !== "active") throw new TRPCError({ code: "PRECONDITION_FAILED", message: "لا يوجد ملف ولاء نشط" }); const nextBalance = Number(member.pointsBalance) + input.pointsDelta; if (nextBalance < 0) throw new TRPCError({ code: "BAD_REQUEST", message: "رصيد النقاط لا يكفي" }); const result = await db.transaction(async tx => { const txResult = await tx.insert(loyaltyTransactions).values({ organizationId: input.organizationId, branchId: input.branchId, memberId: member.id, saleId: input.saleId, pointsDelta: input.pointsDelta.toFixed(2), reasonCode: input.reasonCode, createdByUserId: ctx.user.id }); await tx.update(loyaltyMembers).set({ pointsBalance: nextBalance.toFixed(2) }).where(eq(loyaltyMembers.id, member.id)); return txResult; }); return { transactionId: result[0].insertId, pointsBalance: nextBalance }; }),
+    createMembership: protectedProcedure.input(z.object({ organizationId: z.number().int().positive(), customerId: z.number().int().positive(), planId: z.number().int().positive(), startsAt: z.coerce.date().optional() })).mutation(async ({ ctx, input }) => { const db = await getDb(); if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" }); if (!["admin", "manager"].includes(ctx.user.role)) throw new TRPCError({ code: "FORBIDDEN", message: "Membership management permission required" }); if (ctx.user.role !== "admin" && !(await getUserOrganizationIds(db, ctx.user.id)).includes(input.organizationId)) throw new TRPCError({ code: "FORBIDDEN", message: "Organization scope rejected" }); const plan = (await db.select().from(membershipPlans).where(and(eq(membershipPlans.id, input.planId), eq(membershipPlans.organizationId, input.organizationId), eq(membershipPlans.active, 1))).limit(1))[0]; if (!plan) throw new TRPCError({ code: "NOT_FOUND", message: "خطة العضوية غير موجودة" }); const startsAt = input.startsAt ?? new Date(); const endsAt = new Date(startsAt.getTime() + plan.durationDays * 86400000); const result = await db.insert(customerMemberships).values({ organizationId: input.organizationId, customerId: input.customerId, planId: input.planId, status: "active", startsAt, endsAt, createdByUserId: ctx.user.id }); return { membershipId: result[0].insertId, startsAt, endsAt, status: "active" as const }; }),
   }),
 });

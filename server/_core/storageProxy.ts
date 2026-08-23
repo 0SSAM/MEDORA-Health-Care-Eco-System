@@ -2,7 +2,7 @@ import type { Express } from "express";
 import { ENV } from "./env";
 import { safeErrorLabel } from "../domain/safe-error";
 
-const PUBLIC_STORAGE_KEY = /^medora-system-icon_[a-z0-9]+\.png$/i;
+const PUBLIC_STORAGE_KEY = /^aldo-system-icon_[a-z0-9]+\.png$/i;
 
 function isSafeStorageKey(key: string): boolean {
   return key.length > 0 && key.length <= 512 && !/[\\\0\r\n]/.test(key) && !key.split("/").some(segment => segment === ".." || segment === ".");

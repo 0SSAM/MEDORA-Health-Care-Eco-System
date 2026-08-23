@@ -1,4 +1,4 @@
-entity,source_table,source_field,medora_field,required,transformation,validation,quarantine_reason,owner_approval
+entity,source_table,source_field,aldora_field,required,transformation,validation,quarantine_reason,owner_approval
 organization,,,,yes,,,missing_scope,
 branch,,,,yes,,,unknown_branch,
 jurisdiction,,,,yes,,,unsupported_country_pack,

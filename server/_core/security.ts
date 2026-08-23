@@ -1,3 +1,4 @@
+// © 2024-2026 MEDORA Health Care Eco System. All rights reserved. Proprietary and confidential.
 import type { NextFunction, Request, Response } from "express";
 
 const MAX_RATE_ENTRIES = 10_000;
@@ -111,7 +112,7 @@ export function createSecurityMiddleware() {
       "X-Content-Type-Options": "nosniff",
       "X-Frame-Options": "DENY",
       "Referrer-Policy": "strict-origin-when-cross-origin",
-      "Permissions-Policy": "camera=(), microphone=(), geolocation=(), payment=()",
+      "Permissions-Policy": "camera=(), microphone=(), geolocation=(), payment=(), display-capture=()",
       "Cross-Origin-Opener-Policy": "same-origin",
       "Cross-Origin-Resource-Policy": "same-origin",
       "X-DNS-Prefetch-Control": "off",

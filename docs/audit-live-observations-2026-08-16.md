@@ -2,11 +2,11 @@
 
 ## Public and login routes
 
-Source checked: https://medorapharm-fwilugbd.manus.space/
+Source checked: https://aldorapharm-fwilugbd.manus.space/
 
 The public landing page loaded successfully in Arabic RTL. The visible entry point `تسجيل الدخول بأمان` navigated to `/login`.
 
-Source checked: https://medorapharm-fwilugbd.manus.space/login
+Source checked: https://aldorapharm-fwilugbd.manus.space/login
 
 The login route initially displayed `جارٍ التحقق من الجلسة…`, then resolved to the employee login form with username and password fields, a secure-login button, password-recovery button, and an administration-login path. No blank page or client-side error was observed after the session check completed. The page was visually usable at a 1280x720 viewport and showed the Arabic RTL layout.
 

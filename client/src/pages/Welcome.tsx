@@ -1,27 +1,15 @@
-// MEDORA | ميدورا — Integrated Health Care System
-// Copyright (c) 2026 Hossam Naeim Osman | حسام نعيم عثمان. All rights reserved.
-// Proprietary and confidential. Unauthorized copying, distribution, or use of this
-// software, or of any portion of it, is strictly prohibited.
-// Source: https://github.com/0SSAM/MEDORA-Health-Care-Eco-System
 import { useAuth } from "@/_core/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { useLocalization } from "@/contexts/LocalizationContext";
-import { ArrowLeft, ArrowRight, CheckCircle2, ChevronLeft, LockKeyhole, ShieldCheck, Sparkles } from "lucide-react";
+import { MEDORA_LOGO_MARK } from "@/lib/brand";
+import { ArrowLeft, ArrowRight, CheckCircle2, ChevronLeft, HeartPulse, LockKeyhole, ShieldCheck, Sparkles } from "lucide-react";
 
 export const welcomeRoutes = { login: "/login", workspace: "/workspace" } as const;
 
 function BrandMark() {
-  return (
-    <div className="medora-brand-mark grid h-14 w-14 place-items-center rounded-[1.35rem] shadow-lg shadow-cyan-900/10" aria-label="ميدورا">
-      <svg viewBox="0 0 48 48" role="img" aria-hidden="true" className="h-9 w-9">
-        <path d="M24 4 40 10v12c0 10.5-6.7 18.2-16 22-9.3-3.8-16-11.5-16-22V10L24 4Z" fill="#0d1b2a" opacity=".92" />
-        <path d="M24 12c-5.5 3.8-8.5 8.1-8.5 12.9 0 5.6 3.8 9.5 8.5 11.1 4.7-1.6 8.5-5.5 8.5-11.1C32.5 20.1 29.5 15.8 24 12Z" fill="#9ff2e4" />
-        <path d="M24 18c-2.4 2.5-3.6 4.8-3.6 7.1 0 2.4 1.4 4.2 3.6 5.2 2.2-1 3.6-2.8 3.6-5.2 0-2.3-1.2-4.6-3.6-7.1Z" fill="#19c5d1" />
-      </svg>
-    </div>
-  );
+  return <div role="img" aria-label="MEDORA Health Care Eco System" className="relative grid h-14 w-14 shrink-0 place-items-center overflow-hidden rounded-[1.35rem] bg-gradient-to-br from-cyan-500 via-teal-500 to-violet-600 shadow-lg shadow-cyan-900/10"><span aria-hidden="true" className="grid h-9 w-9 place-items-center rounded-2xl border border-white/40 bg-slate-950/20 text-white"><HeartPulse className="h-5 w-5" /></span><img src={MEDORA_LOGO_MARK} alt="" onError={event => { event.currentTarget.classList.add("hidden"); }} className="absolute inset-0 h-full w-full object-contain" /></div>;
 }
 
 export default function Welcome() {
@@ -32,7 +20,7 @@ export default function Welcome() {
 
   const copy = english
     ? {
-        eyebrow: "MEDORA | INTEGRATED HEALTH SYSTEM",
+        eyebrow: "MEDORA | HEALTH CARE ECO SYSTEM",
         title: "One secure operating space for the healthcare journey.",
         subtitle: "A calm, intelligent foundation for pharmacies, hospitals, insurers, distributors, laboratories, and care teams across the Arab world.",
         login: "Sign in securely",
@@ -42,9 +30,11 @@ export default function Welcome() {
         trustBody: "Tenant isolation, scoped permissions, audit trails, and fail-closed regulated workflows.",
         features: ["Unified operations", "Regional readiness", "Human-friendly workflows"],
         footer: "Built to be clear for people and careful with sensitive healthcare work.",
+        brandTitle: "MEDORA | Health Care Eco System",
+        brandSubtitle: "Integrated, secure healthcare operations",
       }
     : {
-        eyebrow: "ميدورا | منظومة الرعاية الصحية المتكاملة",
+        eyebrow: "MEDORA | منظومة الرعاية الصحية المتكاملة",
         title: "مساحة تشغيل آمنة وموحّدة لدورة الرعاية الصحية.",
         subtitle: "أساس هادئ وذكي للصيدليات والمستشفيات وشركات التأمين والتوزيع والمعامل وفرق الرعاية في العالم العربي.",
         login: "تسجيل الدخول بأمان",
@@ -54,6 +44,8 @@ export default function Welcome() {
         trustBody: "عزل المؤسسات، صلاحيات محددة، سجل تدقيق، وفشل آمن في العمليات المنظمة.",
         features: ["عمليات موحّدة", "جاهزية إقليمية", "تجربة عمل إنسانية"],
         footer: "مصمم ليكون واضحاً للناس وحذراً مع أعمال الرعاية الصحية الحساسة.",
+        brandTitle: "MEDORA | منظومة الرعاية الصحية المتكاملة",
+        brandSubtitle: "تشغيل صحي متكامل وآمن",
       };
 
   return (
@@ -61,15 +53,16 @@ export default function Welcome() {
       <div className="pointer-events-none absolute -left-24 top-16 h-72 w-72 rounded-full bg-cyan-200/40 blur-3xl" aria-hidden="true" />
       <div className="pointer-events-none absolute -right-24 bottom-0 h-96 w-96 rounded-full bg-violet-200/30 blur-3xl" aria-hidden="true" />
       <div className="relative mx-auto flex min-h-screen w-full max-w-7xl flex-col px-5 py-5 sm:px-8 lg:px-12">
-        <header className="flex items-center justify-between gap-4">
-          <a href="/" className="flex items-center gap-3" aria-label="ميدورا | منظومة الرعاية الصحية المتكاملة">
+        <header className="flex items-center justify-between gap-2 sm:gap-4">
+          <a href="/" className="flex min-w-0 flex-1 items-center gap-2.5 sm:gap-3" aria-label={copy.brandTitle}>
             <BrandMark />
-            <div>
-              <p className="text-sm font-bold tracking-tight sm:text-base">ميدورا | منظومة الرعاية الصحية المتكاملة</p>
-              <p className="text-[11px] text-slate-500">MEDORA | Integrated Health System</p>
+            <div className="min-w-0">
+              <p className="text-xs font-bold tracking-[0.08em] sm:hidden">MEDORA</p>
+              <p className="hidden truncate text-sm font-bold tracking-tight sm:block sm:text-base">{copy.brandTitle}</p>
+              <p className="hidden truncate text-[11px] text-slate-500 sm:block">{copy.brandSubtitle}</p>
             </div>
           </a>
-          <div className="flex items-center gap-2">
+          <div className="flex shrink-0 items-center gap-2">
             <Badge variant="outline" className="hidden border-emerald-200 bg-emerald-50 text-emerald-700 sm:flex"><ShieldCheck className="ml-1 h-3.5 w-3.5" /> {english ? "Secure access" : "دخول آمن"}</Badge>
             <LanguageSwitcher compact />
           </div>

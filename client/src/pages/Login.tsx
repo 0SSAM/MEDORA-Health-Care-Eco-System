@@ -1,9 +1,5 @@
-// MEDORA | ميدورا — Integrated Health Care System
-// Copyright (c) 2026 Hossam Naeim Osman | حسام نعيم عثمان. All rights reserved.
-// Proprietary and confidential. Unauthorized copying, distribution, or use of this
-// software, or of any portion of it, is strictly prohibited.
-// Source: https://github.com/0SSAM/MEDORA-Health-Care-Eco-System
 import { FormEvent, useMemo, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { startLogin } from "@/const";
 import { Button } from "@/components/ui/button";
@@ -14,6 +10,8 @@ import { AlertCircle, ArrowLeft, CheckCircle2, KeyRound, Loader2, Mail, ShieldCh
 import { useLocation } from "wouter";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { useLocalization } from "@/contexts/LocalizationContext";
+import { MEDORA_LOGO_PRIMARY } from "@/lib/brand";
+import { resetIdentityBoundClientState } from "@/lib/identitySessionBoundary";
 
 function Notice({ error, success }: { error?: string; success?: string }) {
   if (!error && !success) return null;
@@ -29,7 +27,7 @@ export default function Login() {
   const { user, loading, logout } = useAuth();
   const { direction } = useLocalization();
   const [, setLocation] = useLocation();
-  const utils = trpc.useUtils();
+  const queryClient = useQueryClient();
   const resetToken = useMemo(() => new URLSearchParams(window.location.search).get("resetToken") || "", []);
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -45,11 +43,12 @@ export default function Login() {
     onSuccess: async result => {
       if (!result.success) { setInternalError(result.message); return; }
       setInternalError("");
-      // Re-read auth.me after Set-Cookie is processed. This avoids treating a
-      // successful credential response as a usable session until the next
-      // same-origin request can resolve the server-backed employee session.
-      await utils.auth.me.invalidate();
-      setLocation("/workspace");
+      // Employee account changes must never reuse the preceding user's cached
+      // tenant-scoped records, errors, or short-lived authorization header.
+      resetIdentityBoundClientState(queryClient);
+      // Reload so every workspace query starts against the newly committed
+      // server-backed session rather than an in-memory SPA state.
+      window.location.assign("/workspace");
     },
     onError: error => setInternalError(error.data?.code === "TOO_MANY_REQUESTS" ? "تم إيقاف المحاولات مؤقتاً للحماية. انتظر قليلاً ثم حاول مرة أخرى." : "تعذر التحقق من البيانات حالياً. تأكد من الاتصال وحاول مرة أخرى."),
   });
@@ -93,7 +92,7 @@ export default function Login() {
       <div className="pointer-events-none absolute -right-24 bottom-0 h-96 w-96 rounded-full bg-teal-200/30 blur-3xl" />
       <section className="relative m-auto grid w-full max-w-5xl overflow-hidden rounded-[2rem] border border-white/80 bg-white/85 shadow-[0_30px_100px_rgba(13,27,42,0.14)] backdrop-blur-xl lg:grid-cols-[1.05fr_.95fr]" aria-labelledby="login-title">
         <div className="flex flex-col justify-between bg-[#0d1b2a] p-8 text-white sm:p-12">
-          <div><div className="grid h-16 w-16 place-items-center rounded-2xl bg-gradient-to-br from-cyan-300 to-teal-200 shadow-lg shadow-cyan-950/30" aria-label="شعار ميدورا"><ShieldCheck className="h-9 w-9 text-[#0d1b2a]" /></div><p className="mt-7 text-sm font-semibold tracking-[0.16em] text-cyan-200">MEDORA INTEGRATED HEALTH SYSTEM</p><h1 className="mt-4 text-3xl font-bold leading-tight sm:text-4xl">منظومة الرعاية الصحية المتكاملة الآمنة</h1><p className="mt-5 max-w-md text-sm leading-7 text-slate-300">دخول مؤسسي بصلاحيات مرتبطة بالفرع والجهة والاختصاص، مع سجل تدقيق للموظفين. لا تُرسل كلمات المرور إلى سجل التدقيق.</p></div>
+          <div><img src={MEDORA_LOGO_PRIMARY} alt="MEDORA Health Care Eco System" className="h-20 w-auto max-w-[15rem] object-contain object-right shadow-lg shadow-cyan-950/30" /><p className="mt-7 text-sm font-semibold tracking-[0.16em] text-cyan-200">MEDORA HEALTH CARE ECO SYSTEM</p><h1 className="mt-4 text-3xl font-bold leading-tight sm:text-4xl">منظومة الرعاية الصحية المتكاملة الآمنة</h1><p className="mt-5 max-w-md text-sm leading-7 text-slate-300">دخول مؤسسي بصلاحيات مرتبطة بالفرع والجهة والاختصاص، مع سجل تدقيق للموظفين. لا تُرسل كلمات المرور إلى سجل التدقيق.</p></div>
           <div className="mt-12 grid gap-3 text-sm text-slate-300 sm:grid-cols-2"><div className="rounded-2xl border border-white/10 bg-white/5 p-4"><strong className="block text-white">حماية متعددة الطبقات</strong><span className="mt-1 block">جلسات، صلاحيات، وحظر محاولات متكررة.</span></div><div className="rounded-2xl border border-white/10 bg-white/5 p-4"><strong className="block text-white">استعادة آمنة</strong><span className="mt-1 block">روابط قصيرة العمر وتستخدم مرة واحدة.</span></div></div>
         </div>
         <div className="p-8 sm:p-12"><button type="button" onClick={() => setLocation("/")} className="mb-8 inline-flex items-center gap-2 text-sm text-slate-500 transition hover:text-slate-900"><ArrowLeft className="h-4 w-4" /> العودة للصفحة العامة</button><div className="max-w-md">
@@ -109,7 +108,7 @@ export default function Login() {
               <button type="button" onClick={() => { setRecoveryOpen(false); setRecoveryError(""); setRecoverySuccess(""); }} className="w-full text-sm text-slate-500 hover:text-slate-900">العودة إلى تسجيل الدخول</button>
             </form>
           </> : <>
-            <form className="mt-8 space-y-4" onSubmit={submitLogin} noValidate><div className="space-y-2"><Label htmlFor="internal-username">اسم المستخدم</Label><Input id="internal-username" autoComplete="username" value={username} onChange={e => setUsername(e.target.value)} placeholder="اسم المستخدم (مثال: owner أو admin)" disabled={internalLogin.isPending} aria-invalid={Boolean(internalError)} /></div><div className="space-y-2"><Label htmlFor="internal-password">كلمة المرور</Label><Input id="internal-password" type="password" autoComplete="current-password" value={password} onChange={e => setPassword(e.target.value)} disabled={internalLogin.isPending} aria-invalid={Boolean(internalError)} /></div><Notice error={internalError} /><Button type="submit" disabled={internalLogin.isPending} className="h-12 w-full bg-[#0d1b2a] text-base hover:bg-[#16324a]">{internalLogin.isPending ? <><Loader2 className="ml-2 h-4 w-4 animate-spin" aria-hidden="true" /> جارٍ التحقق من البيانات…</> : <><UserRound className="ml-2 h-4 w-4" /> دخول الموظفين</>}</Button></form>
+            <form className="mt-8 space-y-4" onSubmit={submitLogin} noValidate><div className="space-y-2"><Label htmlFor="internal-username">اسم المستخدم</Label><Input id="internal-username" autoComplete="username" value={username} onChange={e => setUsername(e.target.value)} placeholder="مثال: cashier.branch1" disabled={internalLogin.isPending} aria-invalid={Boolean(internalError)} /></div><div className="space-y-2"><Label htmlFor="internal-password">كلمة المرور</Label><Input id="internal-password" type="password" autoComplete="current-password" value={password} onChange={e => setPassword(e.target.value)} disabled={internalLogin.isPending} aria-invalid={Boolean(internalError)} /></div><Notice error={internalError} /><Button type="submit" disabled={internalLogin.isPending} className="h-12 w-full bg-[#0d1b2a] text-base hover:bg-[#16324a]">{internalLogin.isPending ? <><Loader2 className="ml-2 h-4 w-4 animate-spin" aria-hidden="true" /> جارٍ التحقق من البيانات…</> : <><UserRound className="ml-2 h-4 w-4" /> دخول الموظفين</>}</Button></form>
             <button type="button" onClick={() => { setRecoveryOpen(true); setRecoveryError(""); setRecoverySuccess(""); }} className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-cyan-800 hover:text-cyan-950"><KeyRound className="h-4 w-4" /> نسيت كلمة المرور؟</button>
             <div className="my-7 flex items-center gap-3 text-xs text-slate-400"><span className="h-px flex-1 bg-slate-200" /><span>أو حساب الإدارة</span><span className="h-px flex-1 bg-slate-200" /></div><Button type="button" variant="outline" onClick={() => startLogin()} className="h-12 w-full border-cyan-200 bg-white text-cyan-900 hover:bg-cyan-50">المتابعة إلى دخول الإدارة الآمن</Button>
           </>}

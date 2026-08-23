@@ -1,8 +1,3 @@
-// MEDORA | ميدورا — Integrated Health Care System
-// Copyright (c) 2026 Hossam Naeim Osman | حسام نعيم عثمان. All rights reserved.
-// Proprietary and confidential. Unauthorized copying, distribution, or use of this
-// software, or of any portion of it, is strictly prohibited.
-// Source: https://github.com/0SSAM/MEDORA-Health-Care-Eco-System
 import { useAuth } from "@/_core/hooks/useAuth";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
@@ -27,6 +22,7 @@ import {
 import { startLogin } from "@/const";
 import { useIsMobile } from "@/hooks/useMobile";
 import { LayoutDashboard, LogOut, PanelLeft, Users } from "lucide-react";
+import { isAtLogicalEdge, swipeAction } from "@/lib/sidebarGestures";
 import { CSSProperties, useEffect, useRef, useState } from "react";
 import { useLocation } from "wouter";
 import { DashboardLayoutSkeleton } from './DashboardLayoutSkeleton';
@@ -111,10 +107,11 @@ function DashboardLayoutContent({
 }: DashboardLayoutContentProps) {
   const { user, logout } = useAuth();
   const [location, setLocation] = useLocation();
-  const { state, toggleSidebar } = useSidebar();
+  const { state, open, openMobile, setOpen, setOpenMobile, toggleSidebar } = useSidebar();
   const isCollapsed = state === "collapsed";
   const [isResizing, setIsResizing] = useState(false);
   const sidebarRef = useRef<HTMLDivElement>(null);
+  const touchStartRef = useRef<{ x: number; y: number } | null>(null);
   const activeMenuItem = menuItems.find(item => item.path === location);
   const isMobile = useIsMobile();
 
@@ -123,6 +120,70 @@ function DashboardLayoutContent({
       setIsResizing(false);
     }
   }, [isCollapsed]);
+
+  useEffect(() => {
+    const handleEdgeHover = (event: MouseEvent) => {
+      if (isMobile || event.buttons !== 0) return;
+      const direction = document.documentElement.dir === "rtl" ? "rtl" : "ltr";
+      const atLogicalEdge = isAtLogicalEdge(direction, event.clientX, window.innerWidth);
+      if (atLogicalEdge && !open) setOpen(true);
+    };
+    window.addEventListener("mousemove", handleEdgeHover, { passive: true });
+    return () => window.removeEventListener("mousemove", handleEdgeHover);
+  }, [isMobile, open, setOpen]);
+
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape" && (isMobile ? openMobile : open)) {
+        isMobile ? setOpenMobile(false) : setOpen(false);
+      }
+    };
+    const handleViewportChange = () => {
+      if (isMobile) setOpenMobile(false);
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    window.addEventListener("orientationchange", handleViewportChange);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+      window.removeEventListener("orientationchange", handleViewportChange);
+    };
+  }, [isMobile, open, openMobile, setOpen, setOpenMobile]);
+
+  const handleTouchStart = (event: TouchEvent) => {
+    if (!isMobile || event.touches.length !== 1) return;
+    const touch = event.touches[0];
+    const direction = document.documentElement.dir === "rtl" ? "rtl" : "ltr";
+    const edgeInset = 36;
+    const startedAtLogicalEdge = direction === "rtl"
+      ? touch.clientX >= window.innerWidth - edgeInset
+      : touch.clientX <= edgeInset;
+    if (startedAtLogicalEdge || openMobile) {
+      touchStartRef.current = { x: touch.clientX, y: touch.clientY };
+    }
+  };
+
+  const handleTouchEnd = (event: TouchEvent) => {
+    const start = touchStartRef.current;
+    touchStartRef.current = null;
+    if (!start || !isMobile) return;
+    const touch = event.changedTouches[0];
+    const dx = touch.clientX - start.x;
+    const dy = touch.clientY - start.y;
+    if (Math.abs(dx) < 56 || Math.abs(dx) < Math.abs(dy) * 1.25) return;
+    const direction = document.documentElement.dir === "rtl" ? "rtl" : "ltr";
+    const action = swipeAction(direction, dx, dy);
+    if (action === "open") setOpenMobile(true);
+    if (action === "close") setOpenMobile(false);
+  };
+
+  useEffect(() => {
+    window.addEventListener("touchstart", handleTouchStart, { passive: true });
+    window.addEventListener("touchend", handleTouchEnd, { passive: true });
+    return () => {
+      window.removeEventListener("touchstart", handleTouchStart);
+      window.removeEventListener("touchend", handleTouchEnd);
+    };
+  }, [isMobile, openMobile, setOpenMobile]);
 
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
@@ -189,7 +250,10 @@ function DashboardLayoutContent({
                   <SidebarMenuItem key={item.path}>
                     <SidebarMenuButton
                       isActive={isActive}
-                      onClick={() => setLocation(item.path)}
+                      onClick={() => {
+                        setLocation(item.path);
+                        if (isMobile) setOpenMobile(false);
+                      }}
                       tooltip={item.label}
                       className={`h-10 transition-all font-normal`}
                     >

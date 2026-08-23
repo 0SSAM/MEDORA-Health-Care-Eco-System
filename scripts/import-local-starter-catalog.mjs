@@ -5,9 +5,9 @@ import process from "node:process";
 import mysql from "mysql2/promise";
 
 const DEFAULT_FILES = [
-  "/home/ubuntu/medora-catalog-research/derived/medicines-pending-review.csv",
-  "/home/ubuntu/medora-catalog-research/derived/cosmetics-pending-review.csv",
-  "/home/ubuntu/medora-catalog-research/derived/medical-equipment-supplies-leads-pending-review.csv",
+  "/home/ubuntu/aldora-catalog-research/derived/medicines-pending-review.csv",
+  "/home/ubuntu/aldora-catalog-research/derived/cosmetics-pending-review.csv",
+  "/home/ubuntu/aldora-catalog-research/derived/medical-equipment-supplies-leads-pending-review.csv",
 ];
 
 function parseArgs(argv) {

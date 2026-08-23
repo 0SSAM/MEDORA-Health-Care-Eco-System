@@ -1,11 +1,7 @@
-// MEDORA | ميدورا — Integrated Health Care System
-// Copyright (c) 2026 Hossam Naeim Osman | حسام نعيم عثمان. All rights reserved.
-// Proprietary and confidential. Unauthorized copying, distribution, or use of this
-// software, or of any portion of it, is strictly prohibited.
-// Source: https://github.com/0SSAM/MEDORA-Health-Care-Eco-System
 import { useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
+import { useLocalization } from "@/contexts/LocalizationContext";
 import {
   Dialog,
   DialogContent,
@@ -32,6 +28,10 @@ export function SecureLoginDialog({
   onClose,
 }: SecureLoginDialogProps) {
   const [internalOpen, setInternalOpen] = useState(open);
+  const { language, direction } = useLocalization();
+  const copy = language === "ar"
+    ? { imageAlt: "رمز نافذة الدخول", description: "تسجيل الدخول الآمن للمتابعة", login: "تسجيل الدخول" }
+    : { imageAlt: "Secure sign-in dialog graphic", description: "Sign in securely to continue", login: "Sign in" };
 
   useEffect(() => {
     if (!onOpenChange) {
@@ -56,13 +56,13 @@ export function SecureLoginDialog({
       open={onOpenChange ? open : internalOpen}
       onOpenChange={handleOpenChange}
     >
-      <DialogContent className="py-5 bg-[#f8f8f7] rounded-[20px] w-[400px] shadow-[0px_4px_11px_0px_rgba(0,0,0,0.08)] border border-[rgba(0,0,0,0.08)] backdrop-blur-2xl p-0 gap-0 text-center">
+      <DialogContent dir={direction} className="py-5 bg-[#f8f8f7] rounded-[20px] w-[400px] shadow-[0px_4px_11px_0px_rgba(0,0,0,0.08)] border border-[rgba(0,0,0,0.08)] backdrop-blur-2xl p-0 gap-0 text-center">
         <div className="flex flex-col items-center gap-2 p-5 pt-12">
           {logo ? (
             <div className="w-16 h-16 bg-white rounded-xl border border-[rgba(0,0,0,0.08)] flex items-center justify-center">
               <img
                 src={logo}
-                alt="Dialog graphic"
+                alt={copy.imageAlt}
                 className="w-10 h-10 rounded-md"
               />
             </div>
@@ -75,7 +75,7 @@ export function SecureLoginDialog({
             </DialogTitle>
           ) : null}
           <DialogDescription className="text-sm text-[#858481] leading-5 tracking-[-0.154px]">
-            تسجيل الدخول الآمن للمتابعة
+            {copy.description}
           </DialogDescription>
         </div>
 
@@ -85,7 +85,7 @@ export function SecureLoginDialog({
             onClick={onLogin}
             className="w-full h-10 bg-[#1a1a19] hover:bg-[#1a1a19]/90 text-white rounded-[10px] text-sm font-medium leading-5 tracking-[-0.154px]"
           >
-            تسجيل الدخول
+            {copy.login}
           </Button>
         </DialogFooter>
       </DialogContent>
