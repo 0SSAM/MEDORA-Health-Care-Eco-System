@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 
 const projectRoot = "/home/ubuntu/ألدورا-|-منظومة-الرعاية-الصحية-المتكاملة";
 const logoPrimary = "/manus-storage/medora-logo-primary_2cf35bd2.png";
-const logoMark = "/manus-storage/medora-logo-primary-512_9338f979.png";
+const logoMark = "/manus-storage/medora-logo-primary-512_f58d6a48.png";
 
 describe("MEDORA logo surfaces", () => {
   it("uses the approved shared logo on application entry surfaces", () => {

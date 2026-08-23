@@ -9,13 +9,13 @@
   "lang": "ar",
   "dir": "rtl",
   "icons": [
-    { "src": "/manus-storage/medora-logo-primary-512_9338f979.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" },
-    { "src": "/manus-storage/medora-logo-primary-512_9338f979.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+    { "src": "/manus-storage/medora-logo-primary-512_f58d6a48.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" },
+    { "src": "/manus-storage/medora-logo-primary-512_f58d6a48.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
   ],
   "shortcuts": [{
     "name": "نقطة البيع",
     "short_name": "POS",
     "url": "/pos",
-    "icons": [{ "src": "/manus-storage/medora-logo-primary-512_9338f979.png", "sizes": "512x512", "type": "image/png" }]
+    "icons": [{ "src": "/manus-storage/medora-logo-primary-512_f58d6a48.png", "sizes": "512x512", "type": "image/png" }]
   }]
 }

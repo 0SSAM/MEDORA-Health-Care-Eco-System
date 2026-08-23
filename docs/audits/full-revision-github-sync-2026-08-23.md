@@ -76,6 +76,12 @@ The subsequent integration-tree gate surfaced three remaining GitHub-only artifa
 
 The collector now presents **MEDORA** in its visible diagnostics while retaining its existing data-minimisation logic. The Android, iOS, and HarmonyOS reference adapters are included as reference material only; the release gate still states that web delivery is not native activation evidence. The showcase-secret test now verifies that a supplied secret is non-trivial without issuing a network call; internal login behaviour remains tested by the authenticated server contracts. Focused verification of the three affected suites passed **3 files / 7 tests** with a transient environment-only value. The full integration-tree gate and a fresh protected CI run are the remaining validation steps.
 
+## Final integration gate and brand-contract closure
+
+The final GitHub integration-tree validation passed with CI-equivalent, transient configuration values. `pnpm test` passed **241 files / 750 tests**, with **3 files / 10 tests intentionally skipped** for credential-, provider-, device-, or isolated-database-bound paths. Production audit reported no known vulnerabilities; the production build completed with only the existing non-blocking large-chunk advisory; the smoke check passed; and all three unauthenticated Chromium E2E checks passed in **3.2 seconds**.
+
+The last local failure was configuration-only: a deliberately invalid temporary logo value did not satisfy the existing `/manus-storage/` logo contract. Re-running with the same valid managed-logo path shape used by CI passed, so no product or authorization code was weakened. The final source alignment permits either approved MEDORA title (Arabic or English), restores the reviewed display-only shared brand module, and makes the PWA manifest reference the same managed MEDORA mark. The PR still requires GitHub Actions confirmation; no merge or protected-branch bypass is authorized or performed.
+
 ## Next review steps
 
 1. Compare tracked source and governance files while excluding build output, dependencies, sandbox metadata, secrets, and temporary runtime files.
