@@ -3,10 +3,7 @@ import { describe, expect, it } from "vitest";
 
 describe("MEDORA branding configuration", () => {
   it("uses an approved MEDORA title configuration and HTML title injection", () => {
-    const indexHtml = readFileSync(
-      "/home/ubuntu/ألدورا-|-منظومة-الرعاية-الصحية-المتكاملة/client/index.html",
-      "utf8",
-    );
+    const indexHtml = readFileSync(new URL("../client/index.html", import.meta.url), "utf8");
     expect([
       "MEDORA Health Care Eco System",
       "ميدورا | منظومة الرعاية الصحية المتكاملة",

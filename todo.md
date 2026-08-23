@@ -2504,3 +2504,4 @@ Generated invoice PDF remains a local presentation/export artifact; official ETA
 - [x] Align remaining GitHub-only CI artifacts with current MEDORA source: provider-free debug-brand contract, native-wrapper reference files, and a bounded showcase-secret test that does not depend on an external running service.
 - [x] Align final GitHub brand contracts with the approved Arabic or English MEDORA title and restore the reviewed shared brand module required by the logo contract.
 - [x] Unify the PWA manifest logo mark with the reviewed shared MEDORA mark used by the public entry surfaces, then update the logo contract accordingly.
+- [x] Make GitHub brand contracts repository-root portable and update the CI-only logo configuration to the managed MEDORA path so CI does not depend on the Manus workspace path or legacy ALDORA branding.

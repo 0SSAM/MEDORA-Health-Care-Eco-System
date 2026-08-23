@@ -45,7 +45,7 @@ jobs:
           SHOWCASE_TEST_PASSWORD="CI-only-showcase-password-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-$(openssl rand -hex 18)" \
           VITE_APP_ID="ci-smoke" \
           VITE_APP_TITLE="ميدورا | منظومة الرعاية الصحية المتكاملة" \
-          VITE_APP_LOGO="https://example.invalid/medora-ci-logo.png" \
+          VITE_APP_LOGO="/manus-storage/medora-logo-primary_2cf35bd2.png" \
           VITE_ANALYTICS_ENDPOINT="https://analytics.invalid" \
           VITE_ANALYTICS_WEBSITE_ID="ci-smoke" \
           OAUTH_SERVER_URL="http://127.0.0.1:3999" \

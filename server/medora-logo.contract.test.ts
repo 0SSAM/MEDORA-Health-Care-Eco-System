@@ -1,19 +1,18 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 
-const projectRoot = "/home/ubuntu/ألدورا-|-منظومة-الرعاية-الصحية-المتكاملة";
 const logoPrimary = "/manus-storage/medora-logo-primary_2cf35bd2.png";
 const logoMark = "/manus-storage/medora-logo-primary-512_f58d6a48.png";
 
 describe("MEDORA logo surfaces", () => {
   it("uses the approved shared logo on application entry surfaces", () => {
     const publicBranding = [
-      readFileSync(`${projectRoot}/client/src/lib/brand.ts`, "utf8"),
-      readFileSync(`${projectRoot}/client/src/pages/Login.tsx`, "utf8"),
-      readFileSync(`${projectRoot}/client/src/pages/Welcome.tsx`, "utf8"),
-      readFileSync(`${projectRoot}/client/src/pages/Home.tsx`, "utf8"),
-      readFileSync(`${projectRoot}/client/index.html`, "utf8"),
-      readFileSync(`${projectRoot}/client/public/manifest.webmanifest`, "utf8"),
+      readFileSync(new URL("../client/src/lib/brand.ts", import.meta.url), "utf8"),
+      readFileSync(new URL("../client/src/pages/Login.tsx", import.meta.url), "utf8"),
+      readFileSync(new URL("../client/src/pages/Welcome.tsx", import.meta.url), "utf8"),
+      readFileSync(new URL("../client/src/pages/Home.tsx", import.meta.url), "utf8"),
+      readFileSync(new URL("../client/index.html", import.meta.url), "utf8"),
+      readFileSync(new URL("../client/public/manifest.webmanifest", import.meta.url), "utf8"),
     ].join("\n");
 
     expect(publicBranding).toContain(logoPrimary);

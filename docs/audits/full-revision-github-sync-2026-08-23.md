@@ -80,11 +80,16 @@ The collector now presents **MEDORA** in its visible diagnostics while retaining
 
 The final GitHub integration-tree validation passed with CI-equivalent, transient configuration values. `pnpm test` passed **241 files / 750 tests**, with **3 files / 10 tests intentionally skipped** for credential-, provider-, device-, or isolated-database-bound paths. Production audit reported no known vulnerabilities; the production build completed with only the existing non-blocking large-chunk advisory; the smoke check passed; and all three unauthenticated Chromium E2E checks passed in **3.2 seconds**.
 
-The last local failure was configuration-only: a deliberately invalid temporary logo value did not satisfy the existing `/manus-storage/` logo contract. Re-running with the same valid managed-logo path shape used by CI passed, so no product or authorization code was weakened. The final source alignment permits either approved MEDORA title (Arabic or English), restores the reviewed display-only shared brand module, and makes the PWA manifest reference the same managed MEDORA mark. The PR still requires GitHub Actions confirmation; no merge or protected-branch bypass is authorized or performed.
+The last local failure was configuration-only: a deliberately invalid temporary logo value did not satisfy the existing `/manus-storage/` logo contract. Re-running with the same valid managed-logo path shape used by CI passed, so no product or authorization code was weakened. The final source alignment permits either approved MEDORA title (Arabic or English), restores the reviewed display-only shared brand module, and makes the PWA manifest reference the same managed MEDORA mark.
+
+## Portable-contract closure and final re-gate
+
+The first post-fix GitHub run showed that three brand contracts still embedded the sandbox-specific `/home/ubuntu/ألدورا-|-منظومة-الرعاية-الصحية-المتكاملة` path, which cannot exist on a GitHub runner. The tests now resolve repository files relative to their own modules. The Vitest default logo was also changed from an old ALDORA placeholder to the approved managed MEDORA mark, matching the CI environment. This preserves the assertions while removing both the workspace-path dependency and legacy visible branding.
+
+The full protected-branch gate then passed again from the integration working tree: frozen install, `pnpm check`, **241 files / 750 Vitest tests passed** with **3 files / 10 intentional skips**, production build, smoke check, three unauthenticated Chromium E2E tests in **3.7 seconds**, and the production dependency audit with no known vulnerabilities. The build-size advisory remains non-blocking. This validation used no real account, protected mutation, regulated submission, provider activation, production database, or external secret. The integration branch is ready for a normal PR-only update; final GitHub Actions confirmation remains required, and no merge or branch-protection bypass is authorized.
 
 ## Next review steps
 
-1. Compare tracked source and governance files while excluding build output, dependencies, sandbox metadata, secrets, and temporary runtime files.
-2. Run a focused health audit to identify only reproducible, scope-safe improvements.
-3. Apply any approved modifications with tests and full validation.
-4. Prepare a normal protected-branch pull-request path for the validated, source-only delta; do not use a history rewrite.
+1. Commit the reviewed source-only delta on `manus/auto-sync-aldora` and push that branch only.
+2. Confirm the existing bilingual PR targets `main`, then await its required GitHub Actions checks.
+3. Do not merge, force-push, rewrite history, alter branch protection, or transfer the managed internal remote.

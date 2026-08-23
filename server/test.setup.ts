@@ -5,7 +5,7 @@ const testDefaults: Record<string, string> = {
   VITE_ALDO_SALES_CONTACT_URL:
     "https://wa.me/201550571454?text=MEDORA%20CI%20configuration%20check",
   VITE_APP_TITLE: "ميدورا | منظومة الرعاية الصحية المتكاملة",
-  VITE_APP_LOGO: "https://example.invalid/aldo-app-icon_9eb86e20.png",
+  VITE_APP_LOGO: "/manus-storage/medora-logo-primary_2cf35bd2.png",
 };
 
 for (const [key, value] of Object.entries(testDefaults)) {
