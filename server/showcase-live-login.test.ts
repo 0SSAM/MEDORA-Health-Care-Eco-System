@@ -18,15 +18,20 @@ describe.skipIf(!enabled)("managed showcase login smoke", () => {
     expect(payload.result?.data?.json?.success).toBe(true);
     expect(payload.result?.data?.json?.sessionMode).toBe("showcase");
     const setCookie = response.headers.get("set-cookie");
-    expect(setCookie).toContain("medora_internal_session=");
-    const internalSessionCookie = setCookie?.split(";")[0];
-    expect(internalSessionCookie).toMatch(/^medora_internal_session=/);
+    expect(setCookie).toContain("aldo_internal_session=");
+    const cookieHeaders = typeof response.headers.getSetCookie === "function"
+      ? response.headers.getSetCookie()
+      : [setCookie ?? ""];
+    const internalSessionCookie = cookieHeaders
+      .map(cookie => cookie.split(";")[0])
+      .find(cookie => cookie.startsWith("aldo_internal_session="));
+    expect(internalSessionCookie).toMatch(/^aldo_internal_session=/);
 
     const meResponse = await fetch(`${baseUrl}/api/trpc/auth.me?batch=1&input=${encodeURIComponent(JSON.stringify({ 0: { json: null } }))}`, {
       headers: { cookie: internalSessionCookie! },
     });
     expect(meResponse.status).toBe(200);
     const mePayload = await meResponse.json() as Array<{ result?: { data?: { json?: { openId?: string } } } }>;
-    expect(mePayload[0]?.result?.data?.json?.openId).toBe("medora-showcase-internal-user-v1");
+    expect(mePayload[0]?.result?.data?.json?.openId).toBe("medora-showcase-manager-v1");
   }, 30_000);
 });

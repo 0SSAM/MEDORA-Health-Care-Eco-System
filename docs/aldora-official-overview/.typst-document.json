@@ -1,0 +1,10 @@
+{
+  "entry": "main.typ",
+  "metadata": {
+    "author": "MEDORA Product Documentation",
+    "subtitle": "Philosophy, Meaning, and Cross-Platform Operation",
+    "title": "MEDORA | Official Overview"
+  },
+  "mode": "report",
+  "theme": "report-theme.typ"
+}

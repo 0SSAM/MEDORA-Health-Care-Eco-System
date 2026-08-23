@@ -2,8 +2,8 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { appRouter } from "../routers";
 import type { TrpcContext } from "../_core/context";
 
-const { getDbMock } = vi.hoisted(() => ({ getDbMock: vi.fn() }));
-vi.mock("../db", () => ({ getDb: getDbMock }));
+const { getDbMock, hasCurrentNdaAcceptanceMock, recordAuthenticationEventMock } = vi.hoisted(() => ({ getDbMock: vi.fn(), hasCurrentNdaAcceptanceMock: vi.fn().mockResolvedValue(true), recordAuthenticationEventMock: vi.fn() }));
+vi.mock("../db", () => ({ getDb: getDbMock, hasCurrentNdaAcceptance: hasCurrentNdaAcceptanceMock, recordAuthenticationEvent: recordAuthenticationEventMock }));
 
 type TestUser = NonNullable<TrpcContext["user"]>;
 
@@ -140,6 +140,8 @@ describe("commitSale catalog evidence contract", () => {
       [{ branchId: 9, jurisdictionId: 2, active: 1 }],
       [],
       [{ organizationId: 10 }],
+      [],
+      [{ environment: "production" }],
       [],
       [{ id: 2, countryCode: "EG", active: 1, legalAuthorityProfile: "EDA", language: "ar", defaultLocale: "ar-EG", currencyCode: "EGP", timezone: "Africa/Cairo", taxProfile: "EG-TAX", dateFormat: "YYYY-MM-DD", numberSystem: "latn" }],
       [],

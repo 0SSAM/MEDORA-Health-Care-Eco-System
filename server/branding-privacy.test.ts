@@ -22,13 +22,15 @@ describe("MEDORA visible branding privacy", () => {
     expect(source).toContain("[MEDORA]");
   });
 
-  it("keeps the application-owned service worker branded as MEDORA", async () => {
+  it("keeps the application-owned service worker on the current MEDORA cache policy", async () => {
     const source = await readFile(new URL("../client/public/sw.js", import.meta.url), "utf8");
     expect(source).not.toMatch(/X-BDF|BDF_SYNC_STATUS/i);
     expect(source).toContain("medora-health-care-shell-v4");
-    expect(source).toContain('LEGACY_CACHE_NAMES = ["medora-health-care-shell-v3", "bdf-pharma-shell-v2"]');
+    expect(source).toContain('LEGACY_CACHE_NAMES = ["aldo-health-care-shell-v3", "bdf-pharma-shell-v2"]');
     expect(source).toContain("caches.delete(name)");
-    expect(source).toContain("X-MEDORA-Regulated-Operation");
-    expect(source).toContain("MEDORA_SYNC_STATUS");
+    expect(source).toContain("X-ALDO-Regulated-Operation");
+    expect(source).toContain("ALDO_SYNC_STATUS");
+    expect(source).toContain('const API_PREFIX = "/api/"');
+    expect(source).toContain("requestUrl.pathname.startsWith(API_PREFIX)");
   });
 });

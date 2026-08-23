@@ -4,7 +4,7 @@
 
 Source: https://www.jfda.jo/Default/Ar
 
-The official JFDA homepage identifies the institution and exposes a dedicated Directorate of Medicines, a Directorate of Medical Devices and Supplies, electronic services, legislation, regulations, instructions, guides, policies, and service directories. The page also links to official services for drug registration, public drug-price search, public drug information and leaflets, and information on drugs submitted for registration. These are discovery and activation-gate sources; they do not by themselves establish that MEDORA is compliant or licensed.
+The official JFDA homepage identifies the institution and exposes a dedicated Directorate of Medicines, a Directorate of Medical Devices and Supplies, electronic services, legislation, regulations, instructions, guides, policies, and service directories. The page also links to official services for drug registration, public drug-price search, public drug information and leaflets, and information on drugs submitted for registration. These are discovery and activation-gate sources; they do not by themselves establish that ALDO is compliant or licensed.
 
 Official linked service URLs visible on the page:
 - Drug registration workflow: https://workflow.jfda.jo/user/login
@@ -32,7 +32,7 @@ Source: https://www.sante.gov.ma/Reglementation/Pages/REGLEMENTATION-APPLICABLE-
 
 The official Ministry page titled “Reglementation appliqué au produits de santé” lists primary legal and regulatory materials for health products. It links, among others, to Law 11-08 on in-vitro diagnostic reagents, rules on poisonous substances, Law 84-12 on medical devices, Law 17-04 establishing the medicines and pharmacy code, and decrees concerning generic bioequivalence and marketing authorization for human medicines. The page also links to the Directorate of Medicines and Pharmacy / AMMPS portal.
 
-Implementation implication: Morocco requires separate evidence domains for medicines and pharmacy, in-vitro diagnostics, medical devices, poisonous/controlled substances, and marketing authorization. The official page is a source register, not proof of a facility licence, product authorization, privacy compliance, tax/e-invoicing readiness, or production credential for MEDORA. A Morocco pack must retain the specific law/decree version, applicability, effective date, local authority evidence, reviewer, and acceptance criteria before activation.
+Implementation implication: Morocco requires separate evidence domains for medicines and pharmacy, in-vitro diagnostics, medical devices, poisonous/controlled substances, and marketing authorization. The official page is a source register, not proof of a facility licence, product authorization, privacy compliance, tax/e-invoicing readiness, or production credential for ALDO. A Morocco pack must retain the specific law/decree version, applicability, effective date, local authority evidence, reviewer, and acceptance criteria before activation.
 
 ## Qatar official source verification — follow-up
 

@@ -21,16 +21,17 @@ export const ORGANIZATION_CAPABILITIES = [
   "manage_members",
   "view_sensitive_clinical",
   "view_audit",
+  "view_financials",
 ] as const;
 
 export type OrganizationCapability = (typeof ORGANIZATION_CAPABILITIES)[number];
 
 export const ROLE_CAPABILITIES: Record<OrganizationRole, readonly OrganizationCapability[]> = {
-  owner: ["view_workspace", "manage_members", "view_sensitive_clinical", "view_audit"],
-  org_admin: ["view_workspace", "manage_members", "view_sensitive_clinical", "view_audit"],
+  owner: ["view_workspace", "manage_members", "view_sensitive_clinical", "view_audit", "view_financials"],
+  org_admin: ["view_workspace", "manage_members", "view_sensitive_clinical", "view_audit", "view_financials"],
   compliance_officer: ["view_workspace", "view_sensitive_clinical", "view_audit"],
   clinical_lead: ["view_workspace", "view_sensitive_clinical"],
-  operations_manager: ["view_workspace"],
+  operations_manager: ["view_workspace", "view_financials"],
   staff: ["view_workspace"],
   auditor: ["view_workspace", "view_sensitive_clinical", "view_audit"],
 };
@@ -86,6 +87,14 @@ export function canViewOrganizationAudit(
   organizationId: number,
 ) {
   return hasOrganizationCapability(userRole, memberships, organizationId, "view_audit");
+}
+
+export function canViewFinancialData(
+  userRole: string,
+  memberships: OrganizationMembershipSnapshot[],
+  organizationId: number,
+) {
+  return hasOrganizationCapability(userRole, memberships, organizationId, "view_financials");
 }
 
 export function isSupportedOrganizationType(value: string) {

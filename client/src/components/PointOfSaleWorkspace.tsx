@@ -1,0 +1,136 @@
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { AlertCircle, Barcode, Camera, CheckCircle2, ChevronDown, Minus, MoreHorizontal, Plus, Printer, Search, ShoppingCart, Trash2, Undo2, Pause, MessageCircle, X } from "lucide-react";
+import { skipToken } from "@tanstack/react-query";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { trpc } from "@/lib/trpc";
+import { CashierCycleWorkspace } from "@/components/CashierCycleWorkspace";
+import { useLocalization } from "@/contexts/LocalizationContext";
+import { hasValidPosScope, POS_STOCK_QUERY_OPTIONS } from "@/lib/posStockQuery";
+import { classifyScan, createScanPayload, parseKeyboardWedgeSequence, scanLookupCandidates, type KeyboardWedgeEvent, type ScanPayload } from "@/lib/barcodeScanner";
+import { cameraResultToRaw, cameraUnavailableReason, createCameraDetector, requestRearCamera, stopCameraStream, type CameraScanStatus } from "@/lib/cameraBarcodeScanner";
+
+type StockItem = { productId: number; batchId: number; sku: string; barcode: string | null; nameAr: string; nameEn: string | null; unitPrice: number; batchNumber: string; expiryDate: Date | string; quantityOnHand: number; unit: string };
+type BasketLine = StockItem & { quantity: number };
+type HeldInvoice = { id: string; invoiceNumber: string; paymentMethod: "cash" | "meeza" | "instapay" | "insurance"; basket: BasketLine[]; createdAt: string };
+type Receipt = { saleId: number; invoiceNumber: string; total: number };
+type Props = { branchId: number | null; jurisdictionId: number | null };
+
+export function PointOfSaleWorkspace({ branchId, jurisdictionId }: Props) {
+  const { t, language, direction, locale, formatCurrency, sessionMode } = useLocalization();
+  const itemName = useCallback((item: Pick<StockItem, "nameAr" | "nameEn">) => language === "en" && item.nameEn ? item.nameEn : item.nameAr, [language]);
+  const [query, setQuery] = useState("");
+  const [basket, setBasket] = useState<BasketLine[]>([]);
+  const [invoiceNumber, setInvoiceNumber] = useState(() => `MED-POS-${Date.now()}`);
+  const [paymentMethod, setPaymentMethod] = useState<HeldInvoice["paymentMethod"]>("cash");
+  const [status, setStatus] = useState<string | null>(null);
+  const [lastReceipt, setLastReceipt] = useState<Receipt | null>(null);
+  const [showHeld, setShowHeld] = useState(false);
+  const [pendingBarcode, setPendingBarcode] = useState<string | null>(null);
+  const [showSimulatedScanner, setShowSimulatedScanner] = useState(false);
+  const [lastScan, setLastScan] = useState<ScanPayload | null>(null);
+  const [showCameraScanner, setShowCameraScanner] = useState(false);
+  const [cameraStatus, setCameraStatus] = useState<CameraScanStatus>("idle");
+  const [cameraMessage, setCameraMessage] = useState<string | null>(null);
+  const barcodeRef = useRef<HTMLInputElement>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const cameraStreamRef = useRef<MediaStream | null>(null);
+  const cameraDetectorRef = useRef<ReturnType<typeof createCameraDetector> | null>(null);
+  const cameraFrameRef = useRef<number | null>(null);
+  const hasPosScope = hasValidPosScope({ branchId, jurisdictionId });
+  const stockInput = hasPosScope ? { branchId: branchId!, jurisdictionId: jurisdictionId!, query } : skipToken;
+  const stock = trpc.erp.pos.availableStock.useQuery(stockInput, { enabled: hasPosScope, ...POS_STOCK_QUERY_OPTIONS });
+  const heldQuery = trpc.erp.pos.listHeldInvoices.useQuery(branchId ? { branchId } : skipToken, { enabled: Boolean(branchId), retry: false });
+  const heldInvoices = useMemo<HeldInvoice[]>(() => (heldQuery.data ?? []).map(row => ({ id: String(row.id), invoiceNumber: row.invoiceNumber, paymentMethod: row.paymentMethod, basket: row.items as BasketLine[], createdAt: new Date(row.createdAt).toISOString() })), [heldQuery.data]);
+  const utils = trpc.useUtils();
+  const total = useMemo(() => basket.reduce((sum, line) => sum + line.quantity * line.unitPrice, 0), [basket]);
+  const addItem = useCallback((item: StockItem) => {
+    setStatus(null); setLastReceipt(null);
+    setBasket(current => {
+      const found = current.find(line => line.batchId === item.batchId);
+      if (found) return current.map(line => line.batchId === item.batchId ? { ...line, quantity: Math.min(line.quantity + 1, item.quantityOnHand) } : line);
+      return [...current, { ...item, quantity: 1 }];
+    });
+  }, []);
+  const holdInvoiceMutation = trpc.erp.pos.holdInvoice.useMutation({ onSuccess: () => { setBasket([]); setInvoiceNumber(`MED-POS-${Date.now()}`); setStatus(t("pos.holdSuccess")); void utils.erp.pos.listHeldInvoices.invalidate(); }, onError: () => setStatus(t("pos.holdFailed")) });
+  const restoreInvoiceMutation = trpc.erp.pos.restoreHeldInvoice.useMutation({ onSuccess: result => { setBasket(result.items as BasketLine[]); setInvoiceNumber(result.invoiceNumber); setPaymentMethod(result.paymentMethod); setShowHeld(false); setStatus(t("pos.restoreSuccess")); void utils.erp.pos.listHeldInvoices.invalidate(); }, onError: () => setStatus(t("pos.restoreFailed")) });
+  const onSaleSuccess = (result: { saleId: number; status: string }) => { setLastReceipt({ saleId: result.saleId, invoiceNumber, total }); setStatus(`${t("pos.saleComplete")} ${result.status}`); setBasket([]); setInvoiceNumber(`MED-POS-${Date.now()}`); void stock.refetch(); };
+  const commitProductionSale = trpc.erp.pos.commitSale.useMutation({ onSuccess: onSaleSuccess, onError: () => setStatus(t("pos.saleFailed")) });
+  const commitShowcaseSale = trpc.erp.pos.commitShowcaseSale.useMutation({ onSuccess: onSaleSuccess, onError: () => setStatus(t("pos.saleFailed")) });
+  const isSalePending = sessionMode === "showcase" ? commitShowcaseSale.isPending : commitProductionSale.isPending;
+  const changeQuantity = (batchId: number, delta: number) => setBasket(current => current.flatMap(line => line.batchId !== batchId ? [line] : (() => { const quantity = Math.min(line.quantityOnHand, Math.max(0, line.quantity + delta)); return quantity > 0 ? [{ ...line, quantity }] : []; })()));
+  const removeItem = (batchId: number) => setBasket(current => current.filter(line => line.batchId !== batchId));
+  const applyScan = useCallback((raw: string, source: ScanPayload["source"]) => {
+    const payload = createScanPayload(raw, { symbology: classifyScan(raw), source });
+    if (!payload) return false;
+    setLastScan(payload);
+    const candidates = scanLookupCandidates(payload);
+    const exact = stock.data?.find(item => candidates.includes(item.barcode ?? "") || candidates.includes(item.sku));
+    if (exact) { addItem(exact); setQuery(""); setPendingBarcode(null); setStatus(t(source === "camera" ? "pos.addedByCamera" : "pos.addedByBarcode")); return true; }
+    setQuery(payload.raw); setPendingBarcode(payload.raw); setStatus(t("pos.searchingPayload")); return false;
+  }, [addItem, stock.data, t]);
+  const simulateBarcodeScan = (item: StockItem) => { const payload = createScanPayload(item.barcode || item.sku, { symbology: classifyScan(item.barcode || item.sku), source: "simulated" }); if (!payload) return; setLastScan(payload); setQuery(payload.raw); addItem(item); setShowSimulatedScanner(false); setStatus(t("pos.simulatedSuccess")); barcodeRef.current?.focus(); };
+  useEffect(() => { let events: KeyboardWedgeEvent[] = []; let resetTimer: number | null = null; const onKeyDown = (event: KeyboardEvent) => { if (["Shift", "Control", "Alt", "Meta"].includes(event.key)) return; if (event.key === "Enter" || event.key === "Tab") { const payload = parseKeyboardWedgeSequence(events); events = []; if (resetTimer !== null) window.clearTimeout(resetTimer); resetTimer = null; if (payload) { event.preventDefault(); applyScan(payload, "hardware"); } return; } if (event.key.length !== 1) return; events = [...events, { key: event.key, at: performance.now() }].slice(-160); if (resetTimer !== null) window.clearTimeout(resetTimer); resetTimer = window.setTimeout(() => { events = []; resetTimer = null; }, 120); }; window.addEventListener("keydown", onKeyDown, true); return () => { window.removeEventListener("keydown", onKeyDown, true); if (resetTimer !== null) window.clearTimeout(resetTimer); }; }, [applyScan]);
+  useEffect(() => { if (!pendingBarcode || !stock.data) return; const payload = createScanPayload(pendingBarcode, { symbology: classifyScan(pendingBarcode), source: "hardware" }); if (!payload) return; const candidates = scanLookupCandidates(payload); const exact = stock.data.find(item => candidates.includes(item.barcode ?? "") || candidates.includes(item.sku)); if (exact) { addItem(exact); setQuery(""); setPendingBarcode(null); setStatus(t("pos.addedByBarcode")); } }, [addItem, pendingBarcode, stock.data, t]);
+  useEffect(() => { if (!showCameraScanner) return; let cancelled = false; const start = async () => { const reason = cameraUnavailableReason(); if (reason === "insecure") { setCameraStatus("insecure"); setCameraMessage(t("pos.cameraHttps")); return; } if (reason === "unsupported") { setCameraStatus("unsupported"); setCameraMessage(t("pos.cameraUnsupported")); return; } setCameraStatus("requesting"); setCameraMessage(t("pos.cameraPermission")); try { const stream = await requestRearCamera(); if (cancelled) { stopCameraStream(stream); return; } cameraStreamRef.current = stream; if (!videoRef.current) throw new Error("video"); videoRef.current.srcObject = stream; await videoRef.current.play(); cameraDetectorRef.current = createCameraDetector(); setCameraStatus("scanning"); setCameraMessage(t("pos.cameraAim")); const detect = async () => { if (cancelled || !videoRef.current || !cameraDetectorRef.current) return; try { const raw = (await cameraDetectorRef.current.detect(videoRef.current)).map(cameraResultToRaw).find(Boolean); if (raw) { applyScan(raw, "camera"); setCameraStatus("success"); setCameraMessage(t("pos.cameraSuccess")); setShowCameraScanner(false); return; } } catch { setCameraStatus("error"); setCameraMessage(t("pos.cameraFailed")); return; } cameraFrameRef.current = window.requestAnimationFrame(() => { void detect(); }); }; cameraFrameRef.current = window.requestAnimationFrame(() => { void detect(); }); } catch (error) { const reason = error instanceof Error ? error.message : "error"; setCameraStatus(reason === "NotAllowedError" || reason === "denied" ? "denied" : "error"); setCameraMessage(t("pos.cameraDenied")); } }; void start(); return () => { cancelled = true; if (cameraFrameRef.current !== null) window.cancelAnimationFrame(cameraFrameRef.current); cameraFrameRef.current = null; stopCameraStream(cameraStreamRef.current); cameraStreamRef.current = null; cameraDetectorRef.current = null; if (videoRef.current) videoRef.current.srcObject = null; }; }, [applyScan, showCameraScanner, t]);
+  const restoreInvoice = (held: HeldInvoice) => { if (basket.length && !window.confirm(t("pos.replaceBasket"))) return; restoreInvoiceMutation.mutate({ branchId: branchId!, heldId: Number(held.id) }); };
+  const submitSale = () => { if (!branchId || !jurisdictionId || !basket.length || invoiceNumber.trim().length < 3) return; setStatus(null); const saleInput = { branchId, invoiceNumber: invoiceNumber.trim(), paymentMethod, discountAmount: 0, items: basket.map(line => ({ productId: line.productId, batchId: line.batchId, quantity: line.quantity, unit: line.unit, unitPrice: line.unitPrice })) }; (sessionMode === "showcase" ? commitShowcaseSale : commitProductionSale).mutate(saleInput); };
+  const printReceipt = () => {
+    if (!lastReceipt) return;
+    const printWindow = window.open("", "_blank", "noopener,noreferrer,width=420,height=640");
+    if (!printWindow) { setStatus(t("pos.printWindowFailed")); return; }
+
+    const doc = printWindow.document;
+    doc.open();
+    doc.documentElement.setAttribute("dir", direction);
+
+    const title = doc.createElement("title");
+    title.textContent = `${t("pos.receiptTitle")} ${lastReceipt.invoiceNumber}`;
+
+    const style = doc.createElement("style");
+    style.textContent = "body{font-family:Arial,sans-serif;padding:24px;color:#0f172a}h1{font-size:20px}p{margin:8px 0;border-bottom:1px solid #e2e8f0;padding-bottom:8px}";
+
+    const head = doc.head || doc.createElement("head");
+    head.append(title, style);
+    if (!doc.head) doc.documentElement.append(head);
+
+    const body = doc.body || doc.createElement("body");
+
+    const h1 = doc.createElement("h1");
+    h1.textContent = `MEDORA | ${t("pos.receiptTitle")}`;
+
+    const pInvoice = doc.createElement("p");
+    pInvoice.textContent = `${t("pos.invoiceNumber")}: ${lastReceipt.invoiceNumber}`;
+
+    const pSale = doc.createElement("p");
+    pSale.textContent = `${t("pos.saleNumber")}: ${lastReceipt.saleId}`;
+
+    const pTotal = doc.createElement("p");
+    const strong = doc.createElement("strong");
+    strong.textContent = `${t("pos.totalBeforeDiscount")}: ${formatCurrency(lastReceipt.total)}`;
+    pTotal.append(strong);
+
+    const pIssued = doc.createElement("p");
+    pIssued.textContent = t("pos.receiptIssued");
+
+    body.append(h1, pInvoice, pSale, pTotal, pIssued);
+    if (!doc.body) doc.documentElement.append(body);
+
+    doc.close();
+    printWindow.onload = () => { printWindow.print(); printWindow.close(); };
+  };
+  const shareWhatsApp = () => { if (!lastReceipt) return; const text = `MEDORA ${t("pos.receiptTitle")}\n${t("pos.invoiceNumber")}: ${lastReceipt.invoiceNumber}\n${t("pos.saleNumber")}: ${lastReceipt.saleId}\n${t("pos.totalBeforeDiscount")}: ${formatCurrency(lastReceipt.total)}`; window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank", "noopener,noreferrer"); };
+  if (!branchId || !jurisdictionId) return <Card className="border-amber-200 bg-amber-50/60 shadow-none"><CardContent className="flex items-start gap-3 p-5 text-sm text-amber-900"><AlertCircle className="mt-0.5 h-5 w-5 shrink-0" /><div><p className="font-semibold">{t("pos.scopeRequired")}</p><p className="mt-1 leading-6">{t("pos.scopeRequiredDetail")}</p></div></CardContent></Card>;
+  const cameraFallback = ["denied", "unsupported", "insecure", "error"].includes(cameraStatus);
+  return <div className="cashier-touch-ui min-w-0 space-y-4" dir={direction}>
+    <CashierCycleWorkspace branchId={branchId} jurisdictionId={jurisdictionId} />
+    <div className="flex min-w-0 flex-col gap-3 rounded-2xl border border-cyan-100 bg-gradient-to-l from-cyan-50 to-white p-3 sm:p-4 lg:flex-row lg:items-center lg:justify-between"><div className="min-w-0"><div className="flex items-center gap-2"><ShoppingCart className="h-5 w-5 shrink-0 text-cyan-700" /><h2 className="truncate text-lg font-bold text-slate-900">{t("pos.openSale")}</h2></div><p className="mt-1 text-xs leading-5 text-slate-600">{t("pos.openSaleDescription")}</p></div><div className="flex w-full shrink-0 flex-wrap items-center gap-2 lg:w-auto"><Badge variant="outline" className="w-full justify-center bg-white sm:w-fit">{t("pos.currentBranch")}</Badge><details className="group relative w-full sm:w-auto"><summary className="flex min-h-11 cursor-pointer list-none items-center justify-center gap-2 rounded-md border border-slate-200 bg-white px-3 text-sm font-medium text-slate-700 transition hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500"><MoreHorizontal className="h-4 w-4" />{t("pos.saleTools")}<ChevronDown className="h-4 w-4 transition-transform duration-200 group-open:rotate-180 motion-reduce:transition-none" /></summary><div className="absolute end-0 z-10 mt-2 grid w-[min(19rem,calc(100vw-2rem))] gap-2 rounded-2xl border border-slate-200 bg-white p-2 shadow-xl"><Button type="button" variant="outline" size="sm" className="min-h-11 justify-start" onClick={() => { setShowCameraScanner(value => !value); setShowSimulatedScanner(false); }}><Camera className="h-4 w-4" />{t("pos.cameraScan")}</Button><Button type="button" variant="outline" size="sm" className="min-h-11 justify-start" onClick={() => setShowSimulatedScanner(value => !value)}><Barcode className="h-4 w-4" />{t("pos.simulatedScan")}</Button><Button type="button" variant="outline" size="sm" className="min-h-11 justify-start" onClick={() => setShowHeld(value => !value)}><Pause className="h-4 w-4" />{t("pos.heldInvoices")} ({heldInvoices.length})</Button></div></details></div></div>
+    {showCameraScanner && <Card className="border-cyan-200 bg-cyan-50/60 shadow-none"><CardHeader className="space-y-2 pb-2"><CardTitle className="flex items-center justify-between gap-2 text-base"><span className="flex items-center gap-2"><Camera className="h-4 w-4 text-cyan-700" />{t("pos.cameraTitle")}</span><Button type="button" variant="ghost" size="icon" className="h-9 w-9" onClick={() => setShowCameraScanner(false)} aria-label={t("pos.closeCamera")}><X className="h-4 w-4" /></Button></CardTitle><p className="text-xs leading-5 text-cyan-950/75">{t("pos.cameraPrivacy")}</p></CardHeader><CardContent className="space-y-3"><div className="relative overflow-hidden rounded-2xl bg-slate-950"><video ref={videoRef} muted playsInline className="aspect-video w-full object-cover" aria-label={t("pos.cameraTitle")} /><div className="pointer-events-none absolute inset-0 m-[14%] rounded-xl border-2 border-cyan-300/90 shadow-[0_0_0_999px_rgba(2,6,23,.25)]" /></div><div className="rounded-xl border border-cyan-200 bg-white p-3 text-xs leading-5 text-slate-700" role="status">{cameraMessage || t("pos.preparingCamera")}</div>{cameraFallback && <div className="grid gap-2 sm:grid-cols-3"><Button type="button" variant="outline" className="min-h-11" onClick={() => { setShowCameraScanner(false); barcodeRef.current?.focus(); }}>{t("pos.manualEntry")}</Button><Button type="button" variant="outline" className="min-h-11" onClick={() => { setShowCameraScanner(false); setShowSimulatedScanner(true); }}>{t("pos.openSimulation")}</Button><Button type="button" variant="outline" className="min-h-11" onClick={() => { setShowCameraScanner(false); barcodeRef.current?.focus(); }}>{t("pos.usbScanner")}</Button></div>}</CardContent></Card>}
+    {showSimulatedScanner && <Card className="border-violet-200 bg-violet-50/50 shadow-none"><CardHeader className="space-y-1 pb-2"><CardTitle className="flex items-center gap-2 text-base"><Barcode className="h-4 w-4 text-violet-700" />{t("pos.simulatedScanner")}</CardTitle><p className="text-xs leading-5 text-violet-900/70">{t("pos.simulatedScannerDetail")}</p></CardHeader><CardContent className="grid gap-2 sm:grid-cols-2">{stock.data?.slice(0, 4).map(item => <Button key={item.batchId} type="button" variant="outline" className="min-h-12 justify-between border-violet-200 bg-white text-start" onClick={() => simulateBarcodeScan(item)}><span className="min-w-0 truncate">{itemName(item)}</span><span className="shrink-0 text-[11px] text-violet-700">{item.barcode || item.sku}</span></Button>)}{!stock.data?.length && <p className="text-sm text-violet-900/70">{t("pos.searchOrWait")}</p>}</CardContent></Card>}
+    {showHeld && <Card className="border-amber-200 bg-amber-50/40 shadow-none"><CardHeader className="pb-2"><CardTitle className="text-base">{t("pos.heldOnDevice")}</CardTitle></CardHeader><CardContent className="space-y-2">{heldInvoices.length ? heldInvoices.map(held => <div key={held.id} className="flex flex-col gap-2 rounded-xl border border-amber-200 bg-white p-3 sm:flex-row sm:items-center sm:justify-between"><div><p className="font-semibold">{held.invoiceNumber}</p><p className="text-xs text-slate-500">{held.basket.length} {t("pos.items")} · {new Date(held.createdAt).toLocaleString(locale)}</p></div><Button type="button" size="sm" onClick={() => restoreInvoice(held)}><Undo2 className="h-4 w-4" />{t("pos.restore")}</Button></div>) : <p className="text-sm text-slate-600">{t("pos.noHeldInvoices")}</p>}</CardContent></Card>}
+    <div className="grid min-w-0 gap-4 lg:grid-cols-[minmax(0,1.25fr)_minmax(18rem,.85fr)]"><Card className="min-w-0 border-slate-200 shadow-none"><CardHeader className="space-y-3 p-3 sm:p-6"><CardTitle className="text-base">{t("pos.availableItems")}</CardTitle><div className="flex flex-col gap-2 sm:flex-row"><div className="relative min-w-0 flex-1"><Search className="pointer-events-none absolute start-3 top-3 h-4 w-4 text-slate-400" /><Input ref={barcodeRef} value={query} onChange={event => setQuery(event.target.value)} onKeyDown={event => { if (event.key === "Enter") { event.preventDefault(); applyScan(query, "hardware"); } }} className="ps-9" placeholder={t("pos.searchPlaceholder")} aria-label={t("pos.searchAria")} autoComplete="off" /><Barcode className="pointer-events-none absolute end-3 top-3 h-4 w-4 text-cyan-600" /></div><Button type="button" variant="outline" className="min-h-11 w-full shrink-0 sm:w-12" onClick={() => applyScan(query, "hardware")} aria-label={t("pos.addBarcode")}><Barcode className="h-4 w-4" /><span className="sm:hidden">{t("pos.addByCode")}</span></Button></div></CardHeader><CardContent className="min-w-0 space-y-2 p-3 sm:p-6">{lastScan && <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 text-xs" role="status"><div className="flex items-center justify-between gap-2"><span className="font-semibold text-slate-700">{t("pos.lastScan")}</span><Badge variant="outline">{lastScan.symbology === "data-matrix" ? "Data Matrix" : lastScan.symbology === "barcode" ? "Barcode" : t("pos.unknown")} · {lastScan.source === "simulated" ? t("pos.simulated") : t("pos.device")}</Badge></div><p className="mt-1 break-all font-mono text-[11px] text-slate-600" dir="ltr">{lastScan.raw}</p></div>}{stock.isLoading ? <p className="rounded-xl bg-slate-50 p-5 text-center text-sm text-slate-500">{t("pos.loadingStock")}</p> : stock.isError ? <p className="rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-800">{t("pos.stockLoadFailed")}</p> : stock.data?.length ? <div className="grid min-w-0 gap-2 sm:grid-cols-2">{stock.data.map(item => <div key={item.batchId} className="cashier-touch-card min-w-0 rounded-xl border border-slate-200 bg-white p-3 transition hover:border-cyan-300 hover:shadow-sm"><div className="flex min-w-0 items-start justify-between gap-2"><div className="min-w-0"><p className="truncate text-sm font-semibold text-slate-900">{itemName(item)}</p><p className="truncate text-[11px] text-slate-500">{item.sku}{item.barcode ? ` · ${item.barcode}` : ""} · {t("pos.batch")} {item.batchNumber}</p></div><Badge variant="outline" className="shrink-0 text-[10px]">{t("pos.available")} {item.quantityOnHand}</Badge></div><div className="mt-3 flex items-center justify-between gap-2"><div><p className="text-sm font-bold text-cyan-800">{formatCurrency(item.unitPrice)}</p><p className="text-[10px] text-slate-400">{t("pos.expiry")} {new Date(item.expiryDate).toLocaleDateString(locale)}</p></div><Button type="button" size="sm" className="shrink-0 bg-[#0d1b2a]" onClick={() => addItem(item)}><Plus className="h-4 w-4" />{t("pos.add")}</Button></div></div>)}</div> : <div className="rounded-xl border border-dashed border-slate-300 p-8 text-center text-sm text-slate-500">{t("pos.noItems")}</div>}</CardContent></Card>
+      <Card className="order-first min-w-0 border-cyan-100 shadow-sm lg:order-none"><CardHeader className="p-3 sm:p-6"><CardTitle className="flex items-center justify-between gap-2 text-base"><span>{t("pos.basketAndInvoice")}</span><Badge variant="secondary">{basket.length} {t("pos.items")}</Badge></CardTitle></CardHeader><CardContent className="min-w-0 space-y-3"><Input value={invoiceNumber} onChange={event => setInvoiceNumber(event.target.value)} placeholder={t("pos.invoiceNumber")} aria-label={t("pos.invoiceNumber")} /><select value={paymentMethod} onChange={event => setPaymentMethod(event.target.value as HeldInvoice["paymentMethod"])} className="h-10 w-full rounded-md border border-slate-200 bg-white px-3 text-sm" aria-label={t("pos.paymentMethod")}><option value="cash">{t("pos.cash")}</option><option value="meeza">{t("pos.meeza")}</option><option value="instapay">{t("pos.instapay")}</option><option value="insurance">{t("pos.insurance")}</option></select><div className="max-h-72 min-w-0 space-y-2 overflow-y-auto">{basket.length ? basket.map(line => <div key={line.batchId} className="min-w-0 rounded-xl border border-slate-200 p-3"><div className="flex min-w-0 items-start justify-between gap-2"><p className="min-w-0 truncate text-sm font-semibold">{itemName(line)}</p><Button type="button" variant="ghost" size="icon" className="h-7 w-7 shrink-0 text-rose-600" aria-label={`${t("pos.remove")} ${itemName(line)}`} onClick={() => removeItem(line.batchId)}><Trash2 className="h-4 w-4" /></Button></div><div className="mt-2 flex items-center justify-between gap-2"><span className="text-xs text-slate-500">{formatCurrency(line.unitPrice)} × {line.quantity}</span><div className="flex items-center gap-1"><Button type="button" variant="outline" size="icon" className="h-7 w-7" onClick={() => changeQuantity(line.batchId, -1)} aria-label={t("pos.decreaseQuantity")}><Minus className="h-3 w-3" /></Button><span className="min-w-6 text-center text-sm">{line.quantity}</span><Button type="button" variant="outline" size="icon" className="h-7 w-7" disabled={line.quantity >= line.quantityOnHand} onClick={() => changeQuantity(line.batchId, 1)} aria-label={t("pos.increaseQuantity")}><Plus className="h-3 w-3" /></Button></div></div></div>) : <p className="rounded-xl bg-slate-50 p-6 text-center text-sm text-slate-500">{t("pos.emptyBasket")}</p>}</div><div className="flex items-center justify-between border-t border-slate-100 pt-3"><span className="text-sm text-slate-600">{t("pos.totalBeforeDiscount")}</span><strong className="text-lg text-slate-900">{formatCurrency(total)}</strong></div><div className="grid gap-2 sm:grid-cols-2"><Button type="button" variant="outline" disabled={!basket.length} onClick={() => { if (basket.length) holdInvoiceMutation.mutate({ branchId, invoiceNumber: invoiceNumber.trim(), paymentMethod, items: basket }); }}><Pause className="h-4 w-4" />{t("pos.holdInvoice")}</Button><Button type="button" className="bg-[#0d1b2a]" disabled={!basket.length || invoiceNumber.trim().length < 3 || isSalePending} onClick={submitSale}>{isSalePending ? t("pos.processingSale") : t("pos.completeSale")}</Button></div>{lastReceipt && <div className="grid gap-2 sm:grid-cols-2"><Button type="button" variant="outline" onClick={printReceipt}><Printer className="h-4 w-4" />{t("pos.printReceipt")}</Button><Button type="button" variant="outline" onClick={shareWhatsApp}><MessageCircle className="h-4 w-4" />{t("pos.shareWhatsApp")}</Button></div>}{status && <div className={`flex items-start gap-2 rounded-xl p-3 text-xs leading-5 ${lastReceipt ? "bg-emerald-50 text-emerald-800" : "bg-amber-50 text-amber-900"}`} role="status">{lastReceipt ? <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" /> : <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />}<span>{status}</span></div>}</CardContent></Card></div>
+  </div>;
+}

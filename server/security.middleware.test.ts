@@ -7,9 +7,9 @@ function request(overrides: Record<string, unknown> = {}) {
     protocol: "https",
     path: "/api/trpc/auth.internalLogin",
     ip: "203.0.113.10",
-    headers: { host: "medora.example", origin: "https://medora.example" },
+    headers: { host: "aldo.example", origin: "https://aldo.example" },
     get(name: string) {
-      return name.toLowerCase() === "host" ? "medora.example" : undefined;
+      return name.toLowerCase() === "host" ? "aldo.example" : undefined;
     },
     ...overrides,
   } as never;
@@ -34,11 +34,11 @@ function response() {
 describe("HTTP security boundaries", () => {
   it("accepts same-origin mutations and rejects cross-site fetches", () => {
     expect(isTrustedMutationRequest(request())).toEqual({ allowed: true });
-    expect(isTrustedMutationRequest(request({ headers: { host: "medora.example", origin: "https://evil.example", "sec-fetch-site": "cross-site" } }))).toMatchObject({ allowed: false, status: 403 });
+    expect(isTrustedMutationRequest(request({ headers: { host: "aldo.example", origin: "https://evil.example", "sec-fetch-site": "cross-site" } }))).toMatchObject({ allowed: false, status: 403 });
   });
 
   it("rejects a mismatched origin even without fetch metadata", () => {
-    expect(isTrustedMutationRequest(request({ headers: { host: "medora.example", origin: "https://evil.example" } }))).toMatchObject({ allowed: false, status: 403 });
+    expect(isTrustedMutationRequest(request({ headers: { host: "aldo.example", origin: "https://evil.example" } }))).toMatchObject({ allowed: false, status: 403 });
   });
 
   it("adds defensive headers and throttles repeated auth attempts", () => {

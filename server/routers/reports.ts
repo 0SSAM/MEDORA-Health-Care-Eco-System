@@ -10,15 +10,18 @@ import { createHeartbeatJob } from "../_core/heartbeat";
 import { assertCompliancePackUsable } from "../domain/regional-engine";
 import { assertReportJurisdictionAccess } from "../domain/reporting-policy";
 import { assertReportSchedulingEnabled, getReportSchedulingReadiness } from "../domain/report-scheduling-policy";
+import { ENV } from "../_core/env";
 
 const REPORT_CATALOG = {
   "inventory.alerts": { name: "Inventory alerts", queryKey: "inventory.alerts.v1" },
+  "procurement.purchases": { name: "Procurement purchases", queryKey: "procurement.purchases.v1" },
+  "finance.balances": { name: "Supplier and customer balances", queryKey: "finance.balances.v1" },
   "sales.daily": { name: "Daily sales", queryKey: "sales.daily.v1" },
   "compliance.expiry": { name: "Compliance and expiry review", queryKey: "compliance.expiry.v1" },
   "operations.summary": { name: "Operations summary", queryKey: "operations.summary.v1" },
 } as const;
 
-const reportKey = z.enum(["inventory.alerts", "sales.daily", "compliance.expiry", "operations.summary"]);
+const reportKey = z.enum(["inventory.alerts", "procurement.purchases", "finance.balances", "sales.daily", "compliance.expiry", "operations.summary"]);
 const recipientRole = z.enum(["owner", "org_admin", "compliance_officer", "clinical_lead", "operations_manager", "staff", "auditor"]);
 
 async function accessibleJurisdictionIds(db: NonNullable<Awaited<ReturnType<typeof getDb>>>, userId: number, role: string, organizationId: number) {
@@ -77,7 +80,7 @@ export const reportsRouter = router({
     }),
 
   createDefinition: protectedProcedure
-    .input(z.object({ organizationId: z.number().int().positive(), jurisdictionId: z.number().int().positive(), reportKey, name: z.string().min(2).max(180).optional(), description: z.string().max(2000).optional(), cronExpression: z.string().regex(/^\d+ \S+ \S+ \S+ \S+ \S+$/).optional(), recipientUserId: z.number().int().positive().optional(), recipientRole: recipientRole.optional() }))
+    .input(z.object({ organizationId: z.number().int().positive(), jurisdictionId: z.number().int().positive(), reportKey, name: z.string().min(2).max(180).optional(), description: z.string().max(2000).optional(), cronExpression: z.string().regex(/^\d+ \S+ \S+ \S+ \S+ \S+$/).optional(), recipientUserId: z.number().int().positive().optional(), recipientRole: recipientRole.optional(), deliveryChannel: z.enum(["in_app", "email"]).default("in_app") }))
     .mutation(async ({ ctx, input }) => {
       const db = await getDb();
       if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
@@ -94,7 +97,7 @@ export const reportsRouter = router({
         if (!recipient.length) throw new TRPCError({ code: "FORBIDDEN", message: "Recipient is outside the organization" });
       }
       const selected = REPORT_CATALOG[input.reportKey];
-      const inserted = await db.insert(reportDefinitions).values({ organizationId: input.organizationId, jurisdictionId: input.jurisdictionId, reportKey: input.reportKey, name: input.name ?? selected.name, description: input.description, cronExpression: input.cronExpression, status: "draft", queryKey: selected.queryKey, recipientUserId: input.recipientUserId, recipientRole: input.recipientRole, deliveryChannel: "in_app", deliveryEnabled: 0, createdByUserId: ctx.user.id });
+      const inserted = await db.insert(reportDefinitions).values({ organizationId: input.organizationId, jurisdictionId: input.jurisdictionId, reportKey: input.reportKey, name: input.name ?? selected.name, description: input.description, cronExpression: input.cronExpression, status: "draft", queryKey: selected.queryKey, recipientUserId: input.recipientUserId, recipientRole: input.recipientRole, deliveryChannel: input.deliveryChannel, deliveryEnabled: input.deliveryChannel === "email" ? 1 : 0, createdByUserId: ctx.user.id });
       return { definitionId: Number(inserted[0].insertId), status: "draft" as const, deliveryEnabled: false };
     }),
 
@@ -107,6 +110,7 @@ export const reportsRouter = router({
       if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
       const definition = (await db.select().from(reportDefinitions).where(eq(reportDefinitions.id, input.definitionId)).limit(1))[0];
       if (!definition) throw new TRPCError({ code: "NOT_FOUND", message: "Report definition not found" });
+      if (definition.deliveryChannel === "email" && (!ENV.reportMailApiKey || !ENV.reportMailFrom)) throw new TRPCError({ code: "PRECONDITION_FAILED", message: "Email scheduling is unavailable until approved mail configuration is present" });
       await assertOrganizationAccess(db, ctx.user.id, ctx.user.role, definition.organizationId);
       if (definition.jurisdictionId === null) throw new TRPCError({ code: "PRECONDITION_FAILED", message: "Report jurisdiction scope is required" });
       await assertReportRegulatoryScope(db, definition.organizationId, definition.jurisdictionId);

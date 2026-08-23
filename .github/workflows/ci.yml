@@ -45,7 +45,7 @@ jobs:
           SHOWCASE_TEST_PASSWORD="CI-only-showcase-password-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-$(openssl rand -hex 18)" \
           VITE_APP_ID="ci-smoke" \
           VITE_APP_TITLE="ميدورا | منظومة الرعاية الصحية المتكاملة" \
-          VITE_APP_LOGO="https://example.invalid/medora-ci-logo.png" \
+          VITE_APP_LOGO="/manus-storage/medora-logo-primary_2cf35bd2.png" \
           VITE_ANALYTICS_ENDPOINT="https://analytics.invalid" \
           VITE_ANALYTICS_WEBSITE_ID="ci-smoke" \
           OAUTH_SERVER_URL="http://127.0.0.1:3999" \
@@ -92,6 +92,32 @@ jobs:
 
       - name: Post-build smoke check
         run: ./scripts/ci-smoke.sh
+
+  public-surface-e2e:
+    name: Public surface E2E (Arabic RTL / English LTR)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Chromium for public E2E checks
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Run public localization and direction E2E checks
+        run: pnpm e2e
 
   isolated-database-lifecycle:
     name: Isolated database lifecycle

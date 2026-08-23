@@ -10,7 +10,7 @@
 
 ## English
 
-MEDORA uses the Egyptian Pharmacopoeia as a provenance-controlled reference for specification, identity, testing, and assay review only when an official source, edition, effective date, monograph identifier, and valid access status are available. Each reference is scoped to a jurisdiction, active ingredient, dosage form, and declared purpose, with issuing authority and verification date retained.
+ALDO uses the Egyptian Pharmacopoeia as a provenance-controlled reference for specification, identity, testing, and assay review only when an official source, edition, effective date, monograph identifier, and valid access status are available. Each reference is scoped to a jurisdiction, active ingredient, dosage form, and declared purpose, with issuing authority and verification date retained.
 
 A pharmacopoeia reference does not, by itself, prove that a commercial product is registered, market-authorized, suitable for dispensing, or compliant with a local regulator. It does not replace the product leaflet, regulator decision, or responsible pharmacist judgment. Full monograph text is not copied into the system without appropriate licensing. A regional Arab pharmacopeia entry remains blocked until its issuing authority, edition, legal scope, effective date, and access rights are verified.
 

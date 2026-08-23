@@ -9,7 +9,7 @@ The protected-router integration suite is designed to validate persisted organiz
 Use a disposable MySQL, MySQL-compatible, or MariaDB database created specifically for tests. Set both variables only in the test environment:
 
 ```bash
-export TEST_DATABASE_URL='mysql://test_user:test_password@test-db.local/medora_test'
+export TEST_DATABASE_URL='mysql://test_user:test_password@test-db.local/aldo_test'
 export TEST_DATABASE_ISOLATED='true'
 ```
 

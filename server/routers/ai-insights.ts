@@ -170,7 +170,7 @@ async function writeInsightAudit(
 const scopeInput = z.object({
   organizationId: z.number().int().positive(),
   branchId: z.number().int().positive(),
-  jurisdictionId: z.number().int().positive().optional(),
+  jurisdictionId: z.number().int().min(0).optional(),
 });
 const generationInput = scopeInput.extend({
   historyDays: z.number().int().min(14).max(180).default(56),
@@ -296,7 +296,7 @@ async function getPurchasingFacts(
     eq(sales.branchId, input.branchId),
     eq(sales.saleStatus, "completed"),
     gte(sales.createdAt, start),
-    input.jurisdictionId
+    input.jurisdictionId !== undefined
       ? eq(sales.jurisdictionId, input.jurisdictionId)
       : undefined,
   ].filter(Boolean) as any[];
@@ -410,7 +410,7 @@ async function getDecisionFacts(
         eq(sales.branchId, input.branchId),
         eq(sales.saleStatus, "completed"),
         gte(sales.createdAt, start),
-        input.jurisdictionId
+        input.jurisdictionId !== undefined
           ? eq(sales.jurisdictionId, input.jurisdictionId)
           : undefined
       )
@@ -545,7 +545,7 @@ export const aiInsightsRouter = router({
           and(
             eq(aiInsights.organizationId, input.organizationId),
             eq(aiInsights.branchId, input.branchId),
-            input.jurisdictionId
+            input.jurisdictionId !== undefined
               ? eq(aiInsights.jurisdictionId, input.jurisdictionId)
               : undefined,
             input.insightType

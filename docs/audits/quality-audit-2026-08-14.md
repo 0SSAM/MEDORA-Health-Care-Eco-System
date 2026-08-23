@@ -51,7 +51,7 @@ The static boundary inventory now emits a bounded summary in addition to per-fil
 
 ## Frontend audit slice
 
-The reviewed workspace routes use the shared dashboard shell and expose loading, error, or empty states for the inspected data panels. The current Arabic-first UI maintains RTL layout, labeled inputs, visible status text, responsive grid behavior, and an escape path through the persistent navigation. The desktop preview was checked after the MEDORA branding update. This is a focused implementation audit, not a substitute for a full assistive-technology test matrix.
+The reviewed workspace routes use the shared dashboard shell and expose loading, error, or empty states for the inspected data panels. The current Arabic-first UI maintains RTL layout, labeled inputs, visible status text, responsive grid behavior, and an escape path through the persistent navigation. The desktop preview was checked after the ALDO branding update. This is a focused implementation audit, not a substitute for a full assistive-technology test matrix.
 
 ## Server-router audit slice
 

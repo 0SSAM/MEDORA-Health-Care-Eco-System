@@ -1,7 +1,7 @@
 {
-  "schema": "medora-ownership-manifest/v1",
+  "schema": "aldo-ownership-manifest/v1",
   "product": "ميدورا | منظومة الرعاية الصحية المتكاملة",
-  "productSlug": "medora-integrated-health-system",
+  "productSlug": "aldora-integrated-health-system",
   "ownerDeclaredBy": "Hossam Naeim Osman",
   "notice": "Owner-declared provenance record; obtain professional legal review for registration, licensing, and enforcement.",
   "copyright": "© 2026 ميدورا | MEDORA Integrated Health System",

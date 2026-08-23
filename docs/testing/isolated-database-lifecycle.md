@@ -14,7 +14,7 @@ This project runs database lifecycle coverage only against a **disposable, expli
 
 ## Local Execution
 
-Provision a MySQL database dedicated to testing, such as `medora_test`, with a non-root user limited to that database. Set the test endpoint and both markers through the project secret manager; do not commit connection strings. For a local lifecycle run, expose the same isolated endpoint as `DATABASE_URL` only for the command session, then run:
+Provision a MySQL database dedicated to testing, such as `aldora_test`, with a non-root user limited to that database. Set the test endpoint and both markers through the project secret manager; do not commit connection strings. For a local lifecycle run, expose the same isolated endpoint as `DATABASE_URL` only for the command session, then run:
 
 ```bash
 pnpm db:test:migrate
@@ -25,7 +25,7 @@ The suite applies the project migrations to the isolated database, creates only 
 
 ## Continuous Integration
 
-The continuous-integration workflow creates a fresh MySQL service container named `medora_ci_test` for every run. It uses a non-root database user, runs the guarded migration wrapper, then executes the lifecycle suite serially. The container is destroyed with the workflow, so no application or production database is reachable through this job.
+The continuous-integration workflow creates a fresh MySQL service container named `aldora_ci_test` for every run. It uses a non-root database user, runs the guarded migration wrapper, then executes the lifecycle suite serially. The container is destroyed with the workflow, so no application or production database is reachable through this job.
 
 ## Operational Notes
 

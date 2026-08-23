@@ -4,7 +4,7 @@
 
 ## Executive assessment
 
-MEDORA is currently a **secure healthcare pharmacy/branch ERP foundation with multi-organization and jurisdiction controls**, not a complete all-industry ERP suite. The implemented core is strongest in organization and branch access, pharmacy POS, inventory, catalog compliance evidence, prescription intake workflow, customer care/call centre, notifications, demo mode, offline drafts, and scheduled inventory alerts. Several requested domains exist only as permissions, policy vocabulary, UI placeholders, or future extension points and must not be represented as production modules until they have database models, server procedures, user interfaces, integration contracts, and tests.
+ALDO is currently a **secure healthcare pharmacy/branch ERP foundation with multi-organization and jurisdiction controls**, not a complete all-industry ERP suite. The implemented core is strongest in organization and branch access, pharmacy POS, inventory, catalog compliance evidence, prescription intake workflow, customer care/call centre, notifications, demo mode, offline drafts, and scheduled inventory alerts. Several requested domains exist only as permissions, policy vocabulary, UI placeholders, or future extension points and must not be represented as production modules until they have database models, server procedures, user interfaces, integration contracts, and tests.
 
 | Capability area | Current evidence | Status | Safe conclusion |
 |---|---|---|---|
@@ -21,7 +21,7 @@ MEDORA is currently a **secure healthcare pharmacy/branch ERP foundation with mu
 | Government integration | Regulatory prerequisite documents and country source notes | **Documentation only** | No certified government API, certificate, national identifier, tax/e-invoicing, pharmacovigilance, or regulator credential integration is active. |
 | Insurer integration | Insurance aging/classification helpers, scoped eligibility/preauthorization policy, persisted `insurance_requests`, scoped tRPC list/create/transition procedures, hashed member references, lifecycle transitions, and readiness gate | **Persisted policy-first foundation implemented / live connector gated** | Eligibility and preauthorization requests now persist without raw member references and remain organization/jurisdiction scoped. No payer transport, claims, adjudication, remittance, or live API workflow is active. |
 | Offline operation | Offline drafts, branch binding, replay checks | **Partially implemented** | Protected offline draft/replay foundation exists; complete conflict resolution, durable sync queue, attachment handling, and offline coverage of every module are not proven. |
-| Enterprise-suite parity | No evidence of complete cross-domain equivalents | **Not established** | MEDORA should not be marketed as functionally equivalent to Odoo, Dynamics, SAP, Oracle, or Omip without a separate requirements and acceptance program. |
+| Enterprise-suite parity | No evidence of complete cross-domain equivalents | **Not established** | ALDO should not be marketed as functionally equivalent to Odoo, Dynamics, SAP, Oracle, or Omip without a separate requirements and acceptance program. |
 
 ## Automated reporting and notifications
 

@@ -180,7 +180,9 @@ export default defineConfig({
           if (id.includes("react-hook-form") || id.includes("@hookform")) return "vendor-forms";
           if (id.includes("zod")) return "vendor-validation";
           if (id.includes("date-fns")) return "vendor-date";
-          if (id.includes("jspdf")) return "vendor-documents";
+          if (id.includes("jspdf") || id.includes("pdfjs-dist") || id.includes("html2canvas")) return "vendor-documents";
+          if (id.includes("xlsx") || id.includes("exceljs") || id.includes("file-saver")) return "vendor-export";
+          if (id.includes("@aws-sdk") || id.includes("@azure")) return "vendor-cloud";
           if (
             id.includes("@floating-ui") ||
             id.includes("cmdk") ||

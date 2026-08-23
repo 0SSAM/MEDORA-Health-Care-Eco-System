@@ -29,7 +29,7 @@ The project now contains a discreet product identity and provenance boundary: ME
 
 The remaining work is not a claim that code can make ownership “impossible to erase.” The technically feasible controls are tamper-evident release manifests, signed audit chains, protected repository history, access separation, backup custody, watermarking or attribution in official documents, and contractual notices. The legally effective controls are registration, assignment/licence agreements, employment and contractor clauses, contributor records, and evidence preservation under professional advice.
 
-The recommended meaning of **MEDORA** is a brand narrative rather than a false legal acronym: **MEDORA — Adaptive Healthcare, Logistics, Data, and Operations**. In Arabic, it can be presented as **ميدورا: منظومة صحية متكاملة للبيانات والعمليات والرعاية**. The phrase is a positioning explanation and should not be represented as the registered legal expansion of the mark unless the owner formally adopts and registers it.
+The recommended meaning of **ALDO** is a brand narrative rather than a false legal acronym: **ALDO — Adaptive Healthcare, Logistics, Data, and Operations**. In Arabic, it can be presented as **ميدورا: منظومة صحية متكاملة للبيانات والعمليات والرعاية**. The phrase is a positioning explanation and should not be represented as the registered legal expansion of the mark unless the owner formally adopts and registers it.
 
 ### 2. Security and governance
 
@@ -63,7 +63,7 @@ The practical support statement should therefore be: modern supported browsers o
 
 ### 7. Documentation and delivery
 
-The bilingual product description, role-based manuals, IT/admin/owner guide, proposal, architecture diagrams, resilience diagram, migration template, backup/restore runbook, and delivery index have been created. The reusable skills `medora-healthcare-delivery` and `reconnect-sync-conflict-resolution` capture repeatable implementation patterns.
+The bilingual product description, role-based manuals, IT/admin/owner guide, proposal, architecture diagrams, resilience diagram, migration template, backup/restore runbook, and delivery index have been created. The reusable skills `aldora-healthcare-delivery` and `reconnect-sync-conflict-resolution` capture repeatable implementation patterns.
 
 The documentation package must be versioned together with the release and tailored before external presentation. It must not include real credentials, patient data, private keys, or unsupported claims of government approval. The proposal should describe the system as implementation-ready for formal onboarding and integration, not already approved by EDA, ETA, UHIA, insurers, or any other authority.
 

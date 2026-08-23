@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { and, eq } from "drizzle-orm";
+import { and, asc, count, eq, like, or } from "drizzle-orm";
 import { z } from "zod";
 import { branchJurisdictions, branchUsers, branches, internalCredentials, organizationMemberships, organizations, users } from "../../drizzle/schema";
 import { getDb, recordAuthenticationEvent } from "../db";
@@ -7,13 +7,50 @@ import { protectedProcedure, router } from "../_core/trpc";
 import { TRPCError } from "@trpc/server";
 import { assertPasswordPolicy, hashInternalPassword, normalizeInternalUsername } from "../domain/internal-auth";
 import { canManageOrganization, canViewOrganizationAudit, ORGANIZATION_CAPABILITIES, ORGANIZATION_ROLES, ROLE_CAPABILITIES } from "../domain/organization-access";
+import { createEmployeeDirectoryCsv } from "../domain/employee-directory-export";
+import { isWithinShowcaseOrganizationScope } from "../domain/showcase-admin-policy";
 
 const organizationTypeSchema = z.enum(["government", "pharmacy", "pharmacy_chain", "distributor", "insurer", "rehabilitation", "hospital", "laboratory", "radiology"]);
 const organizationRoleSchema = z.enum(ORGANIZATION_ROLES);
 const employeeRoleSchema = z.enum(["staff", "operations_manager", "clinical_lead", "compliance_officer", "auditor", "org_admin"]);
 const employeeBaseInput = z.object({ organizationId: z.number().int().positive(), branchId: z.number().int().positive(), jurisdictionId: z.number().int().positive(), organizationRole: employeeRoleSchema });
+export const employeeDirectoryPageInput = z.object({
+  organizationId: z.number().int().positive(),
+  page: z.number().int().min(1).max(1_000_000).default(1),
+  pageSize: z.number().int().min(10).max(50).default(20),
+  query: z.string().trim().max(100).default(""),
+  role: organizationRoleSchema.or(z.literal("all")).default("all"),
+  branchId: z.number().int().positive().optional(),
+});
+export const employeeDirectoryExportInput = z.object({
+  organizationId: z.number().int().positive(),
+  query: z.string().trim().max(100).default(""),
+  role: organizationRoleSchema.or(z.literal("all")).default("all"),
+  branchId: z.number().int().positive().optional(),
+});
+const EMPLOYEE_DIRECTORY_EXPORT_LIMIT = 1_000;
 
-async function requireOrganizationManager(ctx: { user: { id: number; role: string } }, organizationId: number) {
+function escapeDirectoryLikeTerm(term: string) {
+  return term.replace(/[\\%_]/g, "\\$&");
+}
+
+type OrganizationScopeContext = {
+  user: { id: number; role: string };
+  internalSession?: { session: { sessionMode: string; organizationId: number } } | null;
+};
+
+function assertShowcaseOrganizationScope(ctx: OrganizationScopeContext, organizationId: number) {
+  if (!isWithinShowcaseOrganizationScope({
+    sessionMode: ctx.internalSession?.session.sessionMode,
+    sessionOrganizationId: ctx.internalSession?.session.organizationId,
+    requestedOrganizationId: organizationId,
+  })) {
+    throw new TRPCError({ code: "FORBIDDEN", message: "Showcase sessions can access only their isolated organization" });
+  }
+}
+
+async function requireOrganizationManager(ctx: OrganizationScopeContext, organizationId: number) {
+  assertShowcaseOrganizationScope(ctx, organizationId);
   const db = await getDb();
   if (!db) throw new TRPCError({ code: "SERVICE_UNAVAILABLE", message: "Database unavailable" });
   if (ctx.user.role === "admin") return db;
@@ -34,11 +71,16 @@ export const organizationsRouter = router({
   mine: protectedProcedure.query(async ({ ctx }) => {
     const db = await getDb();
     if (!db) return [];
+    const showcaseSession = ctx.internalSession?.session;
+    if (showcaseSession?.sessionMode === "showcase") {
+      return db.select({ id: organizations.id, organizationType: organizations.organizationType, displayName: organizations.displayName, countryCode: organizations.countryCode, status: organizations.status, environment: organizations.environment, organizationRole: organizationMemberships.organizationRole }).from(organizationMemberships).innerJoin(organizations, eq(organizations.id, organizationMemberships.organizationId)).where(and(eq(organizationMemberships.userId, ctx.user.id), eq(organizationMemberships.active, 1), eq(organizations.status, "active"), eq(organizations.id, showcaseSession.organizationId), eq(organizations.environment, "showcase")));
+    }
     if (ctx.user.role === "admin") return db.select().from(organizations).where(eq(organizations.status, "active"));
     return db.select({ id: organizations.id, organizationType: organizations.organizationType, displayName: organizations.displayName, countryCode: organizations.countryCode, status: organizations.status, environment: organizations.environment, organizationRole: organizationMemberships.organizationRole }).from(organizationMemberships).innerJoin(organizations, eq(organizations.id, organizationMemberships.organizationId)).where(and(eq(organizationMemberships.userId, ctx.user.id), eq(organizationMemberships.active, 1), eq(organizations.status, "active")));
   }),
 
   get: protectedProcedure.input(z.object({ organizationId: z.number().int().positive() })).query(async ({ ctx, input }) => {
+    assertShowcaseOrganizationScope(ctx, input.organizationId);
     const db = await getDb();
     if (!db) throw new TRPCError({ code: "SERVICE_UNAVAILABLE", message: "Database unavailable" });
     const organization = (await db.select().from(organizations).where(eq(organizations.id, input.organizationId)).limit(1))[0];
@@ -60,6 +102,7 @@ export const organizationsRouter = router({
   }),
 
   members: protectedProcedure.input(z.object({ organizationId: z.number().int().positive() })).query(async ({ ctx, input }) => {
+    assertShowcaseOrganizationScope(ctx, input.organizationId);
     const db = await getDb();
     if (!db) throw new TRPCError({ code: "SERVICE_UNAVAILABLE", message: "Database unavailable" });
     if (ctx.user.role !== "admin") {
@@ -79,6 +122,48 @@ export const organizationsRouter = router({
     const db = await requireOrganizationManager(ctx, input.organizationId);
     const rows = await db.select({ userId: users.id, name: users.name, email: users.email, username: internalCredentials.username, credentialActive: internalCredentials.active, organizationRole: organizationMemberships.organizationRole, membershipActive: organizationMemberships.active, branchId: branches.id, branchName: branches.nameAr }).from(organizationMemberships).innerJoin(users, eq(users.id, organizationMemberships.userId)).innerJoin(internalCredentials, eq(internalCredentials.userId, users.id)).innerJoin(branchUsers, and(eq(branchUsers.userId, users.id), eq(branchUsers.active, 1))).innerJoin(branches, and(eq(branches.id, branchUsers.branchId), eq(branches.organizationId, input.organizationId))).where(eq(organizationMemberships.organizationId, input.organizationId));
     return rows.map(row => ({ ...row, capabilities: ROLE_CAPABILITIES[row.organizationRole as keyof typeof ROLE_CAPABILITIES] ?? [] }));
+  }),
+
+  employeeDirectoryPage: protectedProcedure.input(employeeDirectoryPageInput).query(async ({ ctx, input }) => {
+    const db = await requireOrganizationManager(ctx, input.organizationId);
+    const conditions = [eq(organizationMemberships.organizationId, input.organizationId)];
+    if (input.branchId) conditions.push(eq(branches.id, input.branchId));
+    if (input.role !== "all") conditions.push(eq(organizationMemberships.organizationRole, input.role));
+    if (input.query) {
+      const pattern = `%${escapeDirectoryLikeTerm(input.query)}%`;
+      conditions.push(or(like(users.name, pattern), like(users.email, pattern), like(internalCredentials.username, pattern))!);
+    }
+    const where = and(...conditions);
+    const countResult = await db.select({ total: count() }).from(organizationMemberships).innerJoin(users, eq(users.id, organizationMemberships.userId)).innerJoin(internalCredentials, eq(internalCredentials.userId, users.id)).innerJoin(branchUsers, and(eq(branchUsers.userId, users.id), eq(branchUsers.active, 1))).innerJoin(branches, and(eq(branches.id, branchUsers.branchId), eq(branches.organizationId, input.organizationId))).where(where);
+    const total = Number(countResult[0]?.total ?? 0);
+    const pageCount = Math.max(1, Math.ceil(total / input.pageSize));
+    const page = Math.min(input.page, pageCount);
+    const rows = await db.select({ userId: users.id, name: users.name, email: users.email, username: internalCredentials.username, credentialActive: internalCredentials.active, organizationRole: organizationMemberships.organizationRole, membershipActive: organizationMemberships.active, branchId: branches.id, branchName: branches.nameAr }).from(organizationMemberships).innerJoin(users, eq(users.id, organizationMemberships.userId)).innerJoin(internalCredentials, eq(internalCredentials.userId, users.id)).innerJoin(branchUsers, and(eq(branchUsers.userId, users.id), eq(branchUsers.active, 1))).innerJoin(branches, and(eq(branches.id, branchUsers.branchId), eq(branches.organizationId, input.organizationId))).where(where).orderBy(asc(users.name), asc(users.id)).limit(input.pageSize).offset((page - 1) * input.pageSize);
+    return { records: rows.map(row => ({ ...row, capabilities: ROLE_CAPABILITIES[row.organizationRole as keyof typeof ROLE_CAPABILITIES] ?? [] })), total, page, pageSize: input.pageSize, pageCount, hasPrevious: page > 1, hasNext: page < pageCount };
+  }),
+
+  exportEmployeeDirectoryCsv: protectedProcedure.input(employeeDirectoryExportInput).mutation(async ({ ctx, input }) => {
+    const db = await requireOrganizationManager(ctx, input.organizationId);
+    const conditions = [eq(organizationMemberships.organizationId, input.organizationId)];
+    if (input.branchId) conditions.push(eq(branches.id, input.branchId));
+    if (input.role !== "all") conditions.push(eq(organizationMemberships.organizationRole, input.role));
+    if (input.query) {
+      const pattern = `%${escapeDirectoryLikeTerm(input.query)}%`;
+      conditions.push(or(like(users.name, pattern), like(users.email, pattern), like(internalCredentials.username, pattern))!);
+    }
+    const where = and(...conditions);
+    const rows = await db.select({ name: users.name, username: internalCredentials.username, organizationRole: organizationMemberships.organizationRole, branchName: branches.nameAr, active: organizationMemberships.active }).from(organizationMemberships).innerJoin(users, eq(users.id, organizationMemberships.userId)).innerJoin(internalCredentials, eq(internalCredentials.userId, users.id)).innerJoin(branchUsers, and(eq(branchUsers.userId, users.id), eq(branchUsers.active, 1))).innerJoin(branches, and(eq(branches.id, branchUsers.branchId), eq(branches.organizationId, input.organizationId))).where(where).orderBy(asc(users.name), asc(users.id)).limit(EMPLOYEE_DIRECTORY_EXPORT_LIMIT + 1);
+    const truncated = rows.length > EMPLOYEE_DIRECTORY_EXPORT_LIMIT;
+    const exportedRows = rows.slice(0, EMPLOYEE_DIRECTORY_EXPORT_LIMIT);
+    const dateStamp = new Date().toISOString().slice(0, 10).replace(/-/g, "");
+    return {
+      csv: createEmployeeDirectoryCsv(exportedRows),
+      contentType: "text/csv;charset=utf-8",
+      filename: `medora-employee-directory-org-${input.organizationId}-${dateStamp}.csv`,
+      exportedCount: exportedRows.length,
+      truncated,
+      exportLimit: EMPLOYEE_DIRECTORY_EXPORT_LIMIT,
+    };
   }),
 
   createEmployee: protectedProcedure.input(employeeBaseInput.extend({ name: z.string().min(2).max(160), email: z.string().email().max(320).optional(), username: z.string().min(3).max(80), password: z.string().min(12).max(200) })).mutation(async ({ ctx, input }) => {
@@ -106,9 +191,10 @@ export const organizationsRouter = router({
     if (input.userId === ctx.user.id && !input.active) throw new TRPCError({ code: "BAD_REQUEST", message: "You cannot deactivate your own account" });
     if (input.organizationRole === "org_admin") throw new TRPCError({ code: "FORBIDDEN", message: "Only platform administration can assign organization administrators" });
     await assertBranchScope(db, input.organizationId, input.branchId, input.jurisdictionId);
-    const membership = (await db.select({ id: organizationMemberships.id }).from(organizationMemberships).where(and(eq(organizationMemberships.userId, input.userId), eq(organizationMemberships.organizationId, input.organizationId))).limit(1))[0];
+    const membership = (await db.select({ id: organizationMemberships.id, organizationRole: organizationMemberships.organizationRole }).from(organizationMemberships).where(and(eq(organizationMemberships.userId, input.userId), eq(organizationMemberships.organizationId, input.organizationId))).limit(1))[0];
     const credential = (await db.select({ username: internalCredentials.username }).from(internalCredentials).where(eq(internalCredentials.userId, input.userId)).limit(1))[0];
     if (!membership || !credential) throw new TRPCError({ code: "NOT_FOUND", message: "Employee account not found in this organization" });
+    if (membership.organizationRole === "owner" || membership.organizationRole === "org_admin") throw new TRPCError({ code: "FORBIDDEN", message: "Protected organization roles must be changed through platform administration" });
     await db.transaction(async tx => {
       await tx.update(organizationMemberships).set({ organizationRole: input.organizationRole, active: input.active ? 1 : 0 }).where(eq(organizationMemberships.id, membership.id));
       await tx.update(branchUsers).set({ active: 0 }).where(eq(branchUsers.userId, input.userId));
@@ -137,12 +223,14 @@ export const organizationsRouter = router({
     const db = await requireOrganizationManager(ctx, input.organizationId);
     if (input.organizationRole === "owner" || input.organizationRole === "org_admin") throw new TRPCError({ code: "FORBIDDEN", message: "Use the employee administration policy for privileged roles" });
     const existing = (await db.select().from(organizationMemberships).where(and(eq(organizationMemberships.organizationId, input.organizationId), eq(organizationMemberships.userId, input.userId))).limit(1))[0];
+    if (existing && (existing.organizationRole === "owner" || existing.organizationRole === "org_admin")) throw new TRPCError({ code: "FORBIDDEN", message: "Protected organization roles must be changed through platform administration" });
     if (existing) { await db.update(organizationMemberships).set({ organizationRole: input.organizationRole, active: input.active ? 1 : 0 }).where(eq(organizationMemberships.id, existing.id)); return { id: existing.id, updated: true }; }
     const result = await db.insert(organizationMemberships).values({ organizationId: input.organizationId, userId: input.userId, organizationRole: input.organizationRole, active: input.active ? 1 : 0 });
     return { id: Number(result[0].insertId), updated: false };
   }),
 
   assertManager: protectedProcedure.input(z.object({ organizationId: z.number().int().positive() })).query(async ({ ctx, input }) => {
+    assertShowcaseOrganizationScope(ctx, input.organizationId);
     const db = await getDb();
     if (!db) throw new TRPCError({ code: "SERVICE_UNAVAILABLE", message: "Database unavailable" });
     if (ctx.user.role === "admin") return { allowed: true };

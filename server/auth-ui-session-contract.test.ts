@@ -32,6 +32,6 @@ describe("authentication UI session contract", () => {
     expect(appSource).toContain('path={"/login"} component={Login}');
     expect(appSource).toContain('path={"/workspace"} component={Home}');
     expect(loginSource).toContain("جارٍ التحقق من الجلسة");
-    expect(homeSource).toContain("جارٍ التحقق من جلسة الدخول");
+    expect(homeSource).toContain('t("home.loadingSession")');
   });
 });

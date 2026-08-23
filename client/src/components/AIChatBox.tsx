@@ -1,8 +1,3 @@
-// MEDORA | ميدورا — Integrated Health Care System
-// Copyright (c) 2026 Hossam Naeim Osman | حسام نعيم عثمان. All rights reserved.
-// Proprietary and confidential. Unauthorized copying, distribution, or use of this
-// software, or of any portion of it, is strictly prohibited.
-// Source: https://github.com/0SSAM/MEDORA-Health-Care-Eco-System
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -12,6 +7,7 @@ import { useState, useEffect, useRef } from "react";
 import { defaultRehypePlugins, Streamdown } from "streamdown";
 import type { StreamdownProps } from "streamdown";
 import { harden } from "rehype-harden";
+import { SmartTextInput } from "@/components/SmartTextInput";
 
 /**
  * Message type matching server-side LLM Message interface
@@ -64,6 +60,17 @@ export type AIChatBoxProps = {
    * Click to send directly
    */
   suggestedPrompts?: string[];
+
+  /** Optional, transient writing suggestions for a scoped assistant composer. */
+  smartTyping?: {
+    organizationId: number | null;
+    branchId: number | null;
+    language: "ar" | "en";
+    screen: string;
+  };
+
+  /** Editable text handed off from a contextual assistant entry point. It is never sent automatically. */
+  initialDraft?: string;
 };
 
 /**
@@ -126,19 +133,27 @@ export function AIChatBox({
   height = "600px",
   emptyStateMessage = "Start a conversation with AI",
   suggestedPrompts,
+  smartTyping,
+  initialDraft,
 }: AIChatBoxProps) {
   const [input, setInput] = useState("");
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const inputAreaRef = useRef<HTMLFormElement>(null);
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const lastInitialDraft = useRef<string | undefined>(undefined);
+
+  useEffect(() => {
+    if (typeof initialDraft !== "string" || initialDraft === lastInitialDraft.current) return;
+    lastInitialDraft.current = initialDraft;
+    setInput(initialDraft);
+  }, [initialDraft]);
 
   // Filter out system messages. AI output is untrusted content: allow only HTTPS links,
   // disallow data images and raw HTML, and retain only the hardened Markdown/Katex path.
   const displayMessages = messages.filter((msg) => msg.role !== "system");
   const safeRehypePlugins = [
     [harden, { allowedImagePrefixes: [], allowedLinkPrefixes: ["https://"], allowDataImages: false }],
-    defaultRehypePlugins.katex,
+    ...(defaultRehypePlugins.katex ? [defaultRehypePlugins.katex] : []),
   ] as unknown as NonNullable<StreamdownProps["rehypePlugins"]>;
 
   // Calculate min-height for last assistant message to push user message to top
@@ -177,8 +192,7 @@ export function AIChatBox({
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  const submitCurrent = () => {
     const trimmedInput = input.trim();
     if (!trimmedInput || isLoading) return;
 
@@ -188,14 +202,18 @@ export function AIChatBox({
     // Scroll immediately after sending
     scrollToBottom();
 
-    // Keep focus on input
-    textareaRef.current?.focus();
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    submitCurrent();
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement | HTMLInputElement>) => {
+    if (e.nativeEvent.isComposing) return;
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
-      handleSubmit(e);
+      submitCurrent();
     }
   };
 
@@ -318,22 +336,40 @@ export function AIChatBox({
       <form
         ref={inputAreaRef}
         onSubmit={handleSubmit}
-        className="flex gap-2 p-4 border-t bg-background/50 items-end"
+        className="flex min-w-0 flex-col gap-3 border-t bg-background/50 p-3 sm:flex-row sm:items-end sm:gap-2 sm:p-4"
       >
-        <Textarea
-          ref={textareaRef}
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          onKeyDown={handleKeyDown}
-          placeholder={placeholder}
-          className="flex-1 max-h-32 resize-none min-h-9"
-          rows={1}
-        />
+        {smartTyping ? (
+          <SmartTextInput
+            as="textarea"
+            value={input}
+            onValueChange={setInput}
+            organizationId={smartTyping.organizationId}
+            branchId={smartTyping.branchId}
+            language={smartTyping.language}
+            screen={smartTyping.screen}
+            fieldName="assistant_chat"
+            placeholder={placeholder}
+            ariaLabel={placeholder}
+            disabled={isLoading}
+            onKeyDown={handleKeyDown}
+            className="min-w-0 w-full max-h-32 min-h-11 resize-none sm:flex-1"
+            rows={1}
+          />
+        ) : (
+          <Textarea
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={handleKeyDown}
+            placeholder={placeholder}
+            className="min-w-0 w-full max-h-32 min-h-11 resize-none sm:flex-1"
+            rows={1}
+          />
+        )}
         <Button
           type="submit"
           size="icon"
           disabled={!input.trim() || isLoading}
-          className="shrink-0 h-[38px] w-[38px]"
+          className="h-11 w-full shrink-0 sm:h-[38px] sm:w-[38px]"
         >
           {isLoading ? (
             <Loader2 className="size-4 animate-spin" />

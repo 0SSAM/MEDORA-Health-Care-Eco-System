@@ -8,7 +8,7 @@ Source: [Egyptian Drug Authority — Egyptian Pharmacopoeia](https://edaegypt.go
 
 ## Implementation boundary
 
-MEDORA may store source metadata, edition, jurisdiction, effective date, licensed-access status, and verified monograph identifiers. It must not copy protected monograph text without a license, treat a pharmacopeia monograph as proof that a specific commercial product is registered in Egypt, or use a non-Egyptian reference to override the applicable national authority.
+ALDO may store source metadata, edition, jurisdiction, effective date, licensed-access status, and verified monograph identifiers. It must not copy protected monograph text without a license, treat a pharmacopeia monograph as proof that a specific commercial product is registered in Egypt, or use a non-Egyptian reference to override the applicable national authority.
 
 ## Regional-source status
 

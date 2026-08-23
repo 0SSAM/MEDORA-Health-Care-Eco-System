@@ -1,53 +1,65 @@
-// MEDORA | ميدورا — Integrated Health Care System
-// Copyright (c) 2026 Hossam Naeim Osman | حسام نعيم عثمان. All rights reserved.
-// Proprietary and confidential. Unauthorized copying, distribution, or use of this
-// software, or of any portion of it, is strictly prohibited.
-// Source: https://github.com/0SSAM/MEDORA-Health-Care-Eco-System
 import { useMemo, useState } from "react";
+import { skipToken } from "@tanstack/react-query";
 import { trpc } from "@/lib/trpc";
+import { hasBranchJurisdictionScope, hasOrganizationBranchJurisdictionScope } from "@/lib/scope";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { calculateDemandRecommendation } from "@shared/demand-forecast-policy";
+import { calculateDemandRecommendation } from "../../../server/domain/demand-forecast-policy";
+import SupplierDirectoryWorkspace from "@/components/SupplierDirectoryWorkspace";
+import { useLocalization } from "@/contexts/LocalizationContext";
 
-type SupplyChainWorkspaceProps = { branchId?: number | null; jurisdictionId?: number | null };
+type SupplyChainWorkspaceProps = { organizationId?: number | null; branchId?: number | null; jurisdictionId?: number | null; canManage?: boolean };
 
-export function SupplyChainWorkspace({ branchId = null, jurisdictionId = null }: SupplyChainWorkspaceProps) {
+export function SupplyChainWorkspace({ organizationId = null, branchId = null, jurisdictionId = null, canManage = false }: SupplyChainWorkspaceProps) {
+  const { language } = useLocalization();
+  const t = (ar: string, en: string) => language === "en" ? en : ar;
+  const dir = language === "en" ? "ltr" : "rtl";
   const [query, setQuery] = useState("");
-  const historyQuery = trpc.erp.forecast.salesHistory.useQuery(
-    { branchId: branchId as number, jurisdictionId: jurisdictionId as number, historyDays: 56 },
-    { enabled: Boolean(branchId && jurisdictionId), retry: false },
-  );
+  const [reviewReasons, setReviewReasons] = useState<Record<number, string>>({});
+  const [reviewStatus, setReviewStatus] = useState("");
+  const historyQuery = trpc.erp.forecast.salesHistory.useQuery({ branchId: branchId as number, jurisdictionId: jurisdictionId as number, historyDays: 56 }, { enabled: hasBranchJurisdictionScope(branchId, jurisdictionId), retry: false });
+  const purchaseOrderScopeReady = canManage && hasOrganizationBranchJurisdictionScope(organizationId, branchId, jurisdictionId);
+  const purchaseOrderScope = purchaseOrderScopeReady ? { organizationId: organizationId!, branchId: branchId!, jurisdictionId: jurisdictionId! } : skipToken;
+  const purchaseOrders = trpc.procurement.purchaseOrders.list.useQuery(purchaseOrderScope, { retry: false });
+  const utils = trpc.useUtils();
+  const transitionPurchaseOrder = trpc.procurement.purchaseOrders.transition.useMutation({
+    onSuccess: async (_result, variables) => {
+      setReviewReasons(current => ({ ...current, [variables.purchaseOrderId]: "" }));
+      setReviewStatus(t("تم تسجيل قرار المراجعة وتحديث أمر الشراء. لم ينشئ النظام أمراً أو استلاماً جديداً.", "The review decision was recorded and the purchase order was updated. No new order or receipt was created."));
+      await utils.procurement.purchaseOrders.list.invalidate();
+    },
+    onError: error => setReviewStatus(error.message || t("تعذر تسجيل قرار المراجعة.", "The review decision could not be recorded.")),
+  });
+  const reviewPurchaseOrder = async (purchaseOrderId: number, nextStatus: "approved" | "cancelled") => {
+    const reason = reviewReasons[purchaseOrderId]?.trim() ?? "";
+    if (!purchaseOrderScopeReady || reason.length < 3) { setReviewStatus(t("أدخل سبباً من ثلاثة أحرف على الأقل قبل الاعتماد أو الرفض.", "Enter a reason of at least 3 characters before approving or rejecting.")); return; }
+    setReviewStatus("");
+    await transitionPurchaseOrder.mutateAsync({ purchaseOrderId, nextStatus, reason });
+  };
   const recommendations = useMemo(() => (historyQuery.data ?? []).map(item => ({
-    item: { id: String(item.productId), product: `الصنف #${item.productId}`, history: item.historyDays, onHand: 0, open: 0, lead: 7, review: 7, service: "standard" as const, shelf: null },
-    result: calculateDemandRecommendation({
-      scope: item.scope,
-      productId: String(item.productId),
-      dailyUnits: item.historyDays,
-      onHand: 0,
-      openOrderUnits: 0,
-      leadTimeDays: 7,
-      reviewPeriodDays: 7,
-      serviceLevel: "standard",
-      shelfLifeDays: null,
-    }),
-  })), [historyQuery.data]);
+    item: { id: String(item.productId), product: t(`الصنف #${item.productId}`, `Item #${item.productId}`), history: item.historyDays, onHand: 0, open: 0, lead: 7, review: 7 },
+    result: calculateDemandRecommendation({ scope: item.scope, productId: String(item.productId), dailyUnits: item.historyDays, onHand: 0, openOrderUnits: 0, leadTimeDays: 7, reviewPeriodDays: 7, serviceLevel: "standard", shelfLifeDays: null }),
+  })), [historyQuery.data, language]);
   const filtered = useMemo(() => recommendations.filter(({ item }) => `${item.id} ${item.product}`.toLowerCase().includes(query.toLowerCase())), [recommendations, query]);
-  const noScope = !branchId || !jurisdictionId;
+  const noScope = !hasBranchJurisdictionScope(branchId, jurisdictionId);
+  const quality = (value: string) => value === "insufficient" ? t("بيانات غير كافية", "Insufficient data") : value === "limited" ? t("بيانات محدودة", "Limited data") : t("بيانات كافية", "Sufficient data");
 
-  return <div className="space-y-5" dir="rtl">
-    <div className="grid gap-3 md:grid-cols-3"><Metric title="سجل المبيعات" value={noScope ? "غير متاح" : String(recommendations.length)} /><Metric title="توصيات إعادة الطلب" value={String(recommendations.filter(({ result }) => (result.suggestedOrderUnits ?? 0) > 0).length)} tone="emerald" /><Metric title="حالة النطاق" value={noScope ? "مطلوب" : "مؤكد"} tone={noScope ? "amber" : "cyan"} /></div>
-    <Card><CardHeader><CardTitle className="flex flex-wrap items-center justify-between gap-3"><span>لوحة توقع الطلب وإعادة الطلب</span><Badge variant="outline">بيانات مبيعات خادمية ضمن النطاق</Badge></CardTitle><p className="text-sm leading-6 text-slate-500">تظهر التوصيات فقط من سجل مبيعات حقيقي ضمن المؤسسة والفرع والاختصاص المؤكدين. لا يتم إنشاء أوامر شراء تلقائياً، ولا تُستخدم بيانات اصطناعية.</p></CardHeader><CardContent>
-      {noScope ? <EmptyState text="اختر مؤسسة وفرعاً واختصاصاً مصرحاً به لعرض البيانات التشغيلية." /> : historyQuery.isLoading ? <EmptyState text="جارٍ تحميل سجل المبيعات ضمن النطاق…" /> : historyQuery.isError ? <EmptyState text="تعذر تحميل سجل المبيعات. لم يتم عرض بيانات بديلة." /> : filtered.length === 0 ? <EmptyState text="لا توجد مبيعات مؤهلة أو بيانات كافية ضمن النطاق المحدد." /> : <><div className="grid gap-4 lg:grid-cols-3">{filtered.map(({ item, result }) => <div key={item.id} className="rounded-2xl border border-slate-200 p-4"><div className="flex items-start justify-between gap-2"><div><p className="font-semibold">{item.product}</p><p className="mt-1 text-xs text-slate-500">المهلة {item.lead} أيام · المراجعة {item.review} أيام</p></div><Badge variant="outline" className={result.dataQuality === "insufficient" ? "border-rose-300 text-rose-700" : result.dataQuality === "limited" ? "border-amber-300 text-amber-700" : "border-emerald-300 text-emerald-700"}>{result.dataQuality === "insufficient" ? "بيانات غير كافية" : result.dataQuality === "limited" ? "بيانات محدودة" : "بيانات كافية"}</Badge></div><div className="mt-4 grid grid-cols-2 gap-2 text-sm"><Stat label="توقع يومي" value={result.forecastDailyUnits === null ? "—" : `${result.forecastDailyUnits} وحدة`} /><Stat label="مخزون الأمان" value={result.safetyStockUnits === null ? "—" : `${result.safetyStockUnits} وحدة`} /><Stat label="نقطة الطلب" value={result.reorderPointUnits === null ? "—" : `${result.reorderPointUnits} وحدة`} /><Stat label="المقترح" value={result.suggestedOrderUnits === null ? "مراجعة يدوية" : `${result.suggestedOrderUnits} وحدة`} emphasis={(result.suggestedOrderUnits ?? 0) > 0} /></div><details className="mt-4 text-xs text-slate-600"><summary className="cursor-pointer font-medium">كيف حُسبت التوصية؟</summary><div className="mt-2 space-y-1 leading-5">{result.explanation.map(line => <p key={line}>{line}</p>)}</div></details></div>)}</div><p className="mt-4 rounded-xl bg-amber-50 p-3 text-xs leading-5 text-amber-800">بيانات المخزون والطلبات المفتوحة غير متاحة لهذا العرض، لذلك لا تُعتبر التوصية أمر شراء. التوصية أداة دعم قرار فقط وتتطلب مراجعة واعتماد مسؤول مخزون مخوّل.</p></>}
+  return <div className="space-y-5" dir={dir}>
+    <div className="grid gap-3 md:grid-cols-3"><Metric title={t("سجل المبيعات", "Sales history")} value={noScope ? t("غير متاح", "Unavailable") : String(recommendations.length)} /><Metric title={t("توصيات إعادة الطلب", "Reorder recommendations")} value={String(recommendations.filter(({ result }) => (result.suggestedOrderUnits ?? 0) > 0).length)} tone="emerald" /><Metric title={t("حالة النطاق", "Scope status")} value={noScope ? t("مطلوب", "Required") : t("مؤكد", "Confirmed")} tone={noScope ? "amber" : "cyan"} /></div>
+    <Card><CardHeader><CardTitle className="flex flex-wrap items-center justify-between gap-3"><span>{t("توقع الطلب وإعادة الطلب", "Demand forecast & reorder")}</span><Badge variant="outline">{t("سجل مبيعات خادمي مقيد بالنطاق", "Scope-bound server sales history")}</Badge></CardTitle><p className="text-sm leading-6 text-slate-500">{t("تُبنى التوصيات من سجل مبيعات حقيقي ضمن المؤسسة والفرع والاختصاص المؤكدين. لا تنشئ هذه الشاشة أوامر شراء تلقائياً ولا تستخدم بيانات اصطناعية.", "Recommendations use real sales history from the confirmed organization, branch, and jurisdiction. This screen never creates purchase orders automatically and does not use synthetic data.")}</p></CardHeader><CardContent className="space-y-4">
+      <Input value={query} onChange={event => setQuery(event.target.value)} placeholder={t("ابحث بمعرف الصنف", "Search by item ID")} aria-label={t("ابحث بمعرف الصنف", "Search by item ID")} />
+      {noScope ? <EmptyState text={t("اختر مؤسسة وفرعاً واختصاصاً مصرحاً به لعرض البيانات التشغيلية.", "Select an authorized organization, branch, and jurisdiction to view operational data.")} /> : historyQuery.isLoading ? <EmptyState text={t("جارٍ تحميل سجل المبيعات ضمن النطاق…", "Loading scoped sales history…")} /> : historyQuery.isError ? <EmptyState text={t("تعذر تحميل سجل المبيعات. لم يتم عرض بيانات بديلة.", "Sales history could not be loaded. No substitute data is shown.")} /> : filtered.length === 0 ? <EmptyState text={t("لا توجد مبيعات مؤهلة أو بيانات كافية ضمن النطاق المحدد.", "There are no eligible sales or sufficient data in the selected scope.")} /> : <><div className="grid gap-4 lg:grid-cols-3">{filtered.map(({ item, result }) => <div key={item.id} className="rounded-2xl border border-slate-200 p-4"><div className="flex items-start justify-between gap-2"><div><p className="font-semibold">{item.product}</p><p className="mt-1 text-xs text-slate-500">{t(`المهلة ${item.lead} أيام · المراجعة ${item.review} أيام`, `Lead ${item.lead} days · Review ${item.review} days`)}</p></div><Badge variant="outline" className={result.dataQuality === "insufficient" ? "border-rose-300 text-rose-700" : result.dataQuality === "limited" ? "border-amber-300 text-amber-700" : "border-emerald-300 text-emerald-700"}>{quality(result.dataQuality)}</Badge></div><div className="mt-4 grid grid-cols-2 gap-2 text-sm"><Stat label={t("توقع يومي", "Daily forecast")} value={result.forecastDailyUnits === null ? "—" : t(`${result.forecastDailyUnits} وحدة`, `${result.forecastDailyUnits} units`)} /><Stat label={t("مخزون الأمان", "Safety stock")} value={result.safetyStockUnits === null ? "—" : t(`${result.safetyStockUnits} وحدة`, `${result.safetyStockUnits} units`)} /><Stat label={t("نقطة الطلب", "Reorder point")} value={result.reorderPointUnits === null ? "—" : t(`${result.reorderPointUnits} وحدة`, `${result.reorderPointUnits} units`)} /><Stat label={t("المقترح", "Suggested")} value={result.suggestedOrderUnits === null ? t("مراجعة يدوية", "Manual review") : t(`${result.suggestedOrderUnits} وحدة`, `${result.suggestedOrderUnits} units`)} emphasis={(result.suggestedOrderUnits ?? 0) > 0} /></div><details className="mt-4 text-xs text-slate-600"><summary className="cursor-pointer font-medium">{t("كيف حُسبت التوصية؟", "How was this calculated?")}</summary><div className="mt-2 space-y-1 leading-5">{language === "en" ? <p>{"Calculated from scoped sales history, the configured lead time, and the review period. It remains advisory only."}</p> : result.explanation.map(line => <p key={line}>{line}</p>)}</div></details></div>)}</div><p className="rounded-xl bg-amber-50 p-3 text-xs leading-5 text-amber-800">{t("بيانات المخزون والطلبات المفتوحة غير متاحة لهذا العرض؛ لذلك لا تمثل التوصية أمر شراء. إنها دعم قرار فقط وتتطلب مراجعة واعتماد مسؤول مخزون مخوّل.", "On-hand stock and open-order data are unavailable in this view, so a recommendation is not a purchase order. It is decision support only and requires review and approval by an authorized inventory manager.")}</p></>}
     </CardContent></Card>
-    <Card><CardHeader><CardTitle>متابعة سلاسل الإمداد والتوريد</CardTitle><p className="text-sm leading-6 text-slate-500">لا توجد أوامر شراء محلية معروضة هنا دون مصدر تشغيلي موثق. التكامل مع الموردين وEDI/GS1 والجهات التنظيمية يبقى مغلقاً حتى توفير المواصفات والاعتمادات وبيئة الاختبار الرسمية.</p></CardHeader><CardContent><EmptyState text="لا توجد أوامر توريد مؤهلة للعرض ضمن النطاق الحالي." /></CardContent></Card>
+    {purchaseOrderScopeReady && <Card><CardHeader><CardTitle className="flex flex-wrap items-center justify-between gap-3"><span>{t("مراجعة أوامر الشراء", "Purchase-order review")}</span><Badge variant="outline" className="border-violet-200 bg-violet-50 text-violet-800">{t("قرار بشري موثق", "Recorded human decision")}</Badge></CardTitle><p className="text-sm leading-6 text-slate-500">{t("تظهر فقط الأوامر المقدمة ضمن المؤسسة والفرع والاختصاص الحاليين. الاعتماد أو الرفض يتطلب سبباً ويُسجل في سجل القرار والتدقيق؛ لا تنشئ هذه المراجعة طلباً أو استلاماً أو دفعاً تلقائياً.", "Only submitted orders in the current organization, branch, and jurisdiction are shown. Approval or rejection requires a reason and is recorded in the decision and audit ledgers; this review never creates an order, receipt, or payment automatically.")}</p></CardHeader><CardContent className="space-y-3"><p aria-live="polite" className={reviewStatus ? "rounded-xl bg-slate-50 px-3 py-2 text-sm text-slate-700" : "sr-only"}>{reviewStatus}</p>{purchaseOrders.isLoading ? <EmptyState text={t("جارٍ تحميل أوامر الشراء المقدمة ضمن النطاق…", "Loading submitted purchase orders in scope…")} /> : purchaseOrders.isError ? <EmptyState text={t("تعذر تحميل أوامر الشراء؛ لم تُعرض بيانات بديلة.", "Purchase orders could not be loaded; no substitute data was shown.")} /> : (purchaseOrders.data ?? []).filter(order => order.status === "submitted").length === 0 ? <EmptyState text={t("لا توجد أوامر شراء مقدمة تحتاج قراراً ضمن النطاق الحالي.", "No submitted purchase orders require a decision in the current scope.")} /> : (purchaseOrders.data ?? []).filter(order => order.status === "submitted").map(order => <details key={order.id} className="rounded-xl border border-slate-200 bg-slate-50/60"><summary className="flex min-h-12 cursor-pointer list-none items-center justify-between gap-3 px-4 text-sm marker:content-none"><span className="font-semibold text-slate-900">{order.orderNumber}</span><span className="text-slate-600">{Number(order.totalAmount).toLocaleString(language === "en" ? "en-US" : "ar-EG")} {order.currencyCode}</span></summary><div className="space-y-3 border-t border-slate-200 p-4"><p className="text-xs leading-5 text-slate-600">{t(`قُدم في ${new Date(order.createdAt).toLocaleString(language === "en" ? "en-US" : "ar-EG")}`, `Submitted ${new Date(order.createdAt).toLocaleString(language === "en" ? "en-US" : "ar-EG")}`)}</p><label className="grid gap-1 text-xs font-semibold text-slate-700"><span>{t("سبب الاعتماد أو الرفض", "Reason for approval or rejection")}</span><Input value={reviewReasons[order.id] ?? ""} onChange={event => setReviewReasons(current => ({ ...current, [order.id]: event.target.value }))} minLength={3} maxLength={1000} aria-label={t(`سبب قرار أمر الشراء ${order.orderNumber}`, `Reason for purchase order ${order.orderNumber} decision`)} placeholder={t("مبرر واضح للمراجعة البشرية", "Clear human-review rationale")} /></label><div className="flex flex-wrap justify-end gap-2"><Button type="button" size="sm" variant="outline" className="border-rose-200 text-rose-700 hover:bg-rose-50" disabled={transitionPurchaseOrder.isPending} onClick={() => void reviewPurchaseOrder(order.id, "cancelled")}>{t("رفض", "Reject")}</Button><Button type="button" size="sm" className="bg-emerald-700 hover:bg-emerald-800" disabled={transitionPurchaseOrder.isPending} onClick={() => void reviewPurchaseOrder(order.id, "approved")}>{t("اعتماد", "Approve")}</Button></div></div></details>)}</CardContent></Card>}
+    <SupplierDirectoryWorkspace organizationId={organizationId} branchId={branchId} jurisdictionId={jurisdictionId} />
+    <Card><CardHeader><CardTitle>{t("متابعة التوريد", "Supply follow-up")}</CardTitle><p className="text-sm leading-6 text-slate-500">{t("لا تُعرض أوامر شراء محلية دون مصدر تشغيلي موثق. يظل التكامل مع الموردين وEDI/GS1 والجهات التنظيمية مقفلاً حتى توفر المواصفات والاعتمادات وبيئة الاختبار الرسمية.", "No local purchase orders are shown without a documented operational source. Supplier, EDI/GS1, and regulator integration remains closed until specifications, approvals, and an official test environment are available.")}</p></CardHeader><CardContent><EmptyState text={t("لا توجد أوامر توريد مؤهلة للعرض ضمن النطاق الحالي.", "No eligible supply orders are available in the current scope.")} /></CardContent></Card>
   </div>;
 }
+
 function EmptyState({ text }: { text: string }) { return <p className="rounded-xl border border-dashed p-5 text-sm text-slate-500">{text}</p>; }
 function Stat({ label, value, emphasis = false }: { label: string; value: string; emphasis?: boolean }) { return <div className={`rounded-xl p-3 ${emphasis ? "bg-cyan-50 text-cyan-900" : "bg-slate-50 text-slate-700"}`}><p className="text-xs opacity-70">{label}</p><p className="mt-1 font-semibold">{value}</p></div>; }
 function Metric({ title, value, tone = "cyan" }: { title: string; value: string; tone?: "cyan" | "amber" | "emerald" }) { const tones = { cyan: "bg-cyan-50 text-cyan-800", amber: "bg-amber-50 text-amber-800", emerald: "bg-emerald-50 text-emerald-800" }; return <div className={`rounded-2xl p-4 ${tones[tone]}`}><p className="text-xs opacity-75">{title}</p><p className="mt-2 text-2xl font-bold">{value}</p></div>; }
 
 export default SupplyChainWorkspace;
-
-// Keep the forecast policy import local to the workspace so the server remains the single source of scope and sales truth.
-void Input;
