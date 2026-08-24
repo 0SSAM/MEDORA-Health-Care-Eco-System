@@ -4,7 +4,7 @@ import { branches, branchJurisdictions, branchUsers, complianceEvidence, complia
 import { getDb } from "../db";
 import { protectedProcedure, router } from "../_core/trpc";
 import { TRPCError } from "@trpc/server";
-import { parse as parseCookie } from "cookie";
+import { parseCookie } from "cookie";
 import { COOKIE_NAME } from "@shared/const";
 import { createHeartbeatJob } from "../_core/heartbeat";
 import { assertCompliancePackUsable } from "../domain/regional-engine";

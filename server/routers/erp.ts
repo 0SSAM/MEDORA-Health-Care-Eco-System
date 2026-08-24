@@ -1,5 +1,5 @@
 import { TRPCError } from "@trpc/server";
-import { parse as parseCookie } from "cookie";
+import { parseCookie } from "cookie";
 import { createHash } from "node:crypto";
 import { and, desc, eq, gte, inArray, isNull, like, lt, or, sql } from "drizzle-orm";
 import { COOKIE_NAME } from "@shared/const";

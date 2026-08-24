@@ -1,4 +1,4 @@
-import { parse as parseCookie } from "cookie";
+import { parseCookie } from "cookie";
 
 export function parseRequestCookies(header: string | undefined) {
   return parseCookie(header ?? "");

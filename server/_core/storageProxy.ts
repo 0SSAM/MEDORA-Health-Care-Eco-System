@@ -8,9 +8,18 @@ function isSafeStorageKey(key: string): boolean {
   return key.length > 0 && key.length <= 512 && !/[\\\0\r\n]/.test(key) && !key.split("/").some(segment => segment === ".." || segment === ".");
 }
 
+function getStorageKeyParam(params: unknown): string | undefined {
+  const value = (params as { key?: unknown }).key;
+  if (typeof value === "string") return value;
+  if (Array.isArray(value) && value.every(segment => typeof segment === "string")) {
+    return value.join("/");
+  }
+  return undefined;
+}
+
 export function registerStorageProxy(app: Express) {
-  app.get("/manus-storage/*", async (req, res) => {
-    const key = (req.params as Record<string, string>)[0];
+  app.get("/manus-storage/*key", async (req, res) => {
+    const key = getStorageKeyParam(req.params);
     if (!key || !isSafeStorageKey(key)) {
       res.status(400).send("Invalid storage key");
       return;
@@ -63,4 +72,4 @@ export function registerStorageProxy(app: Express) {
   });
 }
 
-export const storageProxyInternals = { isSafeStorageKey };
+export const storageProxyInternals = { getStorageKeyParam, isSafeStorageKey };
