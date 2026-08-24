@@ -125,6 +125,8 @@ The bootstrap repair replaces the CommonJS detection with `import.meta.url` and 
 
 Post-repair validation passed on 2026-08-24: `pnpm check`; five focused contracts / **11 tests** for bootstrap ESM, credential gating, authorization null handling, OAuth rate limiting, and print DOM safety; complete Vitest **124 files / 391 tests**, with **3 files / 9 intentional skips**; `pnpm build`; `scripts/ci-smoke.sh`; public Chromium E2E **5 passed with 1 intentional environment-gated skip**; and `pnpm audit --prod --audit-level=high` with **No known vulnerabilities found**. Generated Playwright artifacts were removed or restored before staging. The renewed GitHub Actions and CodeQL outcomes remain the independent authority; no code-scanning alert has been dismissed, suppressed, or represented as closed locally.
 
+GitHub completed the renewed PR #27 gate successfully on the successor head: `TypeScript, tests, build, and smoke check`, `Isolated database lifecycle`, the three `CodeQL Advanced` analyses, and the aggregate `CodeQL` check all returned **SUCCESS**; only the explicitly advisory dependency-review job remained skipped. This confirms the CI and CodeQL analysis completed cleanly for the submitted source. The code-scanning-alert API remains permission-gated for this session, so individual alert-status records were not read or modified; no alert was dismissed or suppressed, and no protected-branch merge was performed.
+
 ## Next review steps
 1. Scan the source-only follow-up delta for secrets, generated output, and merge markers, then commit it on the existing successor branch.
 2. Push only `manus/codeql-print-rate-limit`; do not merge, force-push, rewrite history, alter branch protection, or transfer the managed internal remote.
