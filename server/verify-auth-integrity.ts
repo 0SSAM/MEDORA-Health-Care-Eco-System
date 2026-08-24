@@ -2,7 +2,7 @@
 // Database & Auth Integrity Verification Script
 // This script audits the production database for correct admin setup and role propagation.
 
-import { eq, and } from "drizzle-orm";
+import { eq, and, isNull } from "drizzle-orm";
 import { getDb } from "./db";
 import { users, internalCredentials, organizations, organizationMemberships, branches, branchUsers } from "../drizzle/schema";
 
@@ -48,7 +48,7 @@ async function verifyIntegrity() {
     });
 
     // 4. Check for orphaned memberships or users
-    const orphanedUsers = await db.select().from(users).leftJoin(organizationMemberships, eq(users.id, organizationMemberships.userId)).where(and(eq(users.role, "user"), eq(organizationMemberships.id, null)));
+    const orphanedUsers = await db.select().from(users).leftJoin(organizationMemberships, eq(users.id, organizationMemberships.userId)).where(and(eq(users.role, "user"), isNull(organizationMemberships.id)));
     if (orphanedUsers.length > 0) {
       console.warn(`\n[4] Found ${orphanedUsers.length} users without organization membership.`);
     } else {

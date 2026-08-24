@@ -53,6 +53,7 @@ describe("security middleware boundaries", () => {
 
   it("applies stricter limits to authentication and upload routes", () => {
     expect(securityInternals.rateLimitFor("/api/trpc/auth.internalLogin", true)).toEqual({ category: "auth", limit: 12 });
+    expect(securityInternals.rateLimitFor("/api/oauth/callback", false)).toEqual({ category: "auth", limit: 12 });
     expect(securityInternals.rateLimitFor("/api/trpc/erp.prescription.upload", true)).toEqual({ category: "upload", limit: 20 });
     expect(securityInternals.rateLimitFor("/api/trpc/erp.sales.commit", true)).toEqual({ category: "mutation", limit: 120 });
     expect(securityInternals.rateLimitFor("/api/trpc/erp.catalog", false)).toBeNull();

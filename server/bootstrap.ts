@@ -7,9 +7,33 @@ import { getDb } from "./db";
 import { users, internalCredentials, organizations, organizationMemberships, branches, branchUsers, branchJurisdictions, jurisdictionProfiles } from "../drizzle/schema";
 import { hashInternalPassword, normalizeInternalUsername } from "./domain/internal-auth";
 import { randomUUID } from "node:crypto";
+import { pathToFileURL } from "node:url";
 
-export async function bootstrapSystem() {
+export type BootstrapProvisioningCredentials = {
+  username: string;
+  password: string;
+};
+
+export function getBootstrapProvisioningCredentials(
+  environment: NodeJS.ProcessEnv = process.env,
+): BootstrapProvisioningCredentials | null {
+  if (environment.MEDORA_BOOTSTRAP_ALLOW_PROVISIONING !== "true") {
+    return null;
+  }
+
+  const username = environment.MEDORA_BOOTSTRAP_ADMIN_USERNAME?.trim();
+  const password = environment.MEDORA_BOOTSTRAP_ADMIN_PASSWORD;
+  return username && password ? { username, password } : null;
+}
+
+export async function bootstrapSystem(environment: NodeJS.ProcessEnv = process.env) {
   console.log("🚀 Starting MEDORA System Bootstrap...");
+
+  const credentials = getBootstrapProvisioningCredentials(environment);
+  if (!credentials) {
+    console.info("MEDORA startup provisioning is disabled; an explicit runtime provisioning configuration is required.");
+    return;
+  }
 
   const db = await getDb();
   if (!db) {
@@ -28,9 +52,7 @@ export async function bootstrapSystem() {
 
     console.log("🛠️  No Admin account found. Provisioning default Admin...");
 
-    const defaultUsername = "Admin";
-    const defaultPassword = "Admin#@!12345"; // Should be changed on first login
-    const normalizedUsername = normalizeInternalUsername(defaultUsername);
+    const normalizedUsername = normalizeInternalUsername(credentials.username);
 
     await db.transaction(async (tx) => {
       // Create Organization
@@ -47,8 +69,13 @@ export async function bootstrapSystem() {
       // Create Jurisdiction
       const jurResult = await tx.insert(jurisdictionProfiles).values({
         countryCode: "EG",
-        jurisdictionName: "القاهرة",
-        active: 1
+        countryNameAr: "مصر",
+        defaultLocale: "ar-EG",
+        currencyCode: "EGP",
+        timezone: "Africa/Cairo",
+        taxProfile: "UNVERIFIED",
+        dateFormat: "yyyy-MM-dd",
+        active: 0,
       });
       const jurId = Number(jurResult[0].insertId);
 
@@ -57,17 +84,9 @@ export async function bootstrapSystem() {
         organizationId: orgId,
         code: "HQ-001",
         nameAr: "فرع القاهرة الرئيسي",
-        nameEn: "Main Cairo Branch",
         active: 1
       });
       const branchId = Number(branchResult[0].insertId);
-
-      // Link Branch to Jurisdiction
-      await tx.insert(branchJurisdictions).values({
-        branchId,
-        jurisdictionId: jurId,
-        active: 1
-      });
 
       // Create User
       const userResult = await tx.insert(users).values({
@@ -82,7 +101,7 @@ export async function bootstrapSystem() {
       await tx.insert(internalCredentials).values({
         userId,
         username: normalizedUsername,
-        passwordHash: hashInternalPassword(defaultPassword),
+        passwordHash: hashInternalPassword(credentials.password),
         accountType: "employee",
         active: 1
       });
@@ -101,19 +120,33 @@ export async function bootstrapSystem() {
         branchId,
         active: 1
       });
+
+      // This explicit operator-run provisioning creates no approved country pack.
+      // Keep the jurisdiction inactive, while preserving the auditable scope link.
+      await tx.insert(branchJurisdictions).values({
+        branchId,
+        jurisdictionId: jurId,
+        locationSource: "manual_override",
+        confirmedByUserId: userId,
+      });
     });
 
     console.log("✨ Default Admin provisioned successfully.");
-    console.log(`👤 Username: ${defaultUsername}`);
-    console.log(`🔑 Password: ${defaultPassword}`);
-    console.log("⚠️  IMPORTANT: Please change the password immediately after first login.");
+    console.log("⚠️  Provisioning credentials are never logged; rotate the configured password according to the approved access policy.");
 
   } catch (error) {
     console.error("❌ Bootstrap Failed:", error);
   }
 }
 
-// If run directly
-if (require.main === module) {
-  bootstrapSystem();
+function isDirectExecution(): boolean {
+  const invokedPath = process.argv[1];
+  return Boolean(invokedPath) && import.meta.url === pathToFileURL(invokedPath).href;
+}
+
+if (isDirectExecution()) {
+  bootstrapSystem().catch(error => {
+    console.error("❌ Bootstrap Failed:", error);
+    process.exitCode = 1;
+  });
 }

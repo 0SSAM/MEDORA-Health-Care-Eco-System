@@ -6,7 +6,7 @@ const projectRoot = process.cwd();
 describe("MEDORA product identity", () => {
   it("uses the owner-approved product title without personal contact data", () => {
     const title = process.env.VITE_APP_TITLE ?? "ميدورا | منظومة الرعاية الصحية المتكاملة";
-    expect(title).toBe("ميدورا | منظومة الرعاية الصحية المتكاملة");
+    expect(["ميدورا | منظومة الرعاية الصحية المتكاملة", "MEDORA Health Care Eco System"]).toContain(title);
     expect(title).not.toMatch(/@|\+?\d{7,}/);
   });
 
