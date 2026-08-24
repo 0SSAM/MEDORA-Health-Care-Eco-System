@@ -84,7 +84,17 @@ const modules = [
   { id: "antiFraud", label: "النزاهة ومكافحة الاحتيال", searchText: "anti fraud theft manipulation inventory cash procurement audit investigation", icon: ShieldCheck },
 ];
 
-const organizationModules: Record<string, string[]> = { government: ["overview", "compliance", "finance", "hr", "insurance", "egyptHealthcare", "icd10"], pharmacy: ["overview", "pos", "inventory", "supplyChain", "prescriptions", "insurance", "promotions", "compliance", "hr", "crm", "customerCare", "callCentre", "whatsapp", "catalog", "icd10", "aiInsights", "antiFraud"], pharmacy_chain: ["overview", "pos", "inventory", "supplyChain", "prescriptions", "insurance", "promotions", "compliance", "finance", "hr", "crm", "customerCare", "callCentre", "whatsapp", "catalog", "icd10", "aiInsights", "antiFraud"], distributor: ["overview", "inventory", "supplyChain", "promotions", "compliance", "finance", "hr", "crm", "catalog", "aiInsights", "antiFraud"], insurer: ["overview", "insurance", "compliance", "finance", "hr", "crm", "customerCare", "icd10"], rehabilitation: ["overview", "prescriptions", "customerCare", "finance", "compliance", "hr", "icd10"], hospital: ["overview", "inventory", "prescriptions", "insurance", "egyptHealthcare", "compliance", "finance", "hr", "crm", "customerCare", "icd10", "antiFraud"], laboratory: ["overview", "prescriptions", "compliance", "finance", "hr", "customerCare", "icd10"], radiology: ["overview", "prescriptions", "compliance", "finance", "hr", "customerCare", "icd10"] };
+const organizationModules: Record<string, string[]> = { 
+    government: ["overview", "compliance", "finance", "hr", "insurance", "egyptHealthcare", "icd10", "customerCare", "callCentre"], 
+    pharmacy: ["overview", "pos", "inventory", "supplyChain", "prescriptions", "insurance", "promotions", "compliance", "hr", "crm", "customerCare", "callCentre", "whatsapp", "catalog", "icd10", "aiInsights", "antiFraud", "finance"], 
+    pharmacy_chain: ["overview", "pos", "inventory", "supplyChain", "prescriptions", "insurance", "promotions", "compliance", "finance", "hr", "crm", "customerCare", "callCentre", "whatsapp", "catalog", "icd10", "aiInsights", "antiFraud"], 
+    distributor: ["overview", "inventory", "supplyChain", "promotions", "compliance", "finance", "hr", "crm", "catalog", "aiInsights", "antiFraud", "customerCare"], 
+    insurer: ["overview", "insurance", "compliance", "finance", "hr", "crm", "customerCare", "callCentre", "icd10"], 
+    rehabilitation: ["overview", "prescriptions", "customerCare", "finance", "compliance", "hr", "icd10", "callCentre"], 
+    hospital: ["overview", "inventory", "prescriptions", "insurance", "egyptHealthcare", "compliance", "finance", "hr", "crm", "customerCare", "icd10", "antiFraud", "callCentre"], 
+    laboratory: ["overview", "prescriptions", "compliance", "finance", "hr", "customerCare", "icd10", "callCentre"], 
+    radiology: ["overview", "prescriptions", "compliance", "finance", "hr", "customerCare", "icd10", "callCentre"] 
+  };
 
 const coreShortcuts: ReadonlyArray<{ key: string; label: string; description: string; module: string; roles: readonly string[] }> = [
   { key: "F2", label: "فاتورة بيع جديدة", description: "فتح نقطة البيع لبدء معاملة جديدة", module: "pos", roles: ["admin", "manager", "pharmacist", "cashier"] },

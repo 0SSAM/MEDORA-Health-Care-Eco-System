@@ -15,6 +15,7 @@ import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { LocalizationProvider } from "./contexts/LocalizationContext";
 import { SecurityOverlay } from "./components/SecurityOverlay";
+import { AssistantSidebar } from "./components/AssistantSidebar";
 
 function Router() {
   // make sure to consider if you need authentication for certain routes
@@ -65,6 +66,7 @@ function App() {
           <TooltipProvider>
             <Toaster />
             <SecurityOverlay />
+            <AssistantSidebar />
             <Router />
           </TooltipProvider>
         </LocalizationProvider>
