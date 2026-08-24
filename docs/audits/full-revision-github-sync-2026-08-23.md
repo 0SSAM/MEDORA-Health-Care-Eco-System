@@ -109,7 +109,15 @@ The public Chromium suite also passed **5 tests**, with **1 intentional environm
 
 These local outcomes validate the successor implementation, not a GitHub CodeQL disposition. GitHub Actions and CodeQL remain the independent authority for alert closure; no alert was dismissed, suppressed, or bypassed.
 
+## PR #27 base advance and CI follow-up — 2026-08-24
+
+PR #27 was opened from `manus/codeql-print-rate-limit` to `main` without a direct main push or merge. Immediately afterward, `main` advanced from `3bbd7ab` to `a2c33be` with an independent production-auth-integrity verification script. GitHub Actions evaluates the pull-request merge result, so CI surfaced a TypeScript failure in that newly introduced base-file query: `eq(organizationMemberships.id, null)` is not a valid Drizzle predicate for the non-nullable membership identifier. This was a reproducible CI error in the advanced base, not an issue caused by the tax-invoice or OAuth remediation.
+
+The successor branch incorporated the advanced `main` through a normal merge commit only; no rebase, history rewrite, or force push was used. The orphan-detection query now uses `isNull(organizationMemberships.id)`, which preserves the intended left-join semantics and keeps the verification script read-only. A dedicated source contract prevents a return to the invalid null comparison. The repair does not affect authentication issuance, organization/branch/jurisdiction enforcement, showcase restrictions, database writes, or any regulated action.
+
+After that merge, TypeScript passed and focused security verification passed **3 files / 7 tests**. The complete Vitest suite passed **122 files / 387 tests**, with **3 files / 9 intentional skips**. Production build, `scripts/ci-smoke.sh`, public Chromium E2E (**5 passed; 1 intentional environment-gated skip**), and the production dependency audit all passed. The next action is to stage and push this narrow follow-up only to the existing successor branch, then await GitHub CI and CodeQL again. GitHub CodeQL remains the authority for the original alert disposition; no alert has been dismissed, suppressed, or claimed closed locally.
+
 ## Next review steps
-1. Scan the staged source-only delta for secrets, generated output, and merge markers, then commit the validated successor.
-2. Push only the successor branch, and open a bilingual pull request targeting `main` without merging it.
-3. Await the required GitHub Actions and CodeQL outcomes; do not merge, force-push, rewrite history, alter branch protection, or transfer the managed internal remote.
+1. Scan the source-only follow-up delta for secrets, generated output, and merge markers, then commit it on the existing successor branch.
+2. Push only `manus/codeql-print-rate-limit`; do not merge, force-push, rewrite history, alter branch protection, or transfer the managed internal remote.
+3. Await the renewed required GitHub Actions and CodeQL outcomes before updating the active project record and saving a published checkpoint.
