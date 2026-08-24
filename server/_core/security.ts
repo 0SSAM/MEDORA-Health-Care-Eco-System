@@ -5,6 +5,7 @@ const WINDOW_MS = 60_000;
 const AUTH_LIMIT = 12;
 const MUTATION_LIMIT = 120;
 const UPLOAD_LIMIT = 20;
+const PUBLIC_READ_LIMIT = 600;
 
 type Bucket = { count: number; resetAt: number };
 
@@ -62,11 +63,19 @@ function clientKey(req: Request): string {
   return req.ip || "unknown";
 }
 
-function rateLimitFor(path: string, isMutation: boolean): { category: "auth" | "upload" | "mutation"; limit: number } | null {
+function rateLimitFor(path: string, isMutation: boolean): { category: "auth" | "upload" | "mutation" | "public-read"; limit: number } | null {
   if (path === "/api/trpc/auth.internalLogin" || path === "/api/trpc/auth.requestPasswordReset" || path === "/api/trpc/auth.resetPassword" || path === "/api/oauth/callback") {
     return { category: "auth", limit: AUTH_LIMIT };
   }
-  if (!isMutation) return null;
+  if (!isMutation) {
+    // The Vite/static SPA fallbacks read index.html from disk for every public
+    // navigation. Bound those requests without throttling protected API reads
+    // or authorized storage delivery, which enforce their own controls.
+    if (!path.startsWith("/api/") && !path.startsWith("/manus-storage/")) {
+      return { category: "public-read", limit: PUBLIC_READ_LIMIT };
+    }
+    return null;
+  }
   if (/\.(upload|extract|import)\b/i.test(path)) return { category: "upload", limit: UPLOAD_LIMIT };
   return { category: "mutation", limit: MUTATION_LIMIT };
 }

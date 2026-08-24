@@ -57,5 +57,8 @@ describe("security middleware boundaries", () => {
     expect(securityInternals.rateLimitFor("/api/trpc/erp.prescription.upload", true)).toEqual({ category: "upload", limit: 20 });
     expect(securityInternals.rateLimitFor("/api/trpc/erp.sales.commit", true)).toEqual({ category: "mutation", limit: 120 });
     expect(securityInternals.rateLimitFor("/api/trpc/erp.catalog", false)).toBeNull();
+    expect(securityInternals.rateLimitFor("/", false)).toEqual({ category: "public-read", limit: 600 });
+    expect(securityInternals.rateLimitFor("/operations", false)).toEqual({ category: "public-read", limit: 600 });
+    expect(securityInternals.rateLimitFor("/manus-storage/public-logo.svg", false)).toBeNull();
   });
 });
