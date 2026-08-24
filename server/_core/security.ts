@@ -63,10 +63,10 @@ function clientKey(req: Request): string {
 }
 
 function rateLimitFor(path: string, isMutation: boolean): { category: "auth" | "upload" | "mutation"; limit: number } | null {
-  if (!isMutation) return null;
   if (path === "/api/trpc/auth.internalLogin" || path === "/api/trpc/auth.requestPasswordReset" || path === "/api/trpc/auth.resetPassword" || path === "/api/oauth/callback") {
     return { category: "auth", limit: AUTH_LIMIT };
   }
+  if (!isMutation) return null;
   if (/\.(upload|extract|import)\b/i.test(path)) return { category: "upload", limit: UPLOAD_LIMIT };
   return { category: "mutation", limit: MUTATION_LIMIT };
 }

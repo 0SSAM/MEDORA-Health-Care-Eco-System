@@ -31,7 +31,7 @@ describe("integrated operations workspace contracts", () => {
 
   it("communicates fail-closed external integration boundaries", () => {
     expect(source).toContain("الإرسال الشبكي معطل حتى اعتماد الموصل الرسمي");
-    expect(source).toContain("لا تُرسل إشعارات تلقائياً قبل الجدولة الصريحة");
+    expect(source).toContain("التسليم التلقائي معطل حتى الجدولة الصريحة");
     expect(source).toContain("الحد القانوني للخصم النسبي يطبقه الخادم");
   });
 });
