@@ -12,6 +12,7 @@ import { inventoryAlertHandler } from "../scheduled/inventory";
 import { reportExecutionHandler } from "../scheduled/reports";
 import { createSecurityMiddleware } from "./security";
 import { attachRequestCookies } from "./request-cookies";
+import { bootstrapSystem } from "../bootstrap";
 
 function isPortAvailable(port: number): Promise<boolean> {
   return new Promise(resolve => {
@@ -33,6 +34,9 @@ async function findAvailablePort(startPort: number = 3000): Promise<number> {
 }
 
 async function startServer() {
+  // Automated System Bootstrap & Admin Provisioning
+  await bootstrapSystem();
+
   const app = express();
   const server = createServer(app);
   app.disable("x-powered-by");
