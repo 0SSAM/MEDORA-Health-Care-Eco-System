@@ -14,6 +14,22 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  codeql-setup-guard:
+    name: CodeQL setup guard
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Require the default-setup boundary
+        run: |
+          if [[ -f .github/workflows/codeql.yml ]]; then
+            echo "Advanced CodeQL workflow detected. This repository uses GitHub Code Scanning default setup only."
+            exit 1
+          fi
+
   quality:
     name: TypeScript, tests, build, and smoke check
     runs-on: ubuntu-latest
