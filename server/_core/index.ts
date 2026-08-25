@@ -12,6 +12,7 @@ import { inventoryAlertHandler } from "../scheduled/inventory";
 import { reportExecutionHandler } from "../scheduled/reports";
 import { createSecurityMiddleware } from "./security";
 import { attachRequestCookies } from "./request-cookies";
+import rateLimit from "express-rate-limit";
 // import { bootstrapSystem } from "../bootstrap";
 
 function isPortAvailable(port: number): Promise<boolean> {
@@ -44,6 +45,17 @@ async function startServer() {
   // Trust exactly that hop so Express resolves the browser-visible HTTPS origin
   // for CSRF/origin checks; do not trust an unbounded forwarding chain.
   app.set("trust proxy", 1);
+  
+  // Global rate limiter to protect against basic DoS
+  const globalLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    limit: 1000, // Limit each IP to 1000 requests per window
+    standardHeaders: "draft-7",
+    legacyHeaders: false,
+    message: "Too many requests from this IP, please try again after 15 minutes",
+  });
+  app.use(globalLimiter);
+
   app.use(createSecurityMiddleware());
   // Bounded request parsing: upload handlers additionally validate MIME, scope,
   // and content before persistence. Large payloads must use approved object storage.
@@ -57,10 +69,20 @@ async function startServer() {
     next();
   });
   registerStorageProxy(app);
-  registerOAuthRoutes(app);
+  // Sensitive API rate limiting (tRPC & OAuth)
+  const apiLimiter = rateLimit({
+    windowMs: 5 * 60 * 1000, // 5 minutes
+    limit: 100, // Limit each IP to 100 requests per window
+    standardHeaders: "draft-7",
+    legacyHeaders: false,
+    message: "Too many API requests, please try again after 5 minutes",
+  });
+
+  registerOAuthRoutes(app, apiLimiter);
   // tRPC API
   app.use(
     "/api/trpc",
+    apiLimiter,
     createExpressMiddleware({
       router: appRouter,
       createContext,

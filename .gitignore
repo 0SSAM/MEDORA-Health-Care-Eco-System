@@ -115,3 +115,4 @@ client/public/version.json
 
 # MEDORA project local artifacts
 test-results/
+\n# Playwright reports\nplaywright-report/\ntest-results/\n

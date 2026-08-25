@@ -11,8 +11,8 @@ function getQueryParam(req: Request, key: string): string | undefined {
   return typeof value === "string" ? value : undefined;
 }
 
-export function registerOAuthRoutes(app: Express) {
-  app.get("/api/oauth/callback", async (req: Request, res: Response) => {
+export function registerOAuthRoutes(app: Express, limiter?: any) {
+  app.get("/api/oauth/callback", ...(limiter ? [limiter] : []), async (req: Request, res: Response) => {
     const code = getQueryParam(req, "code");
     const state = getQueryParam(req, "state");
 
