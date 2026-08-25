@@ -1,0 +1,8 @@
+# MEDORA sensitive surfaces require explicit owner review when branch rules are available.
+* @0SSAM
+
+# Healthcare, security, database, and CI changes should be reviewed by the project owner.
+/server/ @0SSAM
+/drizzle/ @0SSAM
+/.github/ @0SSAM
+/docs/security-automation-and-monitoring-policy.md @0SSAM

@@ -1,0 +1,115 @@
+=== ROUTERS ===
+server/routers/erp.ts
+server/routers/notifications.ts
+server/routers/organizations.ts
+server/routers/regional.ts
+=== PAGES ===
+client/src/pages/ComponentShowcase.tsx
+client/src/pages/Home.tsx
+client/src/pages/NotFound.tsx
+=== SCHEMA TABLES ===
+3:export const organizations = mysqlTable("organizations", {
+14:export const organizationMemberships = mysqlTable("organization_memberships", {
+23:export const users = mysqlTable("users", {
+35:export const branches = mysqlTable("branches", {
+44:export const branchUsers = mysqlTable("branch_users", {
+51:export const products = mysqlTable("products", {
+65:export const inventoryBatches = mysqlTable("inventory_batches", {
+78:export const sales = mysqlTable("sales", {
+94:export const saleItems = mysqlTable("sale_items", {
+104:export const auditLogs = mysqlTable("audit_logs", {
+117:export const scheduledJobs = mysqlTable("scheduled_jobs", {
+133:export const branchAlerts = mysqlTable("branch_alerts", {
+144:export const notifications = mysqlTable("notifications", {
+158:export const notificationReads = mysqlTable("notification_reads", {
+167:export const prescriptionIntakes = mysqlTable("prescription_intakes", {
+182:export const customerProfiles = mysqlTable("customer_profiles", {
+197:export const careInteractions = mysqlTable("care_interactions", {
+207:export const callTickets = mysqlTable("call_tickets", {
+227:export const catalogItems = mysqlTable("catalog_items", {
+250:export const catalogSyncQueue = mysqlTable("catalog_sync_queue", {
+269:export const jurisdictionProfiles = mysqlTable("jurisdiction_profiles", {
+287:export const branchJurisdictions = mysqlTable("branch_jurisdictions", {
+298:export const compliancePacks = mysqlTable("compliance_packs", {
+313:export const complianceRuleAudits = mysqlTable("compliance_rule_audits", {
+326:export const complianceEvidence = mysqlTable("compliance_evidence", {
+349:export const offlineDrafts = mysqlTable("offline_drafts", {
+=== TEST FILES ===
+server/auth.logout.test.ts
+server/domain/branch-access.test.ts
+server/domain/branch-compliance.test.ts
+server/domain/catalog-policy.test.ts
+server/domain/compliance-lifecycle.test.ts
+server/domain/country-data-boundary.test.ts
+server/domain/data-boundary.test.ts
+server/domain/demo-access.test.ts
+server/domain/erp.test.ts
+server/domain/invoicing-policy.test.ts
+server/domain/jurisdiction-access.test.ts
+server/domain/localization.test.ts
+server/domain/notification-scope.test.ts
+server/domain/notifications-policy.test.ts
+server/domain/notifications-view.test.ts
+server/domain/offline-policy.test.ts
+server/domain/organization-access.test.ts
+server/domain/organization-workspace.test.ts
+server/domain/ownership-identity.test.ts
+server/domain/realtimeReview.test.ts
+server/domain/regional-engine.test.ts
+server/domain/regional-rules.test.ts
+server/domain/rules.test.ts
+server/domain/sales-contact.test.ts
+server/domain/sensitive-data.test.ts
+server/integration/organization-router-contract.test.ts
+server/integration/organization-scope.test.ts
+server/integration/schema-boundary.test.ts
+server/integration/test-database-secret.test.ts
+=== SCHEDULE/HEARTBEAT ===
+server/_core/heartbeat.ts:7:   * 6-field cron with seconds (`sec min hour dom mon dow`), UTC, min interval 60s.
+server/_core/heartbeat.ts:11:  cron: string;
+server/_core/heartbeat.ts:12:  /** Callback path. MUST start with `/api/scheduled/`. */
+server/_core/heartbeat.ts:33:  cronExpression: string;
+server/_core/heartbeat.ts:128:  if (!path || !path.startsWith("/api/scheduled/")) {
+server/_core/heartbeat.ts:131:      message: "callback path must start with /api/scheduled/",
+server/_core/heartbeat.ts:137: * Create a new HTTP cron job. Returns the assigned `taskUid` to persist on
+server/_core/heartbeat.ts:149:      cronExpression: job.cron,
+server/_core/heartbeat.ts:160: * Update an existing cron located by `taskUid`. Only fields you pass in
+server/_core/heartbeat.ts:170:  if (patch.cron !== undefined) body.cronExpression = patch.cron;
+server/_core/heartbeat.ts:185:/** Delete a cron located by `taskUid`. Idempotent on caller side. */
+server/_core/heartbeat.ts:194: * List cron jobs owned by the resolved actor (end-user when `userSession`
+server/_core/heartbeat.ts:197: * `actorUserId` in the response echoes whose cron list you got back. End-users
+server/_core/heartbeat.ts:198: * cannot list other users' crons via this SDK; cross-user inspection is
+server/_core/heartbeat.ts:199: * owner-only via the sandbox CLI (`manus-heartbeat list --user-id <uid>`).
+server/_core/index.ts:11:import { inventoryAlertHandler } from "../scheduled/inventory";
+server/_core/index.ts:48:  // Heartbeat callback: production cron only; handler authenticates task UID.
+server/_core/index.ts:49:  app.post("/api/scheduled/inventory-alerts", inventoryAlertHandler);
+server/_core/map.ts:310: * STATIC MAPS - Generate map images as URLs (for emails, reports, <img> tags)
+server/_core/sdk.ts:323:const CRON_OPEN_ID_PREFIX = "cron_";
+server/_core/types/manusTypes.ts:69:  /** Cron-only; references `schedule_task.uid`. */
+server/auth.logout.test.ts:45:  it("clears the session cookie and reports success", async () => {
+server/domain/rules.ts:5:  manager: ["dashboard.read", "inventory.read", "inventory.write", "insurance.read", "reports.read", "staff.read", "alerts.read"],
+server/domain/rules.test.ts:9:    expect(hasPermission("cashier", "reports.read")).toBe(false);
+server/domain/erp.ts:97:export function validateInventorySchedulePolicy(input: { role: string; path: string; cron: string }) {
+server/domain/erp.ts:98:  if (!["admin", "manager"].includes(input.role)) throw new Error("Only administrators or managers can schedule alerts");
+server/domain/erp.ts:99:  if (input.path !== "/api/scheduled/inventory-alerts") throw new Error("Invalid inventory alert path");
+server/domain/erp.ts:100:  if (!/^\d+ \S+ \S+ \S+ \S+ \S+$/.test(input.cron)) throw new Error("Invalid cron expression");
+server/domain/erp.test.ts:53:  it("enforces inventory schedule authorization and path policy", () => {
+server/domain/erp.test.ts:54:    expect(validateInventorySchedulePolicy({ role: "manager", path: "/api/scheduled/inventory-alerts", cron: "0 0 6 * * *" })).toBe(true);
+server/domain/erp.test.ts:55:    expect(() => validateInventorySchedulePolicy({ role: "cashier", path: "/api/scheduled/inventory-alerts", cron: "0 0 6 * * *" })).toThrow(/Only/);
+server/domain/erp.test.ts:56:    expect(() => validateInventorySchedulePolicy({ role: "admin", path: "/api/other", cron: "0 0 6 * * *" })).toThrow(/path/);
+server/domain/regional-engine.ts:28:export type RegulatedOperation = "catalog" | "sale" | "prescription" | "dispensing" | "invoice" | "insurance" | "payroll" | "report";
+server/domain/regional-rules.ts:1:export type RegionalRuleArea = "tax" | "invoicing" | "pricing" | "prescription" | "controlled_medicine" | "labeling" | "insurance" | "payroll" | "reporting";
+server/routers/erp.ts:5:import { prescriptionIntakes, scheduledJobs, customerProfiles, careInteractions, callTickets, catalogItems, catalogSyncQueue, offlineDrafts, complianceEvidence, compliancePacks, jurisdictionProfiles, branchJurisdictions, branchUsers, inventoryBatches, products, sales, saleItems, branches, organizationMemberships } from "../../drizzle/schema";
+server/routers/erp.ts:7:import { createHeartbeatJob } from "../_core/heartbeat";
+server/routers/erp.ts:167:  schedule: router({
+server/routers/erp.ts:169:      .input(z.object({ cron: z.string().regex(/^\d+ \S+ \S+ \S+ \S+ \S+$/).default("0 0 6 * * *") }))
+server/routers/erp.ts:171:        if (!["admin", "manager"].includes(ctx.user.role)) throw new TRPCError({ code: "FORBIDDEN", message: "Only administrators or managers can create schedules" });
+server/routers/erp.ts:175:        const existing = (await db.select().from(scheduledJobs).where(eq(scheduledJobs.name, name)).limit(1))[0];
+server/routers/erp.ts:176:        if (existing?.scheduleCronTaskUid) return { taskUid: existing.scheduleCronTaskUid, reused: true };
+server/routers/erp.ts:178:        const job = await createHeartbeatJob({ name, cron: input.cron, path: "/api/scheduled/inventory-alerts", method: "POST", description: "Daily FEFO reorder and expiry alerts for branch managers" }, session);
+server/routers/erp.ts:179:        if (existing) await db.update(scheduledJobs).set({ scheduleCronTaskUid: job.taskUid, cronExpression: input.cron, active: 1 }).where(eq(scheduledJobs.id, existing.id));
+server/routers/erp.ts:180:        else await db.insert(scheduledJobs).values({ name, scheduleCronTaskUid: job.taskUid, cronExpression: input.cron, active: 1 });
+server/scheduled/inventory.ts:3:import { branchAlerts, branchUsers, inventoryBatches, scheduledJobs, users } from "../../drizzle/schema";
+server/scheduled/inventory.ts:12:    if (!user.isCron || !taskUid) return res.status(403).json({ error: "cron-only" });
+server/scheduled/inventory.ts:16:    const job = (await db.select().from(scheduledJobs).where(eq(scheduledJobs.scheduleCronTaskUid, taskUid)).limit(1))[0];
+server/scheduled/inventory.ts:32:    await db.update(scheduledJobs).set({ lastRunAt: now }).where(eq(scheduledJobs.id, job.id));

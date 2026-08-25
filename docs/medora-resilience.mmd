@@ -1,0 +1,12 @@
+flowchart TD
+  N[Network state]
+  N -->|Online| V[Server validation]
+  N -->|Slow / unstable| Q[Stable request key + bounded retry]
+  N -->|Offline| D[Non-regulated draft only]
+  Q --> V
+  V -->|Confirmed| C[Commit + audit]
+  V -->|Timeout / uncertain| H[Manual review]
+  D -->|Reconnect| X[Conflict check]
+  X -->|Safe and approved| C
+  X -->|Conflict or regulated| H
+  G[Sale / invoice / prescription / inventory mutation] --> Z[Blocked offline]

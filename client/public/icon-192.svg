@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192" role="img" aria-labelledby="title desc">
+  <title id="title">ميدورا | منظومة الرعاية الصحية المتكاملة</title>
+  <desc id="desc">علامة ميدورا لمنظومة الرعاية الصحية المتكاملة</desc>
+  <defs>
+    <linearGradient id="bg" x1="24" y1="20" x2="168" y2="172" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#0D1B2A"/>
+      <stop offset="1" stop-color="#123B50"/>
+    </linearGradient>
+    <linearGradient id="aqua" x1="54" y1="42" x2="139" y2="147" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#B8F0E7"/>
+      <stop offset="1" stop-color="#19C5D1"/>
+    </linearGradient>
+  </defs>
+  <rect width="192" height="192" rx="46" fill="url(#bg)"/>
+  <circle cx="145" cy="45" r="19" fill="#19C5D1" opacity=".18"/>
+  <path d="M96 36c-25 0-45 20-45 45 0 30 25 48 45 73 20-25 45-43 45-73 0-25-20-45-45-45Z" fill="none" stroke="url(#aqua)" stroke-width="9"/>
+  <path d="m70 119 19-53c2-6 11-6 14 0l19 53M78 98h36" fill="none" stroke="#F4FFFC" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M149 77v28M135 91h28" stroke="#B8F0E7" stroke-width="7" stroke-linecap="round"/>
+</svg>

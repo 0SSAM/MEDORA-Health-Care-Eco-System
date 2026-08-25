@@ -1,0 +1,10 @@
+entity,source_table,source_field,medora_field,required,transformation,validation,quarantine_reason,owner_approval
+organization,,,,yes,,,missing_scope,
+branch,,,,yes,,,unknown_branch,
+jurisdiction,,,,yes,,,unsupported_country_pack,
+catalog_item,,,,yes,,,duplicate_or_missing_provenance,
+customer,,,,no,,,ambiguous_identity,
+sale,,,,yes,,,unbalanced_total_or_missing_scope,
+tax_invoice,,,,yes,,,invalid_numbering_or_tax_profile,
+batch,,,,no,,,missing_lot_or_expiry,
+audit_record,,,,no,,,unverifiable_source_history,

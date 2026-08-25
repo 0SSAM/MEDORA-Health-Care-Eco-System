@@ -1,0 +1,26 @@
+// MEDORA | ميدورا — Integrated Health Care System
+// Copyright (c) 2026 Hossam Naeim Osman | حسام نعيم عثمان. All rights reserved.
+// Proprietary and confidential. Unauthorized copying, distribution, or use of this
+// software, or of any portion of it, is strictly prohibited.
+// Source: https://github.com/0SSAM/MEDORA-Health-Care-Eco-System
+import * as React from "react";
+
+const MOBILE_BREAKPOINT = 768;
+
+export function useIsMobile() {
+  const [isMobile, setIsMobile] = React.useState<boolean | undefined>(
+    undefined
+  );
+
+  React.useEffect(() => {
+    const mql = window.matchMedia(`(max-width: ${MOBILE_BREAKPOINT - 1}px)`);
+    const onChange = () => {
+      setIsMobile(window.innerWidth < MOBILE_BREAKPOINT);
+    };
+    mql.addEventListener("change", onChange);
+    setIsMobile(window.innerWidth < MOBILE_BREAKPOINT);
+    return () => mql.removeEventListener("change", onChange);
+  }, []);
+
+  return !!isMobile;
+}

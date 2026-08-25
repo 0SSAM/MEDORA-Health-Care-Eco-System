@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
+    <meta name="theme-color" content="#0d1b2a" />
+    <meta name="description" content="ميدورا | منظومة الرعاية الصحية المتكاملة — نظام صحي مؤسسي متعدد الدول" />
+    <meta name="author" content="Hossam Naeim Osman" />
+    <meta name="copyright" content="© 2026 ميدورا | MEDORA Integrated Health System" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <link rel="icon" type="image/png" href="/manus-storage/medora-system-icon_1c63a72c.png" />
+    <link rel="apple-touch-icon" href="/manus-storage/medora-system-icon_1c63a72c.png" />
+    <!-- %VITE_APP_TITLE% is retained as a build-tool compatibility marker. -->
+    <title>ميدورا | منظومة الرعاية الصحية المتكاملة</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+    <script>
+      if ("serviceWorker" in navigator && location.protocol === "https:") {
+        window.addEventListener("load", () => navigator.serviceWorker.register("/sw.js").catch(() => undefined));
+      }
+    </script>
+    <script defer src="%VITE_ANALYTICS_ENDPOINT%/umami" data-website-id="%VITE_ANALYTICS_WEBSITE_ID%"></script>
+  </body>
+</html>

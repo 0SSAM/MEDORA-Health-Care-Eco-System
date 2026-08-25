@@ -1,0 +1,12 @@
+{
+  "name": "ميدورا | منظومة الرعاية الصحية المتكاملة",
+  "short_name": "ميدورا",
+  "description": "منظومة رعاية صحية مؤسسية متعددة الدول",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#eef8f8",
+  "theme_color": "#123B50",
+  "lang": "ar",
+  "dir": "rtl",
+  "icons": [{ "src": "/manus-storage/medora-system-icon_1c63a72c.png", "sizes": "1024x1024", "type": "image/png", "purpose": "any maskable" }]
+}

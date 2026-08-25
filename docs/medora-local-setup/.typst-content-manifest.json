@@ -1,0 +1,13 @@
+{
+  "task_kind": "new-document",
+  "output": "pdf",
+  "signals": ["formal Arabic operational guide", "print-ready"],
+  "hard_constraints": ["Arabic title: إعدادات التشغيل المحلي لنظام MEDORA", "direct downloadable PDF"],
+  "content_features": {
+    "code_blocks": 10,
+    "defined_terms": 8,
+    "portrait_images": 0,
+    "tables": 4,
+    "bilingual_labels": 8
+  }
+}
