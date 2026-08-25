@@ -112,7 +112,7 @@ async function seed() {
     await db.insert(branchJurisdictions).values({
       branchId,
       jurisdictionId,
-      active: 1,
+      locationSource: "admin_confirmed",
       confirmedByUserId: admin.id,
       confirmedAt: new Date(),
     });
