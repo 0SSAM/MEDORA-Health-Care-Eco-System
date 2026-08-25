@@ -1,5 +1,5 @@
-const CACHE_NAME = "medora-health-care-shell-v4";
-const LEGACY_CACHE_NAMES = ["medora-health-care-shell-v3", "bdf-pharma-shell-v2"];
+const CACHE_NAME = "medora-health-care-shell-v5";
+const LEGACY_CACHE_NAMES = ["medora-health-care-shell-v4", "medora-health-care-shell-v3", "bdf-pharma-shell-v2"];
 const APP_SHELL = ["/", "/manifest.webmanifest"];
 const REGULATED_HEADER = "X-MEDORA-Regulated-Operation";
 const DRAFT_HEADER = "X-MEDORA-Offline-Draft";

@@ -29,15 +29,22 @@ const queryClient = new QueryClient({
   },
 });
 
-const redirectToLoginIfUnauthorized = (error: unknown) => {
+const redirectToLoginIfUnauthorized = (error: unknown, queryKey?: string) => {
   if (!(error instanceof TRPCClientError)) return;
   if (typeof window === "undefined") return;
 
   const isUnauthorized = error.message === UNAUTHED_ERR_MSG;
-
   if (!isUnauthorized) return;
 
-  startLogin();
+  // Only trigger a hard global redirect if the error came from the core identity query.
+  // Background queries (notifications, metrics, etc.) should not yank the user out
+  // of their current workspace; the individual hooks/components handle their own
+  // local error states or the useAuth hook will eventually catch a real session loss.
+  const isCoreIdentityQuery = queryKey?.includes("auth.me");
+  
+  if (isCoreIdentityQuery) {
+    startLogin();
+  }
 };
 
 const logClientApiError = (label: string, error: unknown) => {
@@ -53,7 +60,8 @@ const logClientApiError = (label: string, error: unknown) => {
 queryClient.getQueryCache().subscribe(event => {
   if (event.type === "updated" && event.action.type === "error") {
     const error = event.query.state.error;
-    redirectToLoginIfUnauthorized(error);
+    const queryKey = JSON.stringify(event.query.queryKey);
+    redirectToLoginIfUnauthorized(error, queryKey);
     logClientApiError("[API Query Error]", error);
   }
 });
