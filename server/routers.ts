@@ -6,6 +6,13 @@ import { systemRouter } from "./_core/systemRouter";
 import { adminProcedure, protectedProcedure, publicProcedure, router } from "./_core/trpc";
 import { allowNlmManualRefresh, clearNlmIcd10Cache, getNlmIcd10CacheStats, searchNlmIcd10Cm } from "./domain/nlm-icd10";
 import { erpRouter } from "./routers/erp";
+import { inventoryTransferRouter } from "./routers/inventory-transfer";
+import { inventoryAdjustmentRouter } from "./routers/inventory-adjustment";
+import { miscellaneousExpenseRouter } from "./routers/miscellaneous-expense";
+import { timeGuardRouter } from "./routers/time-guard";
+import { attendanceRouter } from "./routers/attendance";
+import { payrollRouter } from "./routers/payroll";
+import { leavePermissionRouter } from "./routers/leave-permission";
 import { regionalRouter } from "./routers/regional";
 import { organizationsRouter } from "./routers/organizations";
 import { notificationsRouter } from "./routers/notifications";
@@ -254,7 +261,14 @@ export const appRouter = router({
       return { success: true } as const;
     }),
   }),
+  attendance: attendanceRouter,
+  payroll: payrollRouter,
+  hr: leavePermissionRouter,
   erp: erpRouter,
+  inventoryTransfer: inventoryTransferRouter,
+  inventoryAdjustment: inventoryAdjustmentRouter,
+  miscellaneousExpense: miscellaneousExpenseRouter,
+  timeGuard: timeGuardRouter,
   regional: regionalRouter,
   organizations: organizationsRouter,
   notifications: notificationsRouter,

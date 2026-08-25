@@ -21,6 +21,7 @@ The administrator verifies organization and branch scope before managing users o
 |---|---|
 | إنشاء مستخدم | أقل صلاحية، فرع محدد، سجل تدقيق |
 | تغيير دور | موافقة موثقة ومراجعة أثر الصلاحية |
+| التحقق البيومتري | تفعيل Passkeys/WebAuthn، موافقة الموظف، سجل تدقيق آمن |
 | تعديل قالب فاتورة | نطاق المؤسسة/الفرع، تدقيق، وعدم تخزين bytes في قاعدة البيانات |
 | اعتماد كتالوج | مصدر وترخيص ومراجعة بشرية |
 | تغيير موصل | سبب، حالة سابقة/جديدة، وعدم كشف الأسرار |
@@ -57,7 +58,9 @@ The system supports safe non-regulated drafts only when offline. IT must not con
 
 ## Supported deployment posture
 
-MEDORA is tested as a responsive web application on current Chromium/Edge, Safari iOS, and Chrome Android. Windows 7 requires a managed supported browser or wrapper and is not a blanket compatibility promise. Low-end devices should use reduced motion, paginated views, and limited simultaneous modules.
+MEDORA is deployed using **Docker & Docker Compose** for consistency across environments. It is tested as a responsive web application on current Chromium/Edge, Safari iOS, and Chrome Android. Windows 7 requires a managed supported browser (e.g., Chrome 109) and is not a blanket compatibility promise. Production environments should use **Nginx** as a reverse proxy with SSL termination.
+
+See [MEDORA Deployment Guide](MEDORA-deployment-guide-ar-en.md) for full setup instructions.
 
 ## Acceptance checklist
 

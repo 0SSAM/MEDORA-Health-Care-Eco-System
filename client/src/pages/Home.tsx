@@ -13,7 +13,7 @@ import { cn } from "@/lib/utils";
 import { trpc } from "@/lib/trpc";
 import { useLocalization } from "@/contexts/LocalizationContext";
 import { listDurableOfflineDrafts, removeOfflineDraft, updateOfflineDraft, type OfflineDraft } from "@/lib/offlineQueue";
-import { Activity, AlertCircle, AlertTriangle, ArrowLeftRight, BarChart3, Bell, Boxes, BrainCircuit, Building2, CheckCircle2, ChevronLeft, ClipboardCheck, Database, FileText, FlaskConical, HeartPulse, Keyboard, LayoutDashboard, Loader2, LockKeyhole, Menu, PackageSearch, PhoneCall, Plus, PlugZap, Receipt, Search, Settings2, ShieldCheck, ShoppingCart, Sparkles, Stethoscope, Ticket, UploadCloud, UserRound, Users, WalletCards, X } from "lucide-react";
+import { Activity, AlertCircle, AlertTriangle, ArrowLeftRight, BarChart3, Bell, Boxes, BrainCircuit, Building2, CheckCircle2, ChevronLeft, ClipboardCheck, Clock, Database, FileText, FlaskConical, HeartPulse, Keyboard, LayoutDashboard, Loader2, LockKeyhole, Menu, PackageSearch, PhoneCall, Plus, PlugZap, Receipt, Search, Settings2, ShieldCheck, ShoppingCart, Sparkles, Stethoscope, Ticket, UploadCloud, UserRound, Users, WalletCards, X } from "lucide-react";
 import { skipToken } from "@tanstack/react-query";
 import { Component, lazy, ReactNode, Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { useLocation } from "wouter";
@@ -21,8 +21,13 @@ import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { IntegrationStatusStrip } from "@/components/IntegrationStatusNotice";
 import { describeSearchMatch, smartSearch } from "@/lib/smartSearch";
 import { OfflineStatusIndicator } from "@/components/OfflineStatusIndicator";
+import { TimeGuard } from "@/components/TimeGuard";
 
 const HardwareWorkspace = lazy(() => import("@/components/HardwareWorkspace").then(module => ({ default: module.HardwareWorkspace })));
+const InventoryTransferWorkspace = lazy(() => import("@/components/InventoryTransferWorkspace").then(module => ({ default: module.InventoryTransferWorkspace })));
+const InventoryAdjustmentWorkspace = lazy(() => import("@/components/InventoryAdjustmentWorkspace").then(module => ({ default: module.InventoryAdjustmentWorkspace })));
+const MiscellaneousExpenseWorkspace = lazy(() => import("@/components/MiscellaneousExpenseWorkspace").then(module => ({ default: module.MiscellaneousExpenseWorkspace })));
+const EmployeeDashboard = lazy(() => import("@/components/EmployeeDashboard").then(module => ({ default: module.EmployeeDashboard })));
 const SupplyChainWorkspace = lazy(() => import("@/components/SupplyChainWorkspace").then(module => ({ default: module.SupplyChainWorkspace })));
 const EgyptHealthcareWorkspace = lazy(() => import("@/components/EgyptHealthcareWorkspace").then(module => ({ default: module.EgyptHealthcareWorkspace })));
 const InsuranceWorkspace = lazy(() => import("@/components/IntegratedOperationsWorkspaces").then(module => ({ default: module.InsuranceWorkspace })));
@@ -60,7 +65,7 @@ function LazyWorkspace({ children }: { children: ReactNode }) {
 const modules = [
   { id: "overview", label: "نظرة عامة", searchText: "overview dashboard home", icon: LayoutDashboard },
   { id: "pos", label: "نقطة البيع", searchText: "pos sales cashier point of sale", icon: ShoppingCart },
-  { id: "inventory", label: "المخزون و FEFO", searchText: "inventory stock fefo batches expiry", icon: Boxes },
+  { id: "inventory", label: "المخزون والتحويلات", searchText: "inventory stock fefo batches expiry transfer branch", icon: Boxes },
   { id: "supplyChain", label: "سلاسل الإمداد والتنبؤ", searchText: "supply chain procurement demand forecast reorder", icon: BarChart3 },
   { id: "prescriptions", label: "الوصفات الذكية", searchText: "prescriptions prescription ai pharmacist", icon: BrainCircuit },
   { id: "insurance", label: "التأمين والمطالبات", searchText: "insurance claims tpa payer", icon: ClipboardCheck },
@@ -240,7 +245,8 @@ export default function Home() {
 
   return (
     <div dir={localization.direction} data-country={localization.countryCode} className="medora-app-shell min-h-screen text-slate-900">
-      <aside className={cn("fixed inset-y-0 right-0 z-40 flex w-[286px] flex-col border-l border-slate-200 bg-[#0d1b2a] text-white transition-transform duration-200 lg:translate-x-0", mobileOpen ? "translate-x-0" : "translate-x-full")}>
+      <TimeGuard organizationId={selectedOrganizationId} branchId={activeBranchId}>
+        <aside className={cn("fixed inset-y-0 right-0 z-40 flex w-[286px] flex-col border-l border-slate-200 bg-[#0d1b2a] text-white transition-transform duration-200 lg:translate-x-0", mobileOpen ? "translate-x-0" : "translate-x-full")}>
         <div className="flex h-20 items-center justify-between border-b border-white/10 px-6">
           <div className="flex items-center gap-3"><div className="medora-brand-mark grid h-10 w-10 place-items-center rounded-2xl" aria-label="ميدورا"><svg viewBox="0 0 48 48" role="img" aria-hidden="true" className="h-7 w-7"><path d="M24 4 40 10v12c0 10.5-6.7 18.2-16 22-9.3-3.8-16-11.5-16-22V10L24 4Z" fill="#0d1b2a" opacity=".92"/><path d="M24 12c-5.5 3.8-8.5 8.1-8.5 12.9 0 5.6 3.8 9.5 8.5 11.1 4.7-1.6 8.5-5.5 8.5-11.1C32.5 20.1 29.5 15.8 24 12Z" fill="#9ff2e4"/><path d="M24 18c-2.4 2.5-3.6 4.8-3.6 7.1 0 2.4 1.4 4.2 3.6 5.2 2.2-1 3.6-2.8 3.6-5.2 0-2.3-1.2-4.6-3.6-7.1Z" fill="#19c5d1"/></svg></div><div><p className="font-bold tracking-tight">ميدورا | منظومة الرعاية الصحية المتكاملة</p><p className="text-[11px] text-cyan-200/70">MEDORA | Integrated Health System</p></div></div>
           <Button variant="ghost" size="icon" className="text-white hover:bg-white/10 lg:hidden" onClick={() => setMobileOpen(false)}><X className="h-5 w-5" /></Button>
@@ -263,12 +269,13 @@ export default function Home() {
           {offlineDrafts.length > 0 && <Card className="border-amber-200 bg-amber-50/60 shadow-sm"><CardHeader className="flex-row items-center justify-between space-y-0"><div><CardTitle className="text-lg text-amber-950">الوضع المحدود والمسودات المحلية</CardTitle><p className="mt-1 text-sm text-amber-800">يُسمح بالمسودات غير المنظمة فقط. البيع والوصفات والفوترة وإعادة التشغيل تبقى محجوبة حتى عودة الاتصال والتحقق من الصلاحيات والجهاز.</p></div><Badge variant="outline" className="border-amber-300 bg-white text-amber-800">{offlineDrafts.length} مسودة</Badge></CardHeader><CardContent className="space-y-2">{offlineDrafts.slice(0, 4).map(draft => <div key={draft.id} className="flex items-center justify-between gap-3 rounded-xl border border-amber-200 bg-white px-3 py-2 text-sm"><div><span className="font-medium text-slate-800">{draft.module}</span><span className="mr-2 text-xs text-slate-500">{draft.status === "conflict" ? "تعارض يحتاج مراجعة" : "في الانتظار"}</span></div><Button variant="ghost" size="sm" className="text-amber-800" onClick={() => { removeOfflineDraft(draft.id); setOfflineDrafts(current => current.filter(item => item.id !== draft.id)); }}>إزالة</Button></div>)}</CardContent></Card>}
           {user && (serverDrafts.data?.length ?? 0) > 0 && <Card className="border-cyan-200 bg-cyan-50/50 shadow-sm"><CardHeader className="flex-row items-center justify-between space-y-0"><div><CardTitle className="text-lg text-cyan-950">مسودات الخادم القابلة لإعادة التشغيل</CardTitle><p className="mt-1 text-sm text-cyan-800">هذه المسودات تخص خدمة العملاء ومركز الاتصال فقط، ولا تشمل البيع أو الوصفات أو الفوترة. إعادة التشغيل تتطلب اتصالاً وجهازاً موثوقاً.</p></div><Badge variant="outline" className="border-cyan-300 bg-white text-cyan-800">{serverDrafts.data?.length} محفوظة</Badge></CardHeader><CardContent className="space-y-2">{serverDrafts.data?.slice(0, 6).map(draft => <div key={draft.id} className="flex items-center justify-between gap-3 rounded-xl border border-cyan-200 bg-white px-3 py-2 text-sm"><div><span className="font-medium text-slate-800">{draft.module === "customerCare" ? "خدمة العملاء" : "مركز الاتصال"}</span><span className="mr-2 text-xs text-slate-500">{draft.status === "queued" ? "جاهزة للمراجعة وإعادة التشغيل" : draft.status === "replayed" ? "أعيد تشغيلها" : "تحتاج مراجعة"}</span></div>{draft.status === "queued" && <span title="يتطلب جهازاً موثوقاً قبل إعادة التشغيل" className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-medium text-amber-800">محجوبة: تحقق الجهاز مطلوب</span>}</div>)}</CardContent></Card>}
           <section className="grid gap-6 xl:grid-cols-[1.45fr_1fr]">
-            <Card className="border-0 shadow-sm shadow-slate-200/60"><CardHeader className="flex-row items-center justify-between space-y-0"><div><CardTitle className="text-lg">مركز العمليات</CardTitle><p className="mt-1 text-sm text-slate-500">ابدأ من الوحدة المناسبة لإدارة دورة العمل.</p></div><Badge className="bg-emerald-50 text-emerald-700 hover:bg-emerald-50">جاهز للتهيئة</Badge></CardHeader><CardContent className="grid gap-3 sm:grid-cols-2">{[[ShoppingCart,"نقطة البيع","صرف جزئي، خصم MOH، إيصال ETA","pos"],[PackageSearch,"المخزون","FEFO، التشغيلات، الصلاحيات","inventory"],[BrainCircuit,"الوصفة الذكية","رفع ومراجعة الوصفة بالرؤية","prescriptions"],[UserRound,"خدمة العملاء","ملفات العملاء والمتابعة والموافقات","customerCare"],[Activity,"إدارة علاقات العملاء CRM","الفرص والطلبات والتحليلات","crm"],[Users,"الموارد البشرية HR","إدارة الموظفين والصلاحيات","hr"]].map(([Icon,title,desc,id]) => <button key={title as string} onClick={() => setActive(id as string)} className="group rounded-2xl border border-slate-200 bg-white p-4 text-right transition hover:-translate-y-0.5 hover:border-cyan-300 hover:shadow-md"><div className="mb-4 flex items-center justify-between"><div className="grid h-10 w-10 place-items-center rounded-xl bg-slate-100 text-slate-700 group-hover:bg-cyan-50 group-hover:text-cyan-700"><Icon className="h-5 w-5" /></div><ChevronLeft className="h-4 w-4 text-slate-300 group-hover:text-cyan-600" /></div><p className="font-semibold">{title as string}</p><p className="mt-1 text-xs leading-5 text-slate-500">{desc as string}</p></button>)}</CardContent></Card>
+            <Card className="border-0 shadow-sm shadow-slate-200/60"><CardHeader className="flex-row items-center justify-between space-y-0"><div><CardTitle className="text-lg">مركز العمليات</CardTitle><p className="mt-1 text-sm text-slate-500">ابدأ من الوحدة المناسبة لإدارة دورة العمل.</p></div><Badge className="bg-emerald-50 text-emerald-700 hover:bg-emerald-50">جاهز للتهيئة</Badge></CardHeader><CardContent className="grid gap-3 sm:grid-cols-2">{[[ShoppingCart,"نقطة البيع","صرف جزئي، خصم MOH، إيصال ETA","pos"],[PackageSearch,"المخزون","FEFO، التشغيلات، الصلاحيات","inventory"],[BrainCircuit,"الوصفة الذكية","رفع ومراجعة الوصفة بالرؤية","prescriptions"],[UserRound,"خدمة العملاء","ملفات العملاء والمتابعة والموافقات","customerCare"],[Activity,"إدارة علاقات العملاء CRM","الفرص والطلبات والتحليلات","crm"],[Users,"الموارد البشرية HR","إدارة الموظفين والصلاحيات","hr"],[Clock,"لوحة الموظف","بصمة الحضور والانصراف (GPS)","employeeDashboard"]].map(([Icon,title,desc,id]) => <button key={title as string} onClick={() => setActive(id as string)} className="group rounded-2xl border border-slate-200 bg-white p-4 text-right transition hover:-translate-y-0.5 hover:border-cyan-300 hover:shadow-md"><div className="mb-4 flex items-center justify-between"><div className="grid h-10 w-10 place-items-center rounded-xl bg-slate-100 text-slate-700 group-hover:bg-cyan-50 group-hover:text-cyan-700"><Icon className="h-5 w-5" /></div><ChevronLeft className="h-4 w-4 text-slate-300 group-hover:text-cyan-600" /></div><p className="font-semibold">{title as string}</p><p className="mt-1 text-xs leading-5 text-slate-500">{desc as string}</p></button>)}</CardContent></Card>
             <Card className="border-0 bg-[#0d1b2a] text-white shadow-sm shadow-slate-300"><CardHeader><div className="flex items-center gap-3"><div className="grid h-10 w-10 place-items-center rounded-xl bg-cyan-400/15 text-cyan-300"><Activity className="h-5 w-5" /></div><div><CardTitle className="text-white">حالة المنظومة</CardTitle><p className="mt-1 text-sm text-slate-400">مراقبة الخدمات الأساسية</p></div></div></CardHeader><CardContent className="space-y-5"><div><div className="mb-2 flex justify-between text-sm"><span className="text-slate-300">المصادقة والصلاحيات</span><span className="text-emerald-300">محمية</span></div><Progress value={100} className="h-2 bg-white/10" /></div><div><div className="mb-2 flex justify-between text-sm"><span className="text-slate-300">قواعد المخزون FEFO</span><span className="text-emerald-300">مفعلة</span></div><Progress value={100} className="h-2 bg-white/10" /></div><div><div className="mb-2 flex justify-between text-sm"><span className="text-slate-300">التنبيهات المجدولة</span><span className="text-amber-300">بانتظار النشر</span></div><Progress value={45} className="h-2 bg-white/10" /></div><div className="flex items-center gap-2 border-t border-white/10 pt-4 text-xs text-slate-400"><Building2 className="h-4 w-4" /> متعدد الفروع · عزل حسب الدولة · سجل تدقيق</div></CardContent></Card>
           </section>
           <section className="grid gap-6 lg:grid-cols-3"><Card className="border-0 shadow-sm shadow-slate-200/60 lg:col-span-2"><CardHeader className="flex-row items-center justify-between space-y-0"><div><CardTitle className="text-lg">آخر النشاطات</CardTitle><p className="mt-1 text-sm text-slate-500">ستظهر الأحداث بعد تسجيل الدخول وربط الفروع.</p></div><Button variant="ghost" className="text-cyan-700">سجل التدقيق <ChevronLeft className="mr-1 h-4 w-4" /></Button></CardHeader><CardContent><div className="grid place-items-center rounded-2xl border border-dashed border-slate-300 bg-slate-50/70 px-6 py-12 text-center"><FileText className="mb-3 h-8 w-8 text-slate-300" /><p className="font-medium text-slate-600">لا توجد أحداث معروضة بعد</p><p className="mt-1 max-w-sm text-sm leading-6 text-slate-400">لن يتم إنشاء بيانات تجريبية. سيعرض النظام السجلات الفعلية فقط بعد تهيئة الفروع والمستخدمين.</p></div></CardContent></Card><Card className="border-0 shadow-sm shadow-slate-200/60"><CardHeader><CardTitle className="text-lg">قواعد لا يمكن تجاوزها</CardTitle></CardHeader><CardContent className="space-y-4"><div className="flex gap-3"><ShieldCheck className="h-5 w-5 shrink-0 text-emerald-600" /><p className="text-sm leading-6 text-slate-600">الخصم الأقصى <strong>٧٪</strong> وفق محرك MOH على الخادم.</p></div><div className="flex gap-3"><PackageSearch className="h-5 w-5 shrink-0 text-cyan-600" /><p className="text-sm leading-6 text-slate-600">الصرف من أقرب تاريخ انتهاء عبر FEFO.</p></div><div className="flex gap-3"><Stethoscope className="h-5 w-5 shrink-0 text-violet-600" /><p className="text-sm leading-6 text-slate-600">الوصفة الذكية تحتاج مراجعة صيدلي قبل الصرف.</p></div></CardContent></Card></section>
         </div>
       </main>
+      </TimeGuard>
     </div>
   );
 }
@@ -277,13 +284,14 @@ function ModulePanel({ active, organizationId, branchId, jurisdictionId }: { act
   const panels: Record<string, { title: string; description: string; items: string[] }> = {
     overview: { title: "ملخص التشغيل", description: "نظرة آمنة لا تعرض أرقاماً غير موجودة في قاعدة البيانات.", items: ["مؤشرات الفروع", "التنبيهات الحرجة", "حالة التكاملات"] },
     pos: { title: "نقطة البيع", description: "العمليات الحساسة ستُنفذ على الخادم مع خصم أقصى ٧٪ وFEFO.", items: ["صرف كسري للوحدات", "تحقق MOH قبل الإتمام", "حالة إيصال ETA"] },
-    inventory: { title: "المخزون و FEFO", description: "ترتيب التشغيلات حسب أقرب انتهاء مع تنبيهات نقطة إعادة الطلب.", items: ["رقم التشغيلة والانتهاء", "نقل بين الفروع", "مرتجعات وتالف"] },
+    inventory: { title: "المخزون والتحويلات", description: "إدارة المخزون بنظام FEFO والتحويل الآمن بين الفروع مع تتبع كامل للباتشات.", items: ["تتبع الباتشات", "نقل بين الفروع", "صرف FEFO آلي"] },
     prescriptions: { title: "الوصفة الذكية", description: "ارفع صورة الوصفة ليقوم النموذج المدمج بالاستخراج، ثم يراجعها الصيدلي.", items: ["رفع صورة آمن", "أسماء وجرعات وكميات", "تأكيد صيدلي إلزامي"] },
     insurance: { title: "التأمين والمطالبات", description: "دورة مطالبة قابلة للتدقيق مع حالة رفض ومبالغ معلقة.", items: ["موافقة مسبقة", "25 مزود TPA", "تقارير aging"] },
     compliance: { title: "الامتثال الإقليمي", description: "كل دولة لها ملف ومصادر وحزمة قواعد مستقلة؛ لا تُفعل العمليات المنظمة قبل اعتماد الحزمة وتحديث أدلتها.", items: ["ملف دولة مستقل", "حزمة قواعد بإصدار", "أدلة ومراجعة بشرية"] },
     compounding: { title: "التحضير الصيدلي", description: "تركيبات وBOM وتكلفة مع سجل مسؤولية.", items: ["تركيبة ومكونات", "خصم BOM", "تتبع التحضير المعقم"] },
     finance: { title: "المالية والتقارير", description: "تقارير على بيانات فعلية مع حدود دفع وتسوية واضحة.", items: ["دفتر وحركة نقدية", "Meeza / InstaPay", "تسوية ومراجعة"] },
     hr: { title: "الموارد البشرية وإدارة الموظفين", description: "إدارة الحسابات والأدوار وسجلات الموظفين ضمن نطاق المؤسسة.", items: ["حسابات الموظفين", "الأدوار والصلاحيات", "سجلات الموظفين"] },
+    employeeDashboard: { title: "لوحة الموظف", description: "بصمة الحضور والانصراف (GPS).", items: ["تسجيل حضور", "تسجيل انصراف", "سجل الحضور الشخصي"] },
     crm: { title: "إدارة علاقات العملاء CRM", description: "إدارة الفرص والموافقات والطلبات التشغيلية بخصوصية تامة.", items: ["فرص CRM", "موافقات العملاء", "طلبات الشراء"] },
     customerCare: { title: "خدمة العملاء", description: "ملفات العملاء، الموافقات، المتابعة، والشكاوى مع سجل قابل للتدقيق.", items: ["ملف عميل", "متابعة علاجية", "موافقة وخصوصية"] },
     callCentre: { title: "مركز الاتصال", description: "استقبال المكالمات وتوزيع التذاكر ومواعيد إعادة الاتصال دون حفظ تسجيلات حساسة تلقائياً.", items: ["تذكرة جديدة", "أولوية وتصعيد", "موعد متابعة"] },
@@ -299,7 +307,16 @@ function ModulePanel({ active, organizationId, branchId, jurisdictionId }: { act
   const panel = panels[active] ?? panels.overview;
   if (active === "compliance") return <RegionalComplianceWorkspace />;
   if (active === "pos") return <SalesFinanceWorkspace branchId={branchId} jurisdictionId={jurisdictionId} />;
-  if (active === "inventory") return <SupplyChainWorkspace branchId={branchId} jurisdictionId={jurisdictionId} />;
+  if (active === "inventory") return (
+    <div className="space-y-6">
+      <LazyWorkspace>
+        <InventoryTransferWorkspace organizationId={organizationId} branchId={branchId} jurisdictionId={jurisdictionId} />
+      </LazyWorkspace>
+      <LazyWorkspace>
+        <InventoryAdjustmentWorkspace organizationId={organizationId} branchId={branchId} />
+      </LazyWorkspace>
+    </div>
+  );
   if (active === "prescriptions") return <PrescriptionWorkspace />;
   if (active === "customerCare") return <CustomerCareWorkspace />;
   if (active === "callCentre") return <CallCentreWorkspace />;
@@ -315,8 +332,18 @@ function ModulePanel({ active, organizationId, branchId, jurisdictionId }: { act
   if (active === "supplyChain") return <SupplyChainWorkspace branchId={branchId} jurisdictionId={jurisdictionId} />;
   if (active === "egyptHealthcare") return <EgyptHealthcareWorkspace organizationId={organizationId} branchId={branchId} jurisdictionId={jurisdictionId} />;
   if (active === "insurance") return <InsuranceWorkspace organizationId={organizationId} jurisdictionId={jurisdictionId} branchId={branchId} />;
-  if (active === "finance") return <FinanceWorkspace organizationId={organizationId} jurisdictionId={jurisdictionId} branchId={branchId} />;
+  if (active === "finance") return (
+    <div className="space-y-6">
+      <LazyWorkspace>
+        <FinanceWorkspace organizationId={organizationId} jurisdictionId={jurisdictionId} branchId={branchId} />
+      </LazyWorkspace>
+      <LazyWorkspace>
+        <MiscellaneousExpenseWorkspace organizationId={organizationId} branchId={branchId} />
+      </LazyWorkspace>
+    </div>
+  );
   if (active === "hr") return <div className="space-y-5"><OrganizationWorkspace organizationId={organizationId} /><OperationsManagementWorkspace organizationId={organizationId} branchId={branchId} jurisdictionId={jurisdictionId} section="hr" /></div>;
+  if (active === "employeeDashboard") return <EmployeeDashboard organizationId={organizationId} />;
   if (active === "crm") return <OperationsManagementWorkspace organizationId={organizationId} branchId={branchId} jurisdictionId={jurisdictionId} section="crm" />;
   if (active === "promotions") return <PromotionsWorkspace organizationId={organizationId} jurisdictionId={jurisdictionId} branchId={branchId} />;
   if (active === "whatsapp") return <WhatsAppManagementWorkspace organizationId={organizationId} />;

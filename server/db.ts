@@ -1,5 +1,6 @@
 import { and, desc, eq, isNull } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
+import * as schema from "../drizzle/schema";
 import { InsertUser, authenticationEvents, internalCredentials, internalSessions, passwordResetTokens, users, organizationMemberships, branchUsers, branches, branchJurisdictions, organizations, jurisdictionProfiles } from "../drizzle/schema";
 import { hashAuditRecord, hashInternalPassword, hashSessionToken, isSessionEnvironmentConsistent, verifyInternalPassword } from "./domain/internal-auth";
 import { ENV } from './_core/env';
@@ -11,7 +12,7 @@ let _db: ReturnType<typeof drizzle> | null = null;
 export async function getDb() {
   if (!_db && process.env.DATABASE_URL) {
     try {
-      _db = drizzle(process.env.DATABASE_URL);
+      _db = drizzle(process.env.DATABASE_URL, { schema, mode: "default" });
     } catch (error) {
       console.warn("[Database] Failed to connect:", safeErrorLabel(error));
       _db = null;
@@ -19,6 +20,9 @@ export async function getDb() {
   }
   return _db;
 }
+
+// Export a proxy or direct instance if available for simple scripts
+export const db = drizzle(process.env.DATABASE_URL || "mysql://localhost:3306/medora", { schema, mode: "default" });
 
 export async function upsertUser(user: InsertUser): Promise<void> {
   if (!user.openId) {

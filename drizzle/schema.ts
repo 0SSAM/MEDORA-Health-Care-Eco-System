@@ -945,6 +945,13 @@ export const employeeAttendance = mysqlTable("employee_attendance", {
   status: mysqlEnum("status", ["planned", "present", "late", "absent", "approved_leave", "manual_review"]).default("planned").notNull(),
   source: mysqlEnum("source", ["manual", "verified_device", "imported"]).default("manual").notNull(),
   reviewedByUserId: int("reviewedByUserId"),
+  checkInLat: decimal("checkInLat", { precision: 10, scale: 8 }),
+  checkInLng: decimal("checkInLng", { precision: 11, scale: 8 }),
+  checkOutLat: decimal("checkOutLat", { precision: 10, scale: 8 }),
+  checkOutLng: decimal("checkOutLng", { precision: 11, scale: 8 }),
+  deviceId: varchar("deviceId", { length: 128 }),
+  biometricVerified: int("biometricVerified").default(0).notNull(),
+  biometricType: varchar("biometricType", { length: 32 }), // 'fingerprint', 'face_id', 'none'
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 }, table => ({ dailyEmployeeIdx: uniqueIndex("employee_attendance_daily_employee_idx").on(table.organizationId, table.employeeProfileId, table.workDate), branchDateIdx: index("employee_attendance_branch_date_idx").on(table.organizationId, table.branchId, table.workDate, table.status) }));
@@ -966,6 +973,35 @@ export const employeeLeaveRequests = mysqlTable("employee_leave_requests", {
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 }, table => ({ scopeStatusIdx: index("employee_leave_scope_status_idx").on(table.organizationId, table.branchId, table.status, table.startsAt), employeeDatesIdx: index("employee_leave_employee_dates_idx").on(table.organizationId, table.employeeProfileId, table.startsAt, table.endsAt) }));
+
+export const employeePermissionRequests = mysqlTable("employee_permission_requests", {
+  id: int("id").autoincrement().primaryKey(),
+  organizationId: int("organizationId").notNull(),
+  branchId: int("branchId").notNull(),
+  employeeProfileId: int("employeeProfileId").notNull(),
+  requestType: mysqlEnum("requestType", ["late_arrival", "early_departure", "mid_shift_break"]).notNull(),
+  requestDate: timestamp("requestDate").notNull(),
+  startTime: timestamp("startTime").notNull(),
+  endTime: timestamp("endTime").notNull(),
+  status: mysqlEnum("status", ["submitted", "approved", "rejected", "cancelled"]).default("submitted").notNull(),
+  reasonEncrypted: text("reasonEncrypted"),
+  decidedByUserId: int("decidedByUserId"),
+  decidedAt: timestamp("decidedAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+}, table => ({ employeeDateIdx: index("employee_perm_employee_date_idx").on(table.organizationId, table.employeeProfileId, table.requestDate) }));
+
+export const payrollDeductionRules = mysqlTable("payroll_deduction_rules", {
+  id: int("id").autoincrement().primaryKey(),
+  organizationId: int("organizationId").notNull(),
+  ruleType: mysqlEnum("ruleType", ["lateness", "absence", "unauthorized_leave"]).notNull(),
+  thresholdMinutes: int("thresholdMinutes").default(0), // for lateness
+  deductionMultiplier: decimal("deductionMultiplier", { precision: 5, scale: 2 }).default("1.00"), // e.g. 1.5x for unauthorized absence
+  fixedAmount: decimal("fixedAmount", { precision: 14, scale: 2 }).default("0.00"),
+  active: int("active").default(1).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+}, table => ({ orgRuleIdx: uniqueIndex("payroll_rules_org_type_idx").on(table.organizationId, table.ruleType) }));
 
 /** Procurement requests are internal review records; no supplier order is sent from this table. */
 export const procurementRequests = mysqlTable("procurement_requests", {
@@ -1051,3 +1087,116 @@ export const crmLeads = mysqlTable("crm_leads", {
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 }, table => ({ scopeStageIdx: index("crm_leads_scope_stage_idx").on(table.organizationId, table.branchId, table.stage, table.nextFollowUpAt), contactHashIdx: index("crm_leads_contact_hash_idx").on(table.organizationId, table.contactReferenceHash) }));
+
+export const inventoryTransfers = mysqlTable("inventory_transfers", {
+  id: int("id").autoincrement().primaryKey(),
+  organizationId: int("organizationId").notNull(),
+  sourceBranchId: int("sourceBranchId").notNull(),
+  destinationBranchId: int("destinationBranchId").notNull(),
+  transferNumber: varchar("transferNumber", { length: 80 }).notNull(),
+  status: mysqlEnum("status", ["draft", "requested", "approved", "packed", "in_transit", "received", "partially_received", "rejected", "cancelled"]).default("draft").notNull(),
+  notes: text("notes"),
+  createdByUserId: int("createdByUserId").notNull(),
+  approvedByUserId: int("approvedByUserId"),
+  dispatchedByUserId: int("dispatchedByUserId"),
+  receivedByUserId: int("receivedByUserId"),
+  approvedAt: timestamp("approvedAt"),
+  dispatchedAt: timestamp("dispatchedAt"),
+  receivedAt: timestamp("receivedAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+}, table => ({
+  transferNumberIdx: uniqueIndex("inventory_transfers_number_idx").on(table.organizationId, table.transferNumber),
+  sourceBranchIdx: index("inventory_transfers_source_branch_idx").on(table.organizationId, table.sourceBranchId, table.status),
+  destBranchIdx: index("inventory_transfers_dest_branch_idx").on(table.organizationId, table.destinationBranchId, table.status),
+}));
+
+export const inventoryTransferLines = mysqlTable("inventory_transfer_lines", {
+  id: int("id").autoincrement().primaryKey(),
+  transferId: int("transferId").notNull(),
+  productId: int("productId").notNull(),
+  batchId: int("batchId").notNull(),
+  requestedQuantity: decimal("requestedQuantity", { precision: 14, scale: 3 }).notNull(),
+  shippedQuantity: decimal("shippedQuantity", { precision: 14, scale: 3 }).default("0").notNull(),
+  receivedQuantity: decimal("receivedQuantity", { precision: 14, scale: 3 }).default("0").notNull(),
+  status: mysqlEnum("status", ["pending", "shipped", "received", "rejected"]).default("pending").notNull(),
+  notes: text("notes"),
+}, table => ({
+  transferIdx: index("inventory_transfer_lines_transfer_idx").on(table.transferId),
+}));
+
+export type InventoryTransfer = typeof inventoryTransfers.$inferSelect;
+export type InventoryTransferLine = typeof inventoryTransferLines.$inferSelect;
+
+export const inventoryAdjustments = mysqlTable("inventory_adjustments", {
+  id: int("id").primaryKey().autoincrement(),
+  organizationId: int("organizationId").notNull(),
+  branchId: int("branchId").notNull(),
+  productId: int("productId").notNull(),
+  batchId: int("batchId").notNull(),
+  adjustmentType: mysqlEnum("adjustmentType", ["expired", "damaged", "lost", "found", "correction"]).notNull(),
+  quantity: decimal("quantity", { precision: 14, scale: 3 }).notNull(),
+  reason: text("reason"),
+  status: mysqlEnum("status", ["pending", "approved", "rejected"]).default("pending").notNull(),
+  createdByUserId: int("createdByUserId").notNull(),
+  approvedByUserId: int("approvedByUserId"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+}, table => ({
+  orgIdx: index("inventory_adjustments_org_idx").on(table.organizationId),
+  branchIdx: index("inventory_adjustments_branch_idx").on(table.branchId),
+}));
+
+export const miscellaneousExpenses = mysqlTable("miscellaneous_expenses", {
+  id: int("id").primaryKey().autoincrement(),
+  organizationId: int("organizationId").notNull(),
+  branchId: int("branchId").notNull(),
+  category: mysqlEnum("category", ["utilities", "rent", "supplies", "maintenance", "marketing", "other"]).notNull(),
+  amount: decimal("amount", { precision: 14, scale: 2 }).notNull(),
+  currency: varchar("currency", { length: 3 }).default("EGP").notNull(),
+  description: text("description"),
+  expenseDate: timestamp("expenseDate").defaultNow().notNull(),
+  status: mysqlEnum("status", ["pending", "paid", "cancelled"]).default("pending").notNull(),
+  createdByUserId: int("createdByUserId").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+}, table => ({
+  orgIdx: index("miscellaneous_expenses_org_idx").on(table.organizationId),
+  branchIdx: index("miscellaneous_expenses_branch_idx").on(table.branchId),
+}));
+
+export type InventoryAdjustment = typeof inventoryAdjustments.$inferSelect;
+export type MiscellaneousExpense = typeof miscellaneousExpenses.$inferSelect;
+
+export const employeeShifts = mysqlTable("employee_shifts", {
+  id: int("id").autoincrement().primaryKey(),
+  organizationId: int("organizationId").notNull(),
+  branchId: int("branchId").notNull(),
+  employeeProfileId: int("employeeProfileId").notNull(),
+  dayOfWeek: mysqlEnum("dayOfWeek", ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"]).notNull(),
+  startTime: varchar("startTime", { length: 8 }).notNull(), // HH:mm
+  endTime: varchar("endTime", { length: 8 }).notNull(),   // HH:mm
+  gracePeriodMinutes: int("gracePeriodMinutes").default(15).notNull(),
+  isActive: int("isActive").default(1).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+}, table => ({ employeeDayIdx: uniqueIndex("employee_shifts_employee_day_idx").on(table.employeeProfileId, table.dayOfWeek) }));
+
+export const payrollSummaries = mysqlTable("payroll_summaries", {
+  id: int("id").autoincrement().primaryKey(),
+  organizationId: int("organizationId").notNull(),
+  employeeProfileId: int("employeeProfileId").notNull(),
+  periodStart: timestamp("periodStart").notNull(),
+  periodEnd: timestamp("periodEnd").notNull(),
+  totalWorkMinutes: int("totalWorkMinutes").default(0).notNull(),
+  totalLateMinutes: int("totalLateMinutes").default(0).notNull(),
+  totalOvertimeMinutes: int("totalOvertimeMinutes").default(0).notNull(),
+  absentDays: int("absentDays").default(0).notNull(),
+  baseSalary: decimal("baseSalary", { precision: 14, scale: 2 }).default("0").notNull(),
+  deductions: decimal("deductions", { precision: 14, scale: 2 }).default("0").notNull(),
+  additions: decimal("additions", { precision: 14, scale: 2 }).default("0").notNull(),
+  netSalary: decimal("netSalary", { precision: 14, scale: 2 }).default("0").notNull(),
+  status: mysqlEnum("status", ["draft", "approved", "paid", "cancelled"]).default("draft").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+}, table => ({ periodIdx: uniqueIndex("payroll_summaries_period_idx").on(table.employeeProfileId, table.periodStart, table.periodEnd) }));

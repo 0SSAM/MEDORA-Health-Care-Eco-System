@@ -17,6 +17,7 @@ MEDORA follows a **fail-closed, least-privilege, tenant-isolated** approach. A f
 | Tenant isolation | Every tenant- and branch-scoped read/write is authorized and scoped server-side. | كل قراءة وكتابة مرتبطة بالمستأجر والفرع يجب تفويضها وتحديد نطاقها على الخادم. |
 | Authentication | Authentication state is validated before protected procedures execute. | التحقق من حالة المصادقة قبل تنفيذ الإجراءات المحمية. |
 | Authorization | Server-side roles and permissions govern Admin, Pharmacist, Cashier, and Manager workflows. | تحكم الأدوار والصلاحيات على الخادم في مسارات المدير والصيدلي والكاشير والمشرف. |
+| Biometrics | WebAuthn/Passkeys are used for device-based identity confirmation; raw biometric data is never stored or transmitted. | تُستخدم Passkeys/WebAuthn لتأكيد الهوية عبر الجهاز؛ لا يتم تخزين أو نقل البيانات البيومترية الخام أبدًا. |
 | Sensitive data | Real patient, prescription, credential, and production financial data never belongs in fixtures, tests, issues, or pull requests. | لا يجوز استخدام بيانات المرضى أو الوصفات أو بيانات الاعتماد أو البيانات المالية الحقيقية في الاختبارات أو Issues أو Pull Requests. |
 | Auditability | Important state transitions remain attributable, reviewable, and tamper-evident where implemented. | تبقى انتقالات الحالة المهمة قابلة للنسب والمراجعة ومقاومة للتلاعب حيثما تم تنفيذها. |
 | AI safety | Prescription extraction is assistive only, requires pharmacist confirmation, and must not silently create a sale or dispense action. | استخراج الوصفات مساعد فقط، ويتطلب تأكيد الصيدلي، ولا ينشئ بيعًا أو صرفًا بصمت. |
