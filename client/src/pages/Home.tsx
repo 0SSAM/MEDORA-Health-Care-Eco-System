@@ -13,7 +13,7 @@ import { cn } from "@/lib/utils";
 import { trpc } from "@/lib/trpc";
 import { useLocalization } from "@/contexts/LocalizationContext";
 import { listDurableOfflineDrafts, removeOfflineDraft, updateOfflineDraft, type OfflineDraft } from "@/lib/offlineQueue";
-import { Activity, AlertCircle, AlertTriangle, ArrowLeftRight, BarChart3, Bell, Boxes, BrainCircuit, Building2, CheckCircle2, ChevronLeft, ClipboardCheck, Clock, Database, FileText, FlaskConical, HeartPulse, Keyboard, LayoutDashboard, Loader2, LockKeyhole, Menu, PackageSearch, PhoneCall, Plus, PlugZap, Receipt, Search, Settings2, ShieldCheck, ShoppingCart, Sparkles, Stethoscope, Ticket, UploadCloud, UserRound, Users, WalletCards, X } from "lucide-react";
+import { Activity, AlertCircle, AlertTriangle, ArrowLeftRight, BarChart3, Bell, Boxes, BrainCircuit, Building2, CheckCircle2, ChevronLeft, ClipboardCheck, Clock, Database, FileText, FlaskConical, HeartPulse, Keyboard, LayoutDashboard, Loader2, LockKeyhole, Menu, PackageSearch, PhoneCall, Plus, PlugZap, Receipt, Search, Settings2, ShieldCheck, ShoppingBag, ShoppingCart, Sparkles, Stethoscope, Ticket, UploadCloud, UserCircle, UserRound, Users, WalletCards, X } from "lucide-react";
 import { skipToken } from "@tanstack/react-query";
 import { Component, lazy, ReactNode, Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { useLocation } from "wouter";
@@ -72,15 +72,17 @@ const modules = [
   { id: "egyptHealthcare", label: "المستشفيات والتأمين المصري", searchText: "egypt hospital government private universal health insurance claims", icon: Stethoscope },
   { id: "compliance", label: "الامتثال الإقليمي", searchText: "compliance regulatory egypt eta eda", icon: ShieldCheck },
   { id: "compounding", label: "التحضير الصيدلي", searchText: "compounding pharmacy bom", icon: FlaskConical },
-  { id: "finance", label: "المالية والتقارير", searchText: "finance accounting reports", icon: WalletCards },
   { id: "promotions", label: "العروض الترويجية", searchText: "promotions discounts campaigns", icon: Receipt },
-  { id: "hr", label: "الموارد البشرية", searchText: "hr people employees workforce", icon: Users },
-  { id: "crm", label: "علاقات العملاء CRM", searchText: "crm leads sales marketing", icon: Activity },
+  { id: "finance", label: "المالية والتقارير", searchText: "finance accounting reports taxes audits payroll expenses", icon: WalletCards },
+  { id: "hr", label: "الموارد البشرية", searchText: "hr employees payroll leave management recruitment", icon: Users },
+  { id: "crm", label: "إدارة علاقات العملاء", searchText: "crm leads sales opportunities customers", icon: Activity },
+  { id: "procurement", label: "المشتريات والطلبات", searchText: "procurement purchasing stock orders requests", icon: ShoppingBag },
+  { id: "employeeDashboard", label: "لوحة الموظف", searchText: "employee dashboard attendance gps leave", icon: UserCircle },
   { id: "customerCare", label: "خدمة العملاء", searchText: "customer care patients support", icon: UserRound },
   { id: "callCentre", label: "مركز الاتصال", searchText: "call center support tickets", icon: PhoneCall },
   { id: "whatsapp", label: "إدارة واتساب", searchText: "whatsapp messaging automation meta", icon: PhoneCall },
-    { id: "catalog", label: "كتالوج الأصناف", searchText: "catalog medicines cosmetics supplies products", icon: Database },
-    { id: "icd10", label: "بحث التشخيص المرجعي", searchText: "icd 10 icd10 diagnosis disease coding NLM", icon: Stethoscope },
+  { id: "catalog", label: "كتالوج الأصناف", searchText: "catalog medicines cosmetics supplies products", icon: Database },
+  { id: "icd10", label: "بحث التشخيص المرجعي", searchText: "icd 10 icd10 diagnosis disease coding NLM", icon: Stethoscope },
   { id: "hardware", label: "إعداد الأجهزة والمحاكاة", searchText: "hardware printers scanners simulation devices", icon: Settings2 },
   { id: "security", label: "إعدادات الحماية والمصادقة", searchText: "security authentication 2fa two factor password recovery email otp", icon: LockKeyhole },
   { id: "connectors", label: "مركز الموصلات والاعتمادات", searchText: "connectors integrations government insurance accreditation readiness UPA EDA ETA UHIA", icon: PlugZap },
@@ -90,15 +92,15 @@ const modules = [
 ];
 
 const organizationModules: Record<string, string[]> = { 
-    government: ["overview", "compliance", "finance", "hr", "insurance", "egyptHealthcare", "icd10", "customerCare", "callCentre"], 
-    pharmacy: ["overview", "pos", "inventory", "supplyChain", "prescriptions", "insurance", "promotions", "compliance", "hr", "crm", "customerCare", "callCentre", "whatsapp", "catalog", "icd10", "aiInsights", "antiFraud", "finance"], 
-    pharmacy_chain: ["overview", "pos", "inventory", "supplyChain", "prescriptions", "insurance", "promotions", "compliance", "finance", "hr", "crm", "customerCare", "callCentre", "whatsapp", "catalog", "icd10", "aiInsights", "antiFraud"], 
-    distributor: ["overview", "inventory", "supplyChain", "promotions", "compliance", "finance", "hr", "crm", "catalog", "aiInsights", "antiFraud", "customerCare"], 
-    insurer: ["overview", "insurance", "compliance", "finance", "hr", "crm", "customerCare", "callCentre", "icd10"], 
-    rehabilitation: ["overview", "prescriptions", "customerCare", "finance", "compliance", "hr", "icd10", "callCentre"], 
-    hospital: ["overview", "inventory", "prescriptions", "insurance", "egyptHealthcare", "compliance", "finance", "hr", "crm", "customerCare", "icd10", "antiFraud", "callCentre"], 
-    laboratory: ["overview", "prescriptions", "compliance", "finance", "hr", "customerCare", "icd10", "callCentre"], 
-    radiology: ["overview", "prescriptions", "compliance", "finance", "hr", "customerCare", "icd10", "callCentre"] 
+    government: ["overview", "compliance", "finance", "hr", "insurance", "egyptHealthcare", "icd10", "customerCare", "callCentre", "employeeDashboard"],
+    pharmacy: ["overview", "pos", "inventory", "supplyChain", "procurement", "prescriptions", "insurance", "promotions", "compliance", "hr", "employeeDashboard", "crm", "customerCare", "callCentre", "whatsapp", "catalog", "icd10", "aiInsights", "antiFraud", "finance"], 
+    pharmacy_chain: ["overview", "pos", "inventory", "supplyChain", "procurement", "prescriptions", "insurance", "promotions", "compliance", "finance", "hr", "employeeDashboard", "crm", "customerCare", "callCentre", "whatsapp", "catalog", "icd10", "aiInsights", "antiFraud"], 
+    distributor: ["overview", "inventory", "supplyChain", "procurement", "promotions", "compliance", "finance", "hr", "employeeDashboard", "crm", "catalog", "aiInsights", "antiFraud", "customerCare"], 
+    insurer: ["overview", "insurance", "compliance", "finance", "hr", "employeeDashboard", "crm", "customerCare", "callCentre", "icd10"], 
+    rehabilitation: ["overview", "prescriptions", "customerCare", "finance", "compliance", "hr", "employeeDashboard", "icd10", "callCentre"], 
+    hospital: ["overview", "inventory", "supplyChain", "procurement", "prescriptions", "insurance", "egyptHealthcare", "compliance", "finance", "hr", "employeeDashboard", "crm", "customerCare", "icd10", "antiFraud", "callCentre"], 
+    laboratory: ["overview", "prescriptions", "compliance", "finance", "hr", "employeeDashboard", "customerCare", "icd10", "callCentre"], 
+    radiology: ["overview", "prescriptions", "compliance", "finance", "hr", "employeeDashboard", "customerCare", "icd10", "callCentre"] 
   };
 
 const coreShortcuts: ReadonlyArray<{ key: string; label: string; description: string; module: string; roles: readonly string[] }> = [
@@ -111,12 +113,12 @@ const coreShortcuts: ReadonlyArray<{ key: string; label: string; description: st
   { key: "?", label: "دليل الاختصارات", description: "عرض الاختصارات المتاحة لهذا الدور", module: "overview", roles: ["admin", "manager", "pharmacist", "cashier", "user"] },
 ] as const;
 
-const metrics = [
-  { label: "مبيعات اليوم", value: "—", hint: "تظهر بعد ربط قاعدة البيانات", icon: Receipt, tone: "bg-cyan-50 text-cyan-700" },
-  { label: "قيمة المخزون", value: "—", hint: "بانتظار بيانات الفروع", icon: Boxes, tone: "bg-violet-50 text-violet-700" },
-  { label: "مطالبات معلقة", value: "—", hint: "حالة مباشرة من النظام", icon: ClipboardCheck, tone: "bg-amber-50 text-amber-700" },
-  { label: "تنبيهات حرجة", value: "—", hint: "فحص يومي مجدول", icon: AlertTriangle, tone: "bg-rose-50 text-rose-700" },
-];
+  const metrics = [
+    { label: "مبيعات اليوم", value: "—", hint: "تظهر بعد ربط قاعدة البيانات", icon: Receipt, tone: "bg-cyan-50/50 text-cyan-700" },
+    { label: "قيمة المخزون", value: "—", hint: "بانتظار بيانات الفروع", icon: Boxes, tone: "bg-violet-50/50 text-violet-700" },
+    { label: "مطالبات معلقة", value: "—", hint: "حالة مباشرة من النظام", icon: ClipboardCheck, tone: "bg-amber-50/50 text-amber-700" },
+    { label: "تنبيهات حرجة", value: "—", hint: "فحص يومي مجدول", icon: AlertTriangle, tone: "bg-rose-50/50 text-rose-700" },
+  ];
 
 export default function Home() {
   const { user, loading, logout } = useAuth();
@@ -146,9 +148,39 @@ export default function Home() {
   const role = user?.role as "admin" | "manager" | "pharmacist" | "cashier" | "user" | undefined;
   const allowedModules = useMemo(() => {
     if (!role) return modules.filter(item => item.id === "overview");
-  const access: Record<string, string[]> = { overview: ["admin", "manager", "pharmacist", "cashier"], pos: ["admin", "manager", "pharmacist", "cashier"], inventory: ["admin", "manager", "pharmacist"], supplyChain: ["admin", "manager", "pharmacist"], prescriptions: ["admin", "manager", "pharmacist"], insurance: ["admin", "manager", "pharmacist"], compliance: ["admin", "manager", "pharmacist"], compounding: ["admin", "manager", "pharmacist"], finance: ["admin", "manager"], promotions: ["admin", "manager"], hr: ["admin", "manager"], crm: ["admin", "manager"], customerCare: ["admin", "manager", "pharmacist", "cashier"], callCentre: ["admin", "manager", "pharmacist", "cashier"], whatsapp: ["admin", "manager"], catalog: ["admin", "manager", "pharmacist"], icd10: ["admin", "manager", "pharmacist"], hardware: ["admin", "manager"], security: ["admin", "manager", "pharmacist", "cashier", "user"], connectors: ["admin"], aiGovernance: ["admin", "manager"], aiInsights: ["admin", "manager"], antiFraud: ["admin", "manager"] };
+    const access: Record<string, string[]> = {
+      overview: ["admin", "manager", "pharmacist", "cashier"],
+      pos: ["admin", "manager", "pharmacist", "cashier"],
+      inventory: ["admin", "manager", "pharmacist"],
+      supplyChain: ["admin", "manager", "pharmacist"],
+      prescriptions: ["admin", "manager", "pharmacist"],
+      insurance: ["admin", "manager", "pharmacist"],
+      compliance: ["admin", "manager", "pharmacist"],
+      compounding: ["admin", "manager", "pharmacist"],
+      finance: ["admin", "manager"],
+      promotions: ["admin", "manager"],
+      hr: ["admin", "manager"],
+      crm: ["admin", "manager"],
+      procurement: ["admin", "manager", "pharmacist"],
+      employeeDashboard: ["admin", "manager", "pharmacist", "cashier", "user"],
+      customerCare: ["admin", "manager", "pharmacist", "cashier"],
+      callCentre: ["admin", "manager", "pharmacist", "cashier"],
+      whatsapp: ["admin", "manager"],
+      catalog: ["admin", "manager", "pharmacist"],
+      icd10: ["admin", "manager", "pharmacist"],
+      hardware: ["admin", "manager"],
+      security: ["admin", "manager", "pharmacist", "cashier", "user"],
+      connectors: ["admin"],
+      aiGovernance: ["admin", "manager"],
+      aiInsights: ["admin", "manager"],
+      antiFraud: ["admin", "manager"],
+      egyptHealthcare: ["admin", "manager", "pharmacist"]
+    };
     const scopedModuleIds = activeOrganizationType ? organizationModules[activeOrganizationType] : undefined;
-    return modules.filter(item => (access[item.id] ?? (item.id === "egyptHealthcare" ? ["admin", "manager", "pharmacist"] : [])).includes(role) && (!scopedModuleIds || item.id === "hardware" || item.id === "connectors" || item.id === "aiGovernance" || scopedModuleIds.includes(item.id)));
+    return modules.filter(item => 
+      (access[item.id] || []).includes(role) && 
+      (!scopedModuleIds || item.id === "hardware" || item.id === "connectors" || item.id === "aiGovernance" || scopedModuleIds.includes(item.id))
+    );
   }, [role, activeOrganizationType]);
   const activeModule = allowedModules.find(item => item.id === active) ?? allowedModules[0] ?? modules[0];
   const activeBranchId = localization.branchId;
@@ -269,7 +301,7 @@ export default function Home() {
           {offlineDrafts.length > 0 && <Card className="border-amber-200 bg-amber-50/60 shadow-sm"><CardHeader className="flex-row items-center justify-between space-y-0"><div><CardTitle className="text-lg text-amber-950">الوضع المحدود والمسودات المحلية</CardTitle><p className="mt-1 text-sm text-amber-800">يُسمح بالمسودات غير المنظمة فقط. البيع والوصفات والفوترة وإعادة التشغيل تبقى محجوبة حتى عودة الاتصال والتحقق من الصلاحيات والجهاز.</p></div><Badge variant="outline" className="border-amber-300 bg-white text-amber-800">{offlineDrafts.length} مسودة</Badge></CardHeader><CardContent className="space-y-2">{offlineDrafts.slice(0, 4).map(draft => <div key={draft.id} className="flex items-center justify-between gap-3 rounded-xl border border-amber-200 bg-white px-3 py-2 text-sm"><div><span className="font-medium text-slate-800">{draft.module}</span><span className="mr-2 text-xs text-slate-500">{draft.status === "conflict" ? "تعارض يحتاج مراجعة" : "في الانتظار"}</span></div><Button variant="ghost" size="sm" className="text-amber-800" onClick={() => { removeOfflineDraft(draft.id); setOfflineDrafts(current => current.filter(item => item.id !== draft.id)); }}>إزالة</Button></div>)}</CardContent></Card>}
           {user && (serverDrafts.data?.length ?? 0) > 0 && <Card className="border-cyan-200 bg-cyan-50/50 shadow-sm"><CardHeader className="flex-row items-center justify-between space-y-0"><div><CardTitle className="text-lg text-cyan-950">مسودات الخادم القابلة لإعادة التشغيل</CardTitle><p className="mt-1 text-sm text-cyan-800">هذه المسودات تخص خدمة العملاء ومركز الاتصال فقط، ولا تشمل البيع أو الوصفات أو الفوترة. إعادة التشغيل تتطلب اتصالاً وجهازاً موثوقاً.</p></div><Badge variant="outline" className="border-cyan-300 bg-white text-cyan-800">{serverDrafts.data?.length} محفوظة</Badge></CardHeader><CardContent className="space-y-2">{serverDrafts.data?.slice(0, 6).map(draft => <div key={draft.id} className="flex items-center justify-between gap-3 rounded-xl border border-cyan-200 bg-white px-3 py-2 text-sm"><div><span className="font-medium text-slate-800">{draft.module === "customerCare" ? "خدمة العملاء" : "مركز الاتصال"}</span><span className="mr-2 text-xs text-slate-500">{draft.status === "queued" ? "جاهزة للمراجعة وإعادة التشغيل" : draft.status === "replayed" ? "أعيد تشغيلها" : "تحتاج مراجعة"}</span></div>{draft.status === "queued" && <span title="يتطلب جهازاً موثوقاً قبل إعادة التشغيل" className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-medium text-amber-800">محجوبة: تحقق الجهاز مطلوب</span>}</div>)}</CardContent></Card>}
           <section className="grid gap-6 xl:grid-cols-[1.45fr_1fr]">
-            <Card className="border-0 shadow-sm shadow-slate-200/60"><CardHeader className="flex-row items-center justify-between space-y-0"><div><CardTitle className="text-lg">مركز العمليات</CardTitle><p className="mt-1 text-sm text-slate-500">ابدأ من الوحدة المناسبة لإدارة دورة العمل.</p></div><Badge className="bg-emerald-50 text-emerald-700 hover:bg-emerald-50">جاهز للتهيئة</Badge></CardHeader><CardContent className="grid gap-3 sm:grid-cols-2">{[[ShoppingCart,"نقطة البيع","صرف جزئي، خصم MOH، إيصال ETA","pos"],[PackageSearch,"المخزون","FEFO، التشغيلات، الصلاحيات","inventory"],[BrainCircuit,"الوصفة الذكية","رفع ومراجعة الوصفة بالرؤية","prescriptions"],[UserRound,"خدمة العملاء","ملفات العملاء والمتابعة والموافقات","customerCare"],[Activity,"إدارة علاقات العملاء CRM","الفرص والطلبات والتحليلات","crm"],[Users,"الموارد البشرية HR","إدارة الموظفين والصلاحيات","hr"],[Clock,"لوحة الموظف","بصمة الحضور والانصراف (GPS)","employeeDashboard"]].map(([Icon,title,desc,id]) => <button key={title as string} onClick={() => setActive(id as string)} className="group rounded-2xl border border-slate-200 bg-white p-4 text-right transition hover:-translate-y-0.5 hover:border-cyan-300 hover:shadow-md"><div className="mb-4 flex items-center justify-between"><div className="grid h-10 w-10 place-items-center rounded-xl bg-slate-100 text-slate-700 group-hover:bg-cyan-50 group-hover:text-cyan-700"><Icon className="h-5 w-5" /></div><ChevronLeft className="h-4 w-4 text-slate-300 group-hover:text-cyan-600" /></div><p className="font-semibold">{title as string}</p><p className="mt-1 text-xs leading-5 text-slate-500">{desc as string}</p></button>)}</CardContent></Card>
+            <Card className="border-0 shadow-sm shadow-slate-200/60"><CardHeader className="flex-row items-center justify-between space-y-0"><div><CardTitle className="text-lg">مركز العمليات</CardTitle><p className="mt-1 text-sm text-slate-500">ابدأ من الوحدة المناسبة لإدارة دورة العمل.</p></div><Badge className="bg-emerald-50 text-emerald-700 hover:bg-emerald-50">جاهز للتهيئة</Badge></CardHeader><CardContent className="grid gap-3 sm:grid-cols-2">{[[ShoppingCart,"نقطة البيع","صرف جزئي، خصم MOH، إيصال ETA","pos"],[PackageSearch,"المخزون","FEFO، التشغيلات، الصلاحيات","inventory"],[BrainCircuit,"الوصفة الذكية","رفع ومراجعة الوصفة بالرؤية","prescriptions"],[WalletCards,"المالية والتقارير","المصروفات، الرواتب، والتقارير الضريبية","finance"],[ShoppingBag,"المشتريات","طلبات الشراء، الموردين، والاعتمادات","procurement"],[UserRound,"خدمة العملاء","ملفات العملاء والمتابعة والموافقات","customerCare"],[Activity,"إدارة علاقات العملاء CRM","الفرص والطلبات والتحليلات","crm"],[Users,"الموارد البشرية HR","إدارة الموظفين والصلاحيات","hr"],[UserCircle,"لوحة الموظف","بصمة الحضور والانصراف (GPS)","employeeDashboard"]].map(([Icon,title,desc,id]) => <button key={title as string} onClick={() => setActive(id as string)} className="group rounded-2xl border border-slate-200 bg-white p-4 text-right transition hover:-translate-y-0.5 hover:border-cyan-300 hover:shadow-md"><div className="mb-4 flex items-center justify-between"><div className="grid h-10 w-10 place-items-center rounded-xl bg-slate-100 text-slate-700 group-hover:bg-cyan-50 group-hover:text-cyan-700"><Icon className="h-5 w-5" /></div><ChevronLeft className="h-4 w-4 text-slate-300 group-hover:text-cyan-600" /></div><p className="font-semibold">{title as string}</p><p className="mt-1 text-xs leading-5 text-slate-500">{desc as string}</p></button>)}</CardContent></Card>
             <Card className="border-0 bg-[#0d1b2a] text-white shadow-sm shadow-slate-300"><CardHeader><div className="flex items-center gap-3"><div className="grid h-10 w-10 place-items-center rounded-xl bg-cyan-400/15 text-cyan-300"><Activity className="h-5 w-5" /></div><div><CardTitle className="text-white">حالة المنظومة</CardTitle><p className="mt-1 text-sm text-slate-400">مراقبة الخدمات الأساسية</p></div></div></CardHeader><CardContent className="space-y-5"><div><div className="mb-2 flex justify-between text-sm"><span className="text-slate-300">المصادقة والصلاحيات</span><span className="text-emerald-300">محمية</span></div><Progress value={100} className="h-2 bg-white/10" /></div><div><div className="mb-2 flex justify-between text-sm"><span className="text-slate-300">قواعد المخزون FEFO</span><span className="text-emerald-300">مفعلة</span></div><Progress value={100} className="h-2 bg-white/10" /></div><div><div className="mb-2 flex justify-between text-sm"><span className="text-slate-300">التنبيهات المجدولة</span><span className="text-amber-300">بانتظار النشر</span></div><Progress value={45} className="h-2 bg-white/10" /></div><div className="flex items-center gap-2 border-t border-white/10 pt-4 text-xs text-slate-400"><Building2 className="h-4 w-4" /> متعدد الفروع · عزل حسب الدولة · سجل تدقيق</div></CardContent></Card>
           </section>
           <section className="grid gap-6 lg:grid-cols-3"><Card className="border-0 shadow-sm shadow-slate-200/60 lg:col-span-2"><CardHeader className="flex-row items-center justify-between space-y-0"><div><CardTitle className="text-lg">آخر النشاطات</CardTitle><p className="mt-1 text-sm text-slate-500">ستظهر الأحداث بعد تسجيل الدخول وربط الفروع.</p></div><Button variant="ghost" className="text-cyan-700">سجل التدقيق <ChevronLeft className="mr-1 h-4 w-4" /></Button></CardHeader><CardContent><div className="grid place-items-center rounded-2xl border border-dashed border-slate-300 bg-slate-50/70 px-6 py-12 text-center"><FileText className="mb-3 h-8 w-8 text-slate-300" /><p className="font-medium text-slate-600">لا توجد أحداث معروضة بعد</p><p className="mt-1 max-w-sm text-sm leading-6 text-slate-400">لن يتم إنشاء بيانات تجريبية. سيعرض النظام السجلات الفعلية فقط بعد تهيئة الفروع والمستخدمين.</p></div></CardContent></Card><Card className="border-0 shadow-sm shadow-slate-200/60"><CardHeader><CardTitle className="text-lg">قواعد لا يمكن تجاوزها</CardTitle></CardHeader><CardContent className="space-y-4"><div className="flex gap-3"><ShieldCheck className="h-5 w-5 shrink-0 text-emerald-600" /><p className="text-sm leading-6 text-slate-600">الخصم الأقصى <strong>٧٪</strong> وفق محرك MOH على الخادم.</p></div><div className="flex gap-3"><PackageSearch className="h-5 w-5 shrink-0 text-cyan-600" /><p className="text-sm leading-6 text-slate-600">الصرف من أقرب تاريخ انتهاء عبر FEFO.</p></div><div className="flex gap-3"><Stethoscope className="h-5 w-5 shrink-0 text-violet-600" /><p className="text-sm leading-6 text-slate-600">الوصفة الذكية تحتاج مراجعة صيدلي قبل الصرف.</p></div></CardContent></Card></section>
@@ -292,7 +324,8 @@ function ModulePanel({ active, organizationId, branchId, jurisdictionId }: { act
     finance: { title: "المالية والتقارير", description: "تقارير على بيانات فعلية مع حدود دفع وتسوية واضحة.", items: ["دفتر وحركة نقدية", "Meeza / InstaPay", "تسوية ومراجعة"] },
     hr: { title: "الموارد البشرية وإدارة الموظفين", description: "إدارة الحسابات والأدوار وسجلات الموظفين ضمن نطاق المؤسسة.", items: ["حسابات الموظفين", "الأدوار والصلاحيات", "سجلات الموظفين"] },
     employeeDashboard: { title: "لوحة الموظف", description: "بصمة الحضور والانصراف (GPS).", items: ["تسجيل حضور", "تسجيل انصراف", "سجل الحضور الشخصي"] },
-    crm: { title: "إدارة علاقات العملاء CRM", description: "إدارة الفرص والموافقات والطلبات التشغيلية بخصوصية تامة.", items: ["فرص CRM", "موافقات العملاء", "طلبات الشراء"] },
+    crm: { title: "إدارة علاقات العملاء CRM", description: "إدارة الفرص والموافقات والطلبات التشغيلية بخصوصية تامة.", items: ["فرص CRM", "موافقات العملاء", "تتبع المبيعات"] },
+    procurement: { title: "المشتريات والطلبات", description: "إدارة طلبات الشراء، التوريد، والمخزون التشغيلي.", items: ["طلبات الشراء", "اعتماد الموردين", "ميزانية المشتريات"] },
     customerCare: { title: "خدمة العملاء", description: "ملفات العملاء، الموافقات، المتابعة، والشكاوى مع سجل قابل للتدقيق.", items: ["ملف عميل", "متابعة علاجية", "موافقة وخصوصية"] },
     callCentre: { title: "مركز الاتصال", description: "استقبال المكالمات وتوزيع التذاكر ومواعيد إعادة الاتصال دون حفظ تسجيلات حساسة تلقائياً.", items: ["تذكرة جديدة", "أولوية وتصعيد", "موعد متابعة"] },
     catalog: { title: "كتالوج الأصناف", description: "بحث معزول حسب الدولة في الأدوية والتجميل والمستلزمات، مع مصدر ودرجة تحقق لكل صنف.", items: ["أدوية الدولة", "تجميل", "مستلزمات طبية"] },
@@ -326,9 +359,8 @@ function ModulePanel({ active, organizationId, branchId, jurisdictionId }: { act
   if (active === "aiGovernance") return <AiGovernanceWorkspace organizationId={organizationId} />;
   if (active === "aiInsights") return <AiInsightsWorkspace organizationId={organizationId} branchId={branchId} jurisdictionId={jurisdictionId} />;
   if (active === "antiFraud") return <AntiFraudWorkspace organizationId={organizationId} branchId={branchId} />;
-     if (active === "security") return <AuthenticationSettingsWorkspace />;
-   if (active === "connectors") return <ConnectorAccreditationDashboard />;
-
+  if (active === "security") return <AuthenticationSettingsWorkspace />;
+  if (active === "connectors") return <ConnectorAccreditationDashboard />;
   if (active === "supplyChain") return <SupplyChainWorkspace branchId={branchId} jurisdictionId={jurisdictionId} />;
   if (active === "egyptHealthcare") return <EgyptHealthcareWorkspace organizationId={organizationId} branchId={branchId} jurisdictionId={jurisdictionId} />;
   if (active === "insurance") return <InsuranceWorkspace organizationId={organizationId} jurisdictionId={jurisdictionId} branchId={branchId} />;
@@ -338,13 +370,26 @@ function ModulePanel({ active, organizationId, branchId, jurisdictionId }: { act
         <FinanceWorkspace organizationId={organizationId} jurisdictionId={jurisdictionId} branchId={branchId} />
       </LazyWorkspace>
       <LazyWorkspace>
+        <ReportsWorkspace organizationId={organizationId} jurisdictionId={jurisdictionId} branchId={branchId} />
+      </LazyWorkspace>
+      <LazyWorkspace>
         <MiscellaneousExpenseWorkspace organizationId={organizationId} branchId={branchId} />
       </LazyWorkspace>
     </div>
   );
-  if (active === "hr") return <div className="space-y-5"><OrganizationWorkspace organizationId={organizationId} /><OperationsManagementWorkspace organizationId={organizationId} branchId={branchId} jurisdictionId={jurisdictionId} section="hr" /></div>;
+  if (active === "hr") return (
+    <div className="space-y-5">
+      <LazyWorkspace>
+        <OrganizationWorkspace organizationId={organizationId} />
+      </LazyWorkspace>
+      <LazyWorkspace>
+        <OperationsManagementWorkspace organizationId={organizationId} branchId={branchId} jurisdictionId={jurisdictionId} section="hr" />
+      </LazyWorkspace>
+    </div>
+  );
   if (active === "employeeDashboard") return <EmployeeDashboard organizationId={organizationId} />;
   if (active === "crm") return <OperationsManagementWorkspace organizationId={organizationId} branchId={branchId} jurisdictionId={jurisdictionId} section="crm" />;
+  if (active === "procurement") return <OperationsManagementWorkspace organizationId={organizationId} branchId={branchId} jurisdictionId={jurisdictionId} section="procurement" />;
   if (active === "promotions") return <PromotionsWorkspace organizationId={organizationId} jurisdictionId={jurisdictionId} branchId={branchId} />;
   if (active === "whatsapp") return <WhatsAppManagementWorkspace organizationId={organizationId} />;
   return <Card className="overflow-hidden border-0 bg-white shadow-sm shadow-slate-200/60"><CardContent className="p-0"><div className="flex flex-col gap-5 p-5 sm:flex-row sm:items-center sm:justify-between sm:p-6"><div><div className="mb-2 flex items-center gap-2"><span className="h-2 w-2 rounded-full bg-cyan-500" /><span className="text-xs font-semibold uppercase tracking-[0.14em] text-cyan-700">مساحة عمل</span></div><h2 className="text-xl font-bold tracking-tight">{panel.title}</h2><p className="mt-2 max-w-2xl text-sm leading-6 text-slate-500">{panel.description}</p></div><div className="grid grid-cols-1 gap-2 sm:min-w-[300px] sm:grid-cols-3">{panel.items.map(item => <div key={item} className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-3 text-center text-xs font-medium text-slate-600">{item}</div>)}</div></div></CardContent></Card>;
@@ -386,7 +431,7 @@ function PrescriptionWorkspace() {
   const [intakeId, setIntakeId] = useState<number | null>(null);
   const [branchId, setBranchId] = useState("");
   const [patientId, setPatientId] = useState("");
-  const [prescriptionCode, setPrescriptionCode] = useState(() => `ALD-${Date.now()}`);
+  const [prescriptionCode, setPrescriptionCode] = useState(() => `MED-${Date.now()}`);
   const [medicationText, setMedicationText] = useState("");
   const [dosage, setDosage] = useState("");
   const [frequency, setFrequency] = useState("");
@@ -413,7 +458,7 @@ function PrescriptionWorkspace() {
   const createElectronicPrescription = async () => {
     const branch = Number(branchId); const patient = Number(patientId);
     if (!localization.jurisdictionId || !Number.isInteger(branch) || !Number.isInteger(patient) || !medicationText.trim() || !dosage.trim() || !frequency.trim() || !duration.trim()) { setStatus("أكمل الاختصاص والفرع والمريض وبيانات الدواء المطلوبة."); return; }
-    try { const result = await createPrescription.mutateAsync({ branchId: branch, jurisdictionId: localization.jurisdictionId, patientId: patient, prescriptionCode, lines: [{ medicationText, dosage, frequency, duration, quantity: Number(quantity) }] }); setStatus(`أُنشئت الوصفة ${result.prescriptionCode} بحالة انتظار التحقق الصيدلي.`); setMedicationText(""); setDosage(""); setFrequency(""); setDuration(""); setQuantity("1"); setPrescriptionCode(`ALD-${Date.now()}`); } catch (error) { setStatus(error instanceof Error ? error.message : "تعذر إنشاء الوصفة الإلكترونية"); }
+    try { const result = await createPrescription.mutateAsync({ branchId: branch, jurisdictionId: localization.jurisdictionId, patientId: patient, prescriptionCode, lines: [{ medicationText, dosage, frequency, duration, quantity: Number(quantity) }] }); setStatus(`أُنشئت الوصفة ${result.prescriptionCode} بحالة انتظار التحقق الصيدلي.`); setMedicationText(""); setDosage(""); setFrequency(""); setDuration(""); setQuantity("1"); setPrescriptionCode(`MED-${Date.now()}`); } catch (error) { setStatus(error instanceof Error ? error.message : "تعذر إنشاء الوصفة الإلكترونية"); }
   };
   return <WorkspaceShell title="الوصفات الإلكترونية والصرف الآمن"><div className="space-y-5"><div className="rounded-2xl border border-cyan-100 bg-cyan-50/50 p-4"><div className="mb-2 flex items-center gap-2"><BrainCircuit className="h-5 w-5 text-cyan-600" /><p className="font-semibold text-cyan-950">استقبال وصفة مصورة</p></div><p className="mb-3 text-xs leading-5 text-slate-600">الاستخراج مساعد فقط؛ لا ينشئ وصفة رسمية ولا بيعاً قبل مراجعة بشرية.</p><label className="block text-sm font-medium text-slate-700">رقم الفرع<input className="mt-2 w-full rounded-xl border border-slate-200 px-3 py-2" type="number" min="1" value={branchId} onChange={event => setBranchId(event.target.value)} placeholder="أدخل رقم الفرع" /></label><label className="mt-3 flex cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed border-cyan-200 bg-white px-6 py-7 text-center hover:bg-cyan-50"><UploadIcon /><span className="mt-2 font-semibold text-slate-700">اختر صورة الوصفة</span><input className="hidden" type="file" accept="image/jpeg,image/png,image/webp" onChange={event => { const file = event.target.files?.[0]; if (file) handleFile(file); }} /></label><div className="mt-3 flex flex-wrap items-center gap-3"><Badge variant="outline">{status}</Badge>{intakeId && <Button onClick={runExtraction} disabled={extract.isPending}>{extract.isPending ? "جارٍ التحليل…" : "تحليل الوصفة"}</Button>}</div>{resultText && <pre className="mt-3 max-h-52 overflow-auto rounded-xl bg-slate-950 p-4 text-left text-xs text-cyan-100" dir="ltr">{resultText}</pre>}</div><div className="grid gap-4 lg:grid-cols-2"><div className="rounded-2xl border border-slate-200 bg-white p-4"><div className="mb-3 flex items-center gap-2"><Stethoscope className="h-5 w-5 text-teal-600" /><p className="font-semibold">إنشاء وصفة الطبيب</p></div><p className="mb-3 text-xs leading-5 text-slate-500">تُحفظ كـ PENDING_VERIFICATION، ولا تظهر للصيدلية حتى اعتمادها من مستخدم صيدلي مخوّل.</p><div className="grid gap-2 sm:grid-cols-2"><Input value={patientId} onChange={e => setPatientId(e.target.value)} placeholder="معرّف المريض الداخلي" aria-label="معرف المريض" type="number" /><Input value={prescriptionCode} onChange={e => setPrescriptionCode(e.target.value)} placeholder="رمز الوصفة" aria-label="رمز الوصفة" /><Input value={medicationText} onChange={e => setMedicationText(e.target.value)} placeholder="اسم الدواء" aria-label="اسم الدواء" /><Input value={dosage} onChange={e => setDosage(e.target.value)} placeholder="الجرعة" aria-label="الجرعة" /><Input value={frequency} onChange={e => setFrequency(e.target.value)} placeholder="التكرار" aria-label="التكرار" /><Input value={duration} onChange={e => setDuration(e.target.value)} placeholder="المدة" aria-label="المدة" /><Input value={quantity} onChange={e => setQuantity(e.target.value)} placeholder="الكمية" aria-label="الكمية" type="number" min="0.001" step="0.001" /></div><Button className="mt-3 w-full bg-[#0d1b2a]" onClick={createElectronicPrescription} disabled={createPrescription.isPending}>{createPrescription.isPending ? "جارٍ الحفظ…" : "إرسال للتحقق الصيدلي"}</Button></div><div className="rounded-2xl border border-slate-200 bg-slate-50 p-4"><div className="mb-3 flex items-center gap-2"><Receipt className="h-5 w-5 text-amber-600" /><p className="font-semibold">وصفات الصيدلية للمريض</p></div><p className="mb-3 text-xs leading-5 text-slate-500">البحث لا يعمل إلا داخل الفرع والاختصاص الحاليين وبمعرّف مريض نشط. التكامل الحكومي والتأميني مغلق fail-closed.</p>{accessible.isLoading ? <p className="text-sm text-slate-500">جارٍ البحث…</p> : accessible.data?.length ? <div className="space-y-3">{accessible.data.map(item => <div key={item.prescription.id} className="rounded-xl border border-white bg-white p-3"><div className="flex items-start justify-between gap-2"><div><p className="font-medium">{item.prescription.prescriptionCode}</p><p className="text-xs text-slate-500">{item.prescription.status} · {new Date(item.prescription.createdAt).toLocaleString()}</p></div><div className="flex items-center gap-2"><Badge variant="secondary">{item.lines.length} بند</Badge>{item.prescription.status === "PENDING_VERIFICATION" && <Button size="sm" disabled={verifyPrescription.isPending} onClick={() => verifyPrescription.mutate({ prescriptionId: item.prescription.id })}>تحقق صيدلي</Button>}</div></div>{item.lines.map(line => <div key={line.id} className="mt-2 rounded-lg bg-slate-50 p-2 text-xs"><p className="font-medium">{line.medicationText} · {line.dosage}</p><p>{line.frequency} · {line.duration} · المتبقي {Number(line.quantity) - Number(line.dispensedQuantity)}</p>{line.status !== "DISPENSED" && <Button size="sm" className="mt-2" disabled={dispense.isPending} onClick={() => dispense.mutate({ prescriptionId: item.prescription.id, lineId: line.id, quantity: Number(line.quantity) - Number(line.dispensedQuantity) })}>صرف المتبقي</Button>}</div>)}</div>)}</div> : <p className="rounded-xl border border-dashed border-slate-300 p-5 text-center text-sm text-slate-500">أدخل معرّف مريض لعرض الوصفات التي تم التحقق منها فقط.</p>}</div></div></div></WorkspaceShell>;
 }
