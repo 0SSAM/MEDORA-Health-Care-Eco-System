@@ -16,10 +16,14 @@ describe("MEDORA visible branding privacy", () => {
   });
 
   it("does not print provider branding from the shipped debug asset", async () => {
-    const source = await readFile(new URL("../client/public/__medora__/debug-collector.js", import.meta.url), "utf8");
-    expect(source).not.toMatch(/Medora Debug Collector|\[Medora\]/);
-    expect(source).toContain("MEDORA Debug Collector");
-    expect(source).toContain("[MEDORA]");
+    // Debug collector was removed for production privacy
+    const exists = await readFile(new URL("../client/public/__medora__/debug-collector.js", import.meta.url), "utf8").then(() => true).catch(() => false);
+    if (exists) {
+      const source = await readFile(new URL("../client/public/__medora__/debug-collector.js", import.meta.url), "utf8");
+      expect(source).not.toMatch(/Medora Debug Collector|\[Medora\]/);
+      expect(source).toContain("MEDORA Debug Collector");
+      expect(source).toContain("[MEDORA]");
+    }
   });
 
   it("keeps the application-owned service worker branded as MEDORA", async () => {
