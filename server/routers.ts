@@ -221,7 +221,7 @@ export const appRouter = router({
       ctx.res.cookie(INTERNAL_SESSION_COOKIE, token, { httpOnly: true, sameSite: "lax", secure: isSecureRequest(ctx.req), path: "/" });
       return { success: true as const, mode: "internal" as const, scope, accountType: credential.accountType, sessionMode: credential.accountType === "showcase" ? "showcase" as const : "production" as const };
       } catch (error) {
-        console.error("[Auth] internal login unavailable:", safeErrorLabel(error));
+        console.error("[Auth] internal login unavailable:", error);
         return { success: false as const, message: "تعذر التحقق من البيانات حالياً. تأكد من الاتصال وحاول مرة أخرى." };
       }
     }),

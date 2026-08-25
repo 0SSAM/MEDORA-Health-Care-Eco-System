@@ -66,7 +66,9 @@ function App() {
           <TooltipProvider>
             <Toaster />
             <SecurityOverlay />
-            <AssistantSidebar />
+            <ErrorBoundary fallback={<div className="hidden" />}>
+              <AssistantSidebar />
+            </ErrorBoundary>
             <Router />
           </TooltipProvider>
         </LocalizationProvider>

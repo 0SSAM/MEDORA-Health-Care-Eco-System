@@ -4,7 +4,7 @@
 import { TRPCError } from "@trpc/server";
 import { and, eq, sql } from "drizzle-orm";
 import { z } from "zod";
-import { miscellaneousExpenses, branchUsers, branches, organizationMemberships, auditLogs } from "../../drizzle/schema";
+import { miscellaneousExpenses, branchUsers, branches, organizationMemberships, inventoryBatches, auditLogs } from "../../drizzle/schema";
 import { getDb } from "../db";
 import { protectedProcedure, router } from "../_core/trpc";
 import { canAccessBranch } from "../domain/branch-access";

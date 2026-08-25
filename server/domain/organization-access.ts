@@ -54,7 +54,7 @@ export const ROLE_CAPABILITIES: Record<OrganizationRole, readonly OrganizationCa
     "view_reports", "manage_payroll"
   ],
   operations_manager: [
-    "view_workspace", "view_audit",
+    "view_workspace",
     "inventory_transfer_create", "inventory_transfer_approve", "inventory_transfer_dispatch", "inventory_transfer_receive",
     "inventory_adjustment_create", "inventory_adjustment_approve",
     "finance_expense_create", "finance_expense_approve", "finance_expense_cancel",
@@ -106,10 +106,10 @@ export async function checkCapability(
   organizationId: number,
   capability: OrganizationCapability,
 ) {
-  const { organizationMemberships, internalCredentials } = await import("../../drizzle/schema");
+  const { organizationMemberships, internalCredentials, users } = await import("../../drizzle/schema");
   const { eq, and } = await import("drizzle-orm");
   
-  const user = (await db.select({ role: internalCredentials.accountType }).from(internalCredentials).where(eq(internalCredentials.userId, userId)).limit(1))[0];
+  const user = (await db.select({ role: users.role }).from(users).where(eq(users.id, userId)).limit(1))[0];
   if (user?.role === "admin") return true;
 
   const memberships = await db.select().from(organizationMemberships).where(

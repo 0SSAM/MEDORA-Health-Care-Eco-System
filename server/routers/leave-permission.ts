@@ -2,10 +2,11 @@ import { z } from "zod";
 import { router, protectedProcedure } from "../_core/trpc";
 import { getDb } from "../db";
 import * as schema from "../../drizzle/schema";
-import { eq, and, desc } from "drizzle-orm";
+import { eq, and, desc, sql } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
 import { checkCapability } from "../domain/organization-access";
 import { emitManagerNotification } from "../domain/notification-emitter";
+import { writeDetailedAudit } from "../domain/audit-policy";
 
 export const leavePermissionRouter = router({
   // Leave Requests
@@ -45,7 +46,19 @@ export const leavePermissionRouter = router({
       const profile = (await db.select().from(schema.employeeProfiles).where(and(eq(schema.employeeProfiles.userId, ctx.user.id), eq(schema.employeeProfiles.organizationId, input.organizationId))).limit(1))[0];
       if (!profile) throw new TRPCError({ code: "FORBIDDEN", message: "Employee profile not found" });
 
-      const [request] = await db.insert(schema.employeeLeaveRequests).values({
+      // Check for overlapping leave requests
+      const overlap = await db.select().from(schema.employeeLeaveRequests).where(and(
+        eq(schema.employeeLeaveRequests.employeeProfileId, profile.id),
+        eq(schema.employeeLeaveRequests.status, "approved"),
+        sql`${schema.employeeLeaveRequests.startsAt} <= ${input.endsAt}`,
+        sql`${schema.employeeLeaveRequests.endsAt} >= ${input.startsAt}`
+      )).limit(1);
+
+      if (overlap.length) {
+        throw new TRPCError({ code: "CONFLICT", message: "يوجد طلب إجازة معتمد يتداخل مع هذه التواريخ." });
+      }
+
+      const inserted = await db.insert(schema.employeeLeaveRequests).values({
         organizationId: input.organizationId,
         branchId: input.branchId,
         employeeProfileId: profile.id,
@@ -55,6 +68,17 @@ export const leavePermissionRouter = router({
         status: "submitted",
         reasonEncrypted: input.reason,
         createdByUserId: ctx.user.id
+      });
+
+      const requestId = Number(inserted[0].insertId);
+
+      await writeDetailedAudit(db, {
+        userId: ctx.user.id,
+        organizationId: input.organizationId,
+        branchId: input.branchId,
+        action: "employee_leave_submitted",
+        entityType: "employee_leave_request",
+        entityId: requestId
       });
 
       await emitManagerNotification(db, {
@@ -127,15 +151,39 @@ export const leavePermissionRouter = router({
 
       const status = input.approve ? "approved" : "rejected";
       
-      if (input.type === "leave") {
-        await db.update(schema.employeeLeaveRequests)
-          .set({ status, decidedByUserId: ctx.user.id, decidedAt: new Date() })
-          .where(and(eq(schema.employeeLeaveRequests.id, input.requestId), eq(schema.employeeLeaveRequests.organizationId, input.organizationId)));
-      } else {
-        await db.update(schema.employeePermissionRequests)
-          .set({ status, decidedByUserId: ctx.user.id, decidedAt: new Date() })
-          .where(and(eq(schema.employeePermissionRequests.id, input.requestId), eq(schema.employeePermissionRequests.organizationId, input.organizationId)));
-      }
+      await db.transaction(async (tx) => {
+        if (input.type === "leave") {
+          const request = (await tx.select().from(schema.employeeLeaveRequests)
+            .where(and(eq(schema.employeeLeaveRequests.id, input.requestId), eq(schema.employeeLeaveRequests.organizationId, input.organizationId)))
+            .limit(1))[0];
+          
+          if (!request) throw new TRPCError({ code: "NOT_FOUND", message: "طلب الإجازة غير موجود." });
+          if (request.status !== "submitted") throw new TRPCError({ code: "PRECONDITION_FAILED", message: "لا يمكن تعديل طلب تمت معالجته بالفعل." });
+
+          await tx.update(schema.employeeLeaveRequests)
+            .set({ status, decidedByUserId: ctx.user.id, decidedAt: new Date() })
+            .where(eq(schema.employeeLeaveRequests.id, input.requestId));
+        } else {
+          const request = (await tx.select().from(schema.employeePermissionRequests)
+            .where(and(eq(schema.employeePermissionRequests.id, input.requestId), eq(schema.employeePermissionRequests.organizationId, input.organizationId)))
+            .limit(1))[0];
+          
+          if (!request) throw new TRPCError({ code: "NOT_FOUND", message: "طلب الاستئذان غير موجود." });
+          if (request.status !== "submitted") throw new TRPCError({ code: "PRECONDITION_FAILED", message: "لا يمكن تعديل طلب تمت معالجته بالفعل." });
+
+          await tx.update(schema.employeePermissionRequests)
+            .set({ status, decidedByUserId: ctx.user.id, decidedAt: new Date() })
+            .where(eq(schema.employeePermissionRequests.id, input.requestId));
+        }
+
+        await writeDetailedAudit(tx, {
+          userId: ctx.user.id,
+          organizationId: input.organizationId,
+          action: `employee_${input.type}_${status}`,
+          entityType: `employee_${input.type}_request`,
+          entityId: input.requestId
+        });
+      });
 
       return { success: true };
     })

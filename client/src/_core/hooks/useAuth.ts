@@ -9,7 +9,7 @@ import { clearSessionAuthHeaderCache } from "@/lib/sessionAuth";
 import { TRPCClientError } from "@trpc/client";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
-export const AUTH_CHECK_TIMEOUT_MS = 5_000;
+const AUTH_CHECK_TIMEOUT_MS = 1_500;
 
 type UseAuthOptions = {
   redirectOnUnauthenticated?: boolean;
@@ -27,7 +27,7 @@ export function useAuth(options?: UseAuthOptions) {
   const meQuery = trpc.auth.me.useQuery(undefined, {
     retry: false,
     refetchOnWindowFocus: false,
-    staleTime: Infinity, // The session state is handled by global redirect logic in main.tsx
+    staleTime: 30_000, // Revert to reasonable stale time
   });
   const [authCheckTimedOut, setAuthCheckTimedOut] = useState(false);
 

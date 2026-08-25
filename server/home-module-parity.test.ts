@@ -6,7 +6,8 @@ const homeSource = readFileSync(resolve(process.cwd(), "client/src/pages/Home.ts
 
 describe("Home module parity", () => {
   it("routes inventory to the operational supply-chain workspace", () => {
-    expect(homeSource).toContain('if (active === "inventory") return <SupplyChainWorkspace');
+    expect(homeSource).toContain('if (active === "inventory") return (');
+    expect(homeSource).toContain('<InventoryTransferWorkspace');
   });
 
   it("keeps organization module ids represented in the module catalog", () => {

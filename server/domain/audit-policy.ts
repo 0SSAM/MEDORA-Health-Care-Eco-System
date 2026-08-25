@@ -31,9 +31,12 @@ export async function writeDetailedAudit(db: any, input: {
     branchId: input.branchId ?? null, 
     jurisdictionId: input.jurisdictionId ?? null, 
     requestId: `${input.entityType}:${entityIdStr}`, 
-    createdAt 
+    createdAt,
+    ...(input.metadata ? { metadata: input.metadata } : {})
   });
   
+  // Note: Detailed metadata is currently not persisted in the database schema to maintain high-speed auditing,
+  // but it is included in the cryptographic hash for integrity verification.
   await db.insert(auditLogs).values({ 
     userId: input.userId, 
     organizationId: input.organizationId, 

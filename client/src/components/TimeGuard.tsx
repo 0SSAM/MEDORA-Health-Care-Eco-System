@@ -27,7 +27,7 @@ export function TimeGuard({ children, organizationId, branchId }: { children: Re
   const reportMutation = trpc.timeGuard.reportTampering.useMutation();
 
   useEffect(() => {
-    if (timeQuery.data) {
+    if (timeQuery.data && !timeQuery.isStale && !timeQuery.isLoading) {
       const serverTime = timeQuery.data.timestamp;
       const clientTime = Date.now();
       const driftSeconds = Math.abs(clientTime - serverTime) / 1000;
