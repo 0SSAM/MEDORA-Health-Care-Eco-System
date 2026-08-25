@@ -86,8 +86,8 @@ DATABASE_URL=mysql://medora_app:ضع_كلمة_المرور@127.0.0.1:3306/medora
 JWT_SECRET=ضع_قيمة_عشوائية_طويلة_وفريدة
 
 VITE_APP_ID=معرّف_تطبيق_OAuth
-OAUTH_SERVER_URL=https://api.manus.im
-VITE_OAUTH_PORTAL_URL=https://oauth.manus.im
+OAUTH_SERVER_URL=https://api.medora.local
+VITE_OAUTH_PORTAL_URL=https://oauth.medora.local
 OWNER_OPEN_ID=معرّف_المالك
 OWNER_NAME=Hossam Naeim Osman
 

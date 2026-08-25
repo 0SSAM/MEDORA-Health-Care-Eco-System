@@ -9,7 +9,7 @@ function isSafeStorageKey(key: string): boolean {
 }
 
 export function registerStorageProxy(app: Express) {
-  app.get("/manus-storage/*", async (req, res) => {
+  app.get("/medora-storage/*", async (req, res) => {
     const key = (req.params as Record<string, string>)[0];
     if (!key || !isSafeStorageKey(key)) {
       res.status(400).send("Invalid storage key");

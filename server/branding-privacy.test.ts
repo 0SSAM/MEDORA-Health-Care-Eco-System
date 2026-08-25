@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 describe("MEDORA visible branding privacy", () => {
   it("does not expose provider branding in the login dialog UI copy", async () => {
     const source = await readFile(new URL("../client/src/components/SecureLoginDialog.tsx", import.meta.url), "utf8");
-    expect(source).not.toMatch(/Manus|Please login with|Login with/);
+    expect(source).not.toMatch(/Medora|Please login with|Login with/);
     expect(source).toContain("تسجيل الدخول الآمن للمتابعة");
     expect(source).toContain("تسجيل الدخول");
   });
@@ -12,12 +12,12 @@ describe("MEDORA visible branding privacy", () => {
   it("keeps the shipped application title driven by MEDORA branding", async () => {
     const source = await readFile(new URL("../client/index.html", import.meta.url), "utf8");
     expect(source).toContain("%VITE_APP_TITLE%");
-    expect(source).not.toMatch(/<title>[^<]*manus[^<]*<\/title>/i);
+    expect(source).not.toMatch(/<title>[^<]*medora[^<]*<\/title>/i);
   });
 
   it("does not print provider branding from the shipped debug asset", async () => {
-    const source = await readFile(new URL("../client/public/__manus__/debug-collector.js", import.meta.url), "utf8");
-    expect(source).not.toMatch(/Manus Debug Collector|\[Manus\]/);
+    const source = await readFile(new URL("../client/public/__medora__/debug-collector.js", import.meta.url), "utf8");
+    expect(source).not.toMatch(/Medora Debug Collector|\[Medora\]/);
     expect(source).toContain("MEDORA Debug Collector");
     expect(source).toContain("[MEDORA]");
   });

@@ -2,7 +2,7 @@
 
 ## Public page
 
-URL: https://3000-i5aov69wzw75qujx7lotd-c01336b4.sg1.manus.computer/
+URL: https://3000-i5aov69wzw75qujx7lotd-c01336b4.sg1.medora.local/
 
 The public landing page loaded successfully in the browser. It displayed the bilingual MEDORA title, Arabic-first hero copy, language switcher, secure login link, and the message that access is limited to authorized employee or administrator accounts. No protected operational data was visible before authentication.
 
@@ -36,7 +36,7 @@ After dependency and Vite chunking updates, the public landing page initially sh
 
 ## Pull Request and staging follow-up — 2026-08-16
 
-A pull request was created at https://github.com/0SSAM/MEDORA-Integrated-Health-System/pull/8 from `manus/full-system-audit-pr-2026-08-16`. GitHub reports the PR as mergeable but blocked with `REVIEW_REQUIRED`; it must not be merged by bypassing the review gate.
+A pull request was created at https://github.com/0SSAM/MEDORA-Integrated-Health-System/pull/8 from `medora/full-system-audit-pr-2026-08-16`. GitHub reports the PR as mergeable but blocked with `REVIEW_REQUIRED`; it must not be merged by bypassing the review gate.
 
 The database-dependent integration run was executed safely without substituting the configured application `DATABASE_URL`: 9 tests passed and 5 remained skipped because `TEST_DATABASE_URL` and `TEST_DATABASE_ISOLATED` were not supplied. The five tests require an authorized isolated staging database and use temporary or transactional probes only.
 

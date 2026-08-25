@@ -86,7 +86,7 @@ server/_core/map.ts
 server/_core/notification.ts
 server/_core/sdk.ts
 server/_core/systemRouter.ts
-server/_core/types/manusTypes.ts
+server/_core/types/medoraTypes.ts
 server/_core/voiceTranscription.ts
 server/auth.logout.test.ts
 server/domain/erp.test.ts

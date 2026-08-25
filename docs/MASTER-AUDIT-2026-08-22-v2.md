@@ -556,7 +556,7 @@ The following changes were made locally and are ready to be reviewed/applied:
 2. Remove the literal showcase password from documentation.
 3. Make showcase E2E credentials environment-managed.
 4. Make local test showcase credentials random per process.
-5. Gate the Manus preview bearer-token fallback behind development/explicit preview configuration.
+5. Gate the Medora preview bearer-token fallback behind development/explicit preview configuration.
 6. Remove persistence of the authenticated user object into `localStorage`.
 7. Disable the production localStorage fallback for offline drafts; production requires IndexedDB.
 8. Add an isolated MySQL service to the database lifecycle CI job.

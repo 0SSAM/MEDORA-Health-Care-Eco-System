@@ -23,7 +23,7 @@ type InvoiceResult = { invoiceId: number; status: "ISSUED_LOCAL"; externalSubmis
 type TemplateValues = { nameAr: string; nameEn: string; addressAr: string; addressEn: string; taxRegistrationNumber: string; phone: string; email: string; logoUrl: string; accentColor: string; footerAr: string; footerEn: string };
 type PaperSize = "a4" | "a5" | "receipt80";
 const PAPER_FORMATS: Record<PaperSize, string | number[]> = { a4: "a4", a5: "a5", receipt80: [80, 200] };
-const ARABIC_FONT_URL = "/manus-storage/NotoSansArabic-Regular_86cf5a4e.ttf";
+const ARABIC_FONT_URL = "/assets/NotoSansArabic-Regular_86cf5a4e.ttf";
 let arabicFontDataPromise: Promise<string | null> | null = null;
 
 const emptyTemplate: TemplateValues = { nameAr: "قالب الفاتورة الضريبية", nameEn: "Tax Invoice Template", addressAr: "", addressEn: "", taxRegistrationNumber: "", phone: "", email: "", logoUrl: "", accentColor: "#0f766e", footerAr: "فاتورة ضريبية محلية - الإرسال الرسمي غير مفعّل", footerEn: "Local tax invoice - official submission is not enabled" };
@@ -69,7 +69,7 @@ export function TaxInvoiceWorkspace({ branchId, jurisdictionId }: { branchId: nu
   const [notes, setNotes] = useState("");
   const [returnResult, setReturnResult] = useState<string | null>(null);
   const [returnId, setReturnId] = useState<number | null>(null);
-  const [invoiceNumber, setInvoiceNumber] = useState(() => `ALD-TAX-${Date.now()}`);
+  const [invoiceNumber, setInvoiceNumber] = useState(() => `MED-TAX-${Date.now()}`);
   const [invoiceType, setInvoiceType] = useState<InvoiceType>("sales");
   const [currencyCode, setCurrencyCode] = useState("EGP");
   const [sku, setSku] = useState("");

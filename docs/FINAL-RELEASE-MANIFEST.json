@@ -98,7 +98,7 @@
       "bytes": 0
     },
     {
-      "path": "client/public/__manus__/debug-collector.js",
+      "path": "client/public/__medora__/debug-collector.js",
       "sha256": "ddd6305e0ec7307f1da293329fdd784dfbe72537d0436b6c34697f9212bd6cdd",
       "bytes": 23401
     },
@@ -1853,7 +1853,7 @@
       "bytes": 137
     },
     {
-      "path": "server/_core/types/manusTypes.ts",
+      "path": "server/_core/types/medoraTypes.ts",
       "sha256": "d073995b792a4376177bf7270cbcf3a670d4e72efb8eb6a83ecb55043cc729c3",
       "bytes": 1406
     },

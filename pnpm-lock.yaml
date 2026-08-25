@@ -275,7 +275,7 @@ importers:
       vite:
         specifier: ^8.2.1
         version: 8.2.1(@types/node@24.7.0)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.20.6)
-      vite-plugin-manus-runtime:
+      vite-plugin-medora-runtime:
         specifier: 0.0.59
         version: 0.0.59
       vitest:
@@ -4154,7 +4154,7 @@ packages:
   victory-vendor@36.9.2:
     resolution: {integrity: sha512-PnpQQMuxlwYdocC8fIJqVXvkeViHYzotI+NJrCuav0ZYFoq912ZHBk3mCeuj+5/VpodOjPe1z0Fk2ihgzlXqjQ==}
 
-  vite-plugin-manus-runtime@0.0.59:
+  vite-plugin-medora-runtime@0.0.59:
     resolution: {integrity: sha512-rgEEON7T63R+/2SHAJ0YoKR0skSWKYuCuIZBeRcVnjSWGsZsTigXFHfjpe9/wJCJAeqPVAUhTv0D+CTlPxnCiw==}
 
   vite@8.2.1:
@@ -8431,7 +8431,7 @@ snapshots:
       d3-time: 3.1.0
       d3-timer: 3.0.1
 
-  vite-plugin-manus-runtime@0.0.59:
+  vite-plugin-medora-runtime@0.0.59:
     dependencies:
       '@medv/finder': 4.0.2
       clsx: 2.1.1

@@ -16,7 +16,7 @@ const staffUser: TestUser = {
   openId: "compliance-contract-user",
   email: "compliance-contract@example.com",
   name: "Compliance Contract User",
-  loginMethod: "manus",
+  loginMethod: "medora",
   role: "manager",
   createdAt: new Date(0),
   updatedAt: new Date(0),

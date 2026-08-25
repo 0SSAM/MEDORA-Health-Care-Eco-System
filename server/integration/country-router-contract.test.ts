@@ -12,7 +12,7 @@ const user: TestUser = {
   openId: "country-contract-user",
   email: "country@example.com",
   name: "Country Contract User",
-  loginMethod: "manus",
+  loginMethod: "medora",
   role: "cashier",
   createdAt: new Date(0),
   updatedAt: new Date(0),

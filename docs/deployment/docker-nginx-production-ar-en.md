@@ -77,7 +77,7 @@ Do not commit `medora.env`, paste it into an issue, include it in a Docker build
 
 ## 4. Build and run the MEDORA image | بناء وتشغيل الصورة
 
-Clone or fetch only the approved integration/release ref. The current synchronization branch is `manus/auto-sync-medora`; production should normally use an approved tag or reviewed commit rather than an unreviewed branch.
+Clone or fetch only the approved integration/release ref. The current synchronization branch is `integration/auto-sync-medora`; production should normally use an approved tag or reviewed commit rather than an unreviewed branch.
 
 ```bash
 git clone https://github.com/0SSAM/MEDORA-Integrated-Health-System.git /opt/medora/source

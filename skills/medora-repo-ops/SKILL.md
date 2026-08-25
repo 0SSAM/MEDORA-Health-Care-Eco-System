@@ -10,7 +10,7 @@ Operate the MEDORA health-system monorepo: React + Vite frontend, Express + Driz
 ## Hard rules
 
 - Work only inside the local clone (default path `/home/ubuntu/medora-masterpiece`).
-- Push changes ONLY to the integration branch (`manus/auto-sync-medora`); never push directly to `main`.
+- Push changes ONLY to the integration branch (`integration/auto-sync-medora`); never push directly to `main`.
 - Deliver work through one PR from the integration branch to `main`. Do not merge unless the user explicitly authorizes an admin-override merge (`gh pr merge --admin`).
 - Never commit secrets, `.env` files, `node_modules`, dependency caches, build artifacts (`dist/`), local logs, or `test-results/`.
 - All user-facing content must be bilingual (Arabic + English) and use the branding **MEDORA | ميدورا**.
@@ -52,8 +52,8 @@ Choose by the user's request:
 ## Workflow 1: Full-repo synchronization and enrichment
 
 1. `gh repo clone` if missing, then `git fetch origin` and inspect `origin/main` for new commits.
-2. Create or update the integration branch: `git checkout -b manus/auto-sync-medora origin/main`, push with `--set-upstream`.
-3. Open PR: `gh pr create --base main --head manus/auto-sync-medora` (bilingual title).
+2. Create or update the integration branch: `git checkout -b integration/auto-sync-medora origin/main`, push with `--set-upstream`.
+3. Open PR: `gh pr create --base main --head integration/auto-sync-medora` (bilingual title).
 4. Enrich repo metadata: bilingual README (value proposition, product promise table, architecture, quick-start), CONTRIBUTING.md, SECURITY.md, PR template, repository description, ~20 topics, homepage URL.
 
 ## Workflow 2: Brand Integrity and Maintenance

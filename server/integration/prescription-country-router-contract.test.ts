@@ -13,7 +13,7 @@ const user: TestUser = {
   openId: "prescription-country-contract-user",
   email: "prescription@example.com",
   name: "Prescription Contract User",
-  loginMethod: "manus",
+  loginMethod: "medora",
   role: "pharmacist",
   createdAt: new Date(0),
   updatedAt: new Date(0),

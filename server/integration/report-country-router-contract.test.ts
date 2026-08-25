@@ -11,7 +11,7 @@ const user: TestUser = {
   openId: "report-country-contract-user",
   email: "report-country@example.com",
   name: "Report Country Contract User",
-  loginMethod: "manus",
+  loginMethod: "medora",
   role: "manager",
   createdAt: new Date(0),
   updatedAt: new Date(0),

@@ -9,7 +9,7 @@ This package is the consolidated engineering release candidate after the deep re
 ## Changes already applied in the working copy
 
 - Removed authentication user-info persistence from browser localStorage.
-- Restricted Manus preview/session bearer fallback to development or explicit preview configuration.
+- Restricted Medora preview/session bearer fallback to development or explicit preview configuration.
 - Disabled localStorage as an offline queue fallback in production; production requires IndexedDB.
 - Removed repository-stored showcase password from documentation and E2E tests.
 - Generate CI/test credentials dynamically instead of committing fixed credentials.

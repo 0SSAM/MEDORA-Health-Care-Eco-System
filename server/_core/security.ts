@@ -123,7 +123,7 @@ export function createSecurityMiddleware() {
     if (req.protocol === "https") {
       res.set("Strict-Transport-Security", "max-age=31536000; includeSubDomains");
     }
-    if (path.startsWith("/api/") || path.startsWith("/manus-storage/")) res.set("Cache-Control", "no-store");
+    if (path.startsWith("/api/") || path.startsWith("/medora-storage/")) res.set("Cache-Control", "no-store");
     next();
   };
 }

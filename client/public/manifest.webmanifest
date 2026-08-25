@@ -8,5 +8,5 @@
   "theme_color": "#123B50",
   "lang": "ar",
   "dir": "rtl",
-  "icons": [{ "src": "/manus-storage/medora-system-icon_1c63a72c.png", "sizes": "1024x1024", "type": "image/png", "purpose": "any maskable" }]
+  "icons": [{ "src": "/assets/medora-system-icon_1c63a72c.png", "sizes": "1024x1024", "type": "image/png", "purpose": "any maskable" }]
 }

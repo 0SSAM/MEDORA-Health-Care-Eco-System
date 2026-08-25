@@ -30,7 +30,7 @@ const member: TestUser = {
   openId: "insurance-contract-user",
   email: "insurance-contract@example.com",
   name: "Insurance Contract User",
-  loginMethod: "manus",
+  loginMethod: "medora",
   role: "user",
   createdAt: new Date(0),
   updatedAt: new Date(0),

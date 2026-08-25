@@ -17,7 +17,7 @@ The audit also confirms that the project does **not** yet provide evidence for f
 | Automated regression suite | 41 test files passed; 144 tests passed; 4 optional database tests skipped | Pass with environment limitation | Vitest output from 14 August 2026 |
 | Type safety | TypeScript completed without errors | Pass | `pnpm exec tsc --noEmit` |
 | Production build | Vite and server bundle completed; existing client chunk-size warning remains | Pass with optimization note | `pnpm run build` |
-| Runtime log privacy | Network collector records metadata and omits response bodies under the privacy marker; no actionable error pattern was found in the inspected tail | Pass for inspected slice | `.manus-logs/*` |
+| Runtime log privacy | Network collector records metadata and omits response bodies under the privacy marker; no actionable error pattern was found in the inspected tail | Pass for inspected slice | `.medora-logs/*` |
 | Persisted tenant isolation | Mocked contracts and scoped query code exist, but a valid disposable MySQL lifecycle is unavailable | Blocked | `TEST_DATABASE_URL` prerequisite |
 | Official country packs and external adapters | Frameworks and credential gates exist; authoritative activation evidence and credentials remain absent | Blocked by prerequisites | Capability and regulatory registers |
 

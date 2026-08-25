@@ -14,7 +14,7 @@ type CachedHeader = {
 
 const CACHE_WINDOW_MS = 10_000;
 const PREVIEW_FALLBACK_ENABLED =
-  import.meta.env.DEV || import.meta.env.VITE_MANUS_PREVIEW_AUTH_FALLBACK === "true";
+  import.meta.env.DEV || import.meta.env.VITE_MEDORA_AUTH_FALLBACK === "true";
 let cached: CachedHeader | null = null;
 
 export function getSessionAuthHeader(
@@ -29,7 +29,7 @@ export function getSessionAuthHeader(
     return header;
   }
   try {
-    const raw = storage?.getItem("manus-cookie");
+    const raw = storage?.getItem("medora-session-token");
     if (raw) {
       const prefix = `${COOKIE_NAME}=`;
       const pair = raw.split(";").find(value => value.trim().startsWith(prefix));

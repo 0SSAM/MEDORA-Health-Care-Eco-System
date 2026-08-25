@@ -80,7 +80,7 @@ export function useAuth(options?: UseAuthOptions) {
       // header-based sessions (Safari ITP / WebView) are logged out too. The
       // backend cookie is cleared by the logout mutation.
       try {
-        sessionStorage.removeItem("manus-cookie");
+        sessionStorage.removeItem("medora-session-token");
       } catch {}
       clearSessionAuthHeaderCache();
       utils.auth.me.setData(undefined, null);

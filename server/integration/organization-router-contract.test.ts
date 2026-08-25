@@ -38,7 +38,7 @@ const baseUser: TestUser = {
   openId: "organization-contract-user",
   email: "contract@example.com",
   name: "Contract User",
-  loginMethod: "manus",
+  loginMethod: "medora",
   role: "user",
   createdAt: new Date(0),
   updatedAt: new Date(0),

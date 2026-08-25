@@ -33,6 +33,6 @@ describe("internal logout", () => {
     const source = readFileSync(resolve(process.cwd(), "client/src/_core/hooks/useAuth.ts"), "utf8");
     expect(source).toContain("trpc.auth.internalLogout.useMutation");
     expect(source).toContain("clearSessionAuthHeaderCache();");
-    expect(source).toContain('sessionStorage.removeItem("manus-cookie")');
+    expect(source).toContain('sessionStorage.removeItem("medora-cookie")');
   });
 });

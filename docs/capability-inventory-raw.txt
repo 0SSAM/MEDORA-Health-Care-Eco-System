@@ -79,13 +79,13 @@ server/_core/heartbeat.ts:185:/** Delete a cron located by `taskUid`. Idempotent
 server/_core/heartbeat.ts:194: * List cron jobs owned by the resolved actor (end-user when `userSession`
 server/_core/heartbeat.ts:197: * `actorUserId` in the response echoes whose cron list you got back. End-users
 server/_core/heartbeat.ts:198: * cannot list other users' crons via this SDK; cross-user inspection is
-server/_core/heartbeat.ts:199: * owner-only via the sandbox CLI (`manus-heartbeat list --user-id <uid>`).
+server/_core/heartbeat.ts:199: * owner-only via the sandbox CLI (`medora-heartbeat list --user-id <uid>`).
 server/_core/index.ts:11:import { inventoryAlertHandler } from "../scheduled/inventory";
 server/_core/index.ts:48:  // Heartbeat callback: production cron only; handler authenticates task UID.
 server/_core/index.ts:49:  app.post("/api/scheduled/inventory-alerts", inventoryAlertHandler);
 server/_core/map.ts:310: * STATIC MAPS - Generate map images as URLs (for emails, reports, <img> tags)
 server/_core/sdk.ts:323:const CRON_OPEN_ID_PREFIX = "cron_";
-server/_core/types/manusTypes.ts:69:  /** Cron-only; references `schedule_task.uid`. */
+server/_core/types/medoraTypes.ts:69:  /** Cron-only; references `schedule_task.uid`. */
 server/auth.logout.test.ts:45:  it("clears the session cookie and reports success", async () => {
 server/domain/rules.ts:5:  manager: ["dashboard.read", "inventory.read", "inventory.write", "insurance.read", "reports.read", "staff.read", "alerts.read"],
 server/domain/rules.test.ts:9:    expect(hasPermission("cashier", "reports.read")).toBe(false);
