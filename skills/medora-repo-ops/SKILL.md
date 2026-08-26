@@ -127,27 +127,16 @@ Use this before concluding a maintenance cycle to ensure a clean state:
 ## Pitfalls learned
 
 - The sandbox resets between sessions: always `git fetch` and re-sync before acting; write state to a notes file first.
-- **Workflow 10: Test Account & UI Integration**
-  1. **Documentation**: Create/Update `docs/TEST_ACCOUNTS.md` with bilingual credentials and usage notes.
-  2. **README Integration**: Add a "Test Accounts" section to `README.md` pointing to the guide.
-  3. **Source Audit**: Grep for credentials in `client/src` and `server/` to ensure no hardcoding.
-  4. **Logic Verification**: Confirm `server/db.ts` handles showcase accounts via environment variables (`SHOWCASE_TEST_PASSWORD`).
-  5. **UI Inspection**: Verify the `Login.tsx` and `Welcome.tsx` components do not leak credentials but provide clear entry points for authorized users.
+- **Retired test-account policy**: Do not create, document, seed, or expose shared test/showcase credentials. Verify authentication with authorized ephemeral users in a disposable environment, and confirm that production provisioning requires explicit administrative control.
 - `gh pr merge --admin` does NOT bypass `require_last_push_approval`; the last-pusher workaround (different commit author) or user web-UI approval is required.
 - "Merge conflict detected in pnpm-lock.yaml" notices print on every pnpm command when the lockfile merge was auto-resolved — cosmetic; `--frozen-lockfile` succeeding confirms integrity.
 - Dependabot alerts can exist on the default branch while `pnpm audit --prod` passes; they refer to transitive dev or non-shipped advisories.
 - When rebasing onto main, user-authored main files (README, SECURITY) can silently win conflicts with richer branch versions — always diff the merged tree against both parents and restore the superset.
 - GitHub's "Code Scanning AI" platform jobs can fail with internal 400s ("model not supported") — not a code failure and not among required checks.
 
-## Workflow 11: Automated E2E Authentication Testing
+## Workflow 11: Automated Authentication Testing
 
-Use this to verify login flows and documented test credentials:
-
-1. **Test Creation**: Create `e2e/medora-auth-showcase.spec.ts` to test documented credentials (`test` / `Test#@!12345`).
-2. **Robust Logic**: The test MUST handle the "No Database" constraint in sandbox/CI environments. Since `ensureShowcaseAccount()` requires `DATABASE_URL`, the test should verify that the UI gracefully handles the server-side verification error ("تعذر التحقق من البيانات") when no DB is connected, while including a `test.skip` for the full success path.
-3. **Execution**: Run with `export SHOWCASE_TEST_PASSWORD='...' && pnpm exec playwright test e2e/medora-auth-showcase.spec.ts`.
-4. **Verification**: Confirm the UI correctly captures the login attempt, shows appropriate feedback (error alert or redirect), and does not leak credentials in the DOM or logs.
-5. **CI Safety**: Ensure the test is committed to the repository so it runs in GitHub Actions, documenting the environment requirements for full success.
+Use authorized, short-lived accounts supplied by the test environment. Never commit or rely on shared credentials, showcase accounts, or fixed passwords. Verify successful login, logout, session expiry, authorization boundaries, and credential non-disclosure in the DOM, logs, and CI output.
 
 ## Workflow 12: Frontend Stability & Workspace Hardening
 

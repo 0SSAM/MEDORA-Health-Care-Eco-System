@@ -33,7 +33,8 @@ These variables define the root owner of the platform during initial deployment.
 | `VITE_APP_ID` | The unique application identifier. |
 | `VITE_APP_TITLE` | The visible title of the application (e.g., MEDORA). |
 | `VITE_APP_LOGO` | The path or URL to the application logo. |
-| `SHOWCASE_TEST_PASSWORD` | The password used for the automated showcase/test account. |
+
+No test-account or showcase password is required in production. Production identities must be created through the controlled administrator workflow and stored only in the approved secret-management process.
 
 ## 4. Security Best Practices
 

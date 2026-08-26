@@ -24,7 +24,7 @@ import { operationsRouter } from "./routers/operations";
 import { aiGovernanceRouter } from "./routers/ai-governance";
 import { aiInsightsRouter } from "./routers/ai-insights";
 import { antiFraudRouter } from "./routers/anti-fraud";
-import { createPasswordResetToken, ensureShowcaseAccount, getInternalCredentialByUsername, getInternalScopeForUser, createInternalSession, recordAuthenticationEvent, resetInternalPasswordWithToken, revokeInternalSession } from "./db";
+import { createPasswordResetToken, getInternalCredentialByUsername, getInternalScopeForUser, createInternalSession, recordAuthenticationEvent, resetInternalPasswordWithToken, revokeInternalSession } from "./db";
 import { assertPasswordPolicy, createInternalSessionToken, INTERNAL_LOCKOUT_MS, INTERNAL_MAX_FAILED_ATTEMPTS, INTERNAL_SESSION_COOKIE, INTERNAL_SESSION_TTL_MS, isLocked, normalizeInternalUsername, verifyInternalPassword } from "./domain/internal-auth";
 import { hashInternalPassword, hashAuditRecord } from "./domain/internal-auth";
 import { safeErrorLabel } from "./domain/safe-error";
@@ -75,7 +75,7 @@ export const appRouter = router({
     me: publicProcedure.query(opts => opts.ctx.user),
     sessionInfo: publicProcedure.query(({ ctx }) => ctx.user ? {
       authenticated: true as const,
-      accountType: ctx.internalSession?.user ? (ctx.internalSession.user.openId === "showcase-test-user" ? "showcase" as const : "employee" as const) : "employee" as const,
+      accountType: "employee" as const,
       sessionMode: ctx.internalSession?.session.sessionMode ?? "production" as const,
       role: ctx.user.role,
       expiresAt: ctx.internalSession?.session.expiresAt ?? null,
@@ -190,7 +190,6 @@ export const appRouter = router({
       };
       try {
       const username = normalizeInternalUsername(input.username);
-      await ensureShowcaseAccount(username);
       const credential = await getInternalCredentialByUsername(username);
       const now = new Date();
       const invalid = () => ({ success: false as const, message: "اسم المستخدم أو كلمة المرور غير صحيحة" });
@@ -216,10 +215,10 @@ export const appRouter = router({
         return invalid();
       }
       const token = createInternalSessionToken();
-      await createInternalSession({ token, userId: credential.userId, ...scope, sessionMode: credential.accountType === "showcase" ? "showcase" : "production", expiresAt: new Date(now.getTime() + INTERNAL_SESSION_TTL_MS) });
+      await createInternalSession({ token, userId: credential.userId, ...scope, expiresAt: new Date(now.getTime() + INTERNAL_SESSION_TTL_MS) });
       await recordAuthenticationEvent({ username, userId: credential.userId, ...scope, eventType: "login_success", source: "internal" });
       ctx.res.cookie(INTERNAL_SESSION_COOKIE, token, { httpOnly: true, sameSite: "lax", secure: isSecureRequest(ctx.req), path: "/" });
-      return { success: true as const, mode: "internal" as const, scope, accountType: credential.accountType, sessionMode: credential.accountType === "showcase" ? "showcase" as const : "production" as const };
+      return { success: true as const, mode: "internal" as const, scope, accountType: "employee" as const, sessionMode: "production" as const };
       } catch (error) {
         console.error("[Auth] internal login unavailable:", error);
         return { success: false as const, message: "تعذر التحقق من البيانات حالياً. تأكد من الاتصال وحاول مرة أخرى." };

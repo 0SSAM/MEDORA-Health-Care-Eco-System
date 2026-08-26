@@ -1,16 +1,13 @@
-# MEDORA | ميدورا — RBAC Integration Test Findings
+# MEDORA | ميدورا — RBAC Verification Findings
 # Copyright (c) 2026 Hossam Naeim Osman. All rights reserved.
 
 ## Test Summary
 
-A comprehensive E2E integration test suite (`e2e/medora-rbac.spec.ts`) was developed and executed to verify the role-based access control (RBAC) for the newly exposed Finance and HR modules.
+A comprehensive RBAC verification was completed to verify role-based access control (RBAC) for the exposed Finance and HR modules. The retired showcase account and its isolated test space are not part of the production system.
 
-### 1. Test Environment Setup
-- **Seeding**: A custom script (`server/seed-rbac-tests.ts`) was used to provision test accounts with distinct roles:
-  - `admin`: Platform owner with full access.
-  - `staff_user`: Standard employee with restricted access.
-  - `auditor_user`: Financial auditor with read-only access to Finance.
-- **Scope Resolution**: Corrected a critical issue where login failed due to missing `branchJurisdictions` records, which are required for internal session scope resolution.
+### 1. Verification Environment
+- **Account lifecycle**: Fixed test accounts and RBAC seed scripts have been retired. Verification must use authorized, short-lived environments and explicitly provisioned users; never reuse shared credentials.
+- **Scope resolution**: Corrected a critical issue where login failed due to missing `branchJurisdictions` records, which are required for internal session scope resolution.
 
 ### 2. Functional Verification
 The tests confirmed the following behavior:

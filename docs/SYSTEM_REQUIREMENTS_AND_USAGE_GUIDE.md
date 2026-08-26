@@ -31,7 +31,7 @@ Users accessing the web interface should meet the following criteria:
 ### 2.1. Initial System Setup
 1. **Environment Configuration**: Copy `.env.example` to `.env` and configure the database and security keys.
 2. **Database Migration**: Run `pnpm db:push` to initialize the schema.
-3. **Admin Provisioning**: Use the provided `scripts/seed-rbac-tests.ts` as a template to create the initial organization and owner account.
+3. **Admin Provisioning**: Create the initial organization and owner account through the controlled production provisioning procedure. Do not use test-account seed scripts or reuse test credentials.
 
 ### 2.2. Managing Organizations and Branches
 - **Create Organization**: Navigate to the **Admin Dashboard** and select "Organization Management."

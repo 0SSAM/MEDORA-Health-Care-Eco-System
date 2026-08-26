@@ -38,7 +38,7 @@ describe("internal employee authentication contract", () => {
   });
 
   it("rejects cross-environment session elevation", () => {
-    expect(isSessionEnvironmentConsistent("showcase", "showcase")).toBe(true);
+    expect(isSessionEnvironmentConsistent("showcase", "showcase")).toBe(false);
     expect(isSessionEnvironmentConsistent("production", "production")).toBe(true);
     expect(isSessionEnvironmentConsistent("showcase", "production")).toBe(false);
     expect(isSessionEnvironmentConsistent("production", "showcase")).toBe(false);

@@ -2,7 +2,6 @@ import { randomBytes } from "node:crypto";
 
 const testDefaults: Record<string, string> = {
   AUDIT_SIGNING_KEY: `ci-test-audit-signing-key-${randomBytes(16).toString("hex")}`,
-  SHOWCASE_TEST_PASSWORD: `CI-only-showcase-password-${randomBytes(18).toString("base64url")}`,
   OAUTH_SERVER_URL: "http://127.0.0.1:3999",
   VITE_MEDORA_SALES_CONTACT_URL:
     "https://wa.me/201550571454?text=MEDORA%20CI%20configuration%20check",

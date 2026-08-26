@@ -19,7 +19,7 @@ export type InternalScope = {
 };
 
 export function isSessionEnvironmentConsistent(sessionMode: "production" | "showcase", environment: "production" | "showcase") {
-  return sessionMode === environment;
+  return sessionMode === "production" && environment === "production";
 }
 
 export function assertPasswordPolicy(password: string) {

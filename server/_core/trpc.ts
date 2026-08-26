@@ -2,7 +2,6 @@ import { NOT_ADMIN_ERR_MSG, UNAUTHED_ERR_MSG } from '@shared/const';
 import { initTRPC, TRPCError } from "@trpc/server";
 import superjson from "superjson";
 import type { TrpcContext } from "./context";
-import { recordAuthenticationEvent } from "../db";
 
 const t = initTRPC.context<TrpcContext>().create({
   transformer: superjson,
@@ -25,25 +24,7 @@ const requireUser = t.middleware(async opts => {
   });
 });
 
-const blockShowcaseMutations = t.middleware(async opts => {
-  const showcaseSession = opts.ctx.internalSession?.session;
-  if (opts.type === "mutation" && showcaseSession?.sessionMode === "showcase") {
-    await recordAuthenticationEvent({
-      userId: opts.ctx.user?.id,
-      username: opts.ctx.user?.email,
-      organizationId: showcaseSession.organizationId,
-      branchId: showcaseSession.branchId,
-      jurisdictionId: showcaseSession.jurisdictionId,
-      eventType: "showcase_mutation_simulated",
-      source: "internal",
-      requestId: String(opts.ctx.req.headers["x-request-id"] ?? "showcase-mutation"),
-    });
-    throw new TRPCError({ code: "FORBIDDEN", message: "هذه العملية محاكاة فقط ولا تُحفظ من حساب العرض." });
-  }
-  return opts.next();
-});
-
-export const protectedProcedure = t.procedure.use(requireUser).use(blockShowcaseMutations);
+export const protectedProcedure = t.procedure.use(requireUser);
 
 export const adminProcedure = t.procedure.use(
   t.middleware(async opts => {
@@ -60,4 +41,4 @@ export const adminProcedure = t.procedure.use(
       },
     });
   }),
-).use(blockShowcaseMutations);
+  );
