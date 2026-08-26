@@ -1,0 +1,17 @@
+name: CodeQL Actions Source
+
+on:
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  source-marker:
+    name: Verify minimal Actions source
+    runs-on: ubuntu-latest
+    steps:
+      - name: Confirm manual workflow context
+        shell: bash
+        run: |
+          test "${GITHUB_ACTIONS}" = "true"
+          printf '%s\n' 'Minimal permissionless Actions source retained for default CodeQL analysis.'
