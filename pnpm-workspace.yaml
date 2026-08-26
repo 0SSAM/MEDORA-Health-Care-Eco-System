@@ -1,21 +1,15 @@
 packages:
   - .
-patchedDependencies:
-  wouter@3.7.1: patches/wouter@3.7.1.patch
 overrides:
   fast-xml-parser: ">=5.3.5"
   tailwindcss>nanoid: 3.3.7
   body-parser: 1.20.6
-  express>body-parser: 1.20.6
-  express>body-parser>qs: 6.15.2
-  express>path-to-regexp: 0.1.13
-  express>qs: 6.15.2
   lodash: 4.18.0
-  lodash-es: 4.18.0
   path-to-regexp: 0.1.13
   qs: 6.15.2
   nanoid: 5.1.16
   mdast-util-to-hast: 13.2.1
   uuid: 11.1.1
-  esbuild: 0.25.0
+  esbuild: 0.28.2
+  "@esbuild-kit/core-utils>esbuild": 0.28.2
   picomatch: ">=4.0.4"
