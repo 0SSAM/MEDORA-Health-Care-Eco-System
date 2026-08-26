@@ -53,4 +53,4 @@ A high-severity CodeQL alert identified potential DOM text reinterpretation as H
 - [1] [GitHub Secret Scanning Documentation](https://docs.github.com/en/code-security/secret-scanning/about-secret-scanning)
 - [2] [GitHub CodeQL and Dependabot Security Alerts](https://github.com/MEDORA-Health-Care-Eco-System/MEDORA-Health-Care-Eco-System/security)
 - [3] [Express-Rate-Limit Documentation](https://www.npmjs.com/package/express-rate-limit)
-- [4] [MEDORA Security Verification Test Results (August 2026)](/home/ubuntu/medora-masterpiece/tests/security-verification.ts)
+- [4] [MEDORA Security Verification Test Results (August 2026)](server/integration/security-verification.test.ts)

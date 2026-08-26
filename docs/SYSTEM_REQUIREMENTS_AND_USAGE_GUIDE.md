@@ -62,7 +62,7 @@ Users accessing the web interface should meet the following criteria:
 ## 4. Troubleshooting and Support
 
 ### 4.1. Common Issues
-- **Login Failure**: Verify that the `.env` JWT secrets match and the user has been correctly seeded in the database.
+- **Login Failure**: Verify that the `.env` JWT secrets match and the user has been correctly provisioned in the production database. Check the server logs for specific authentication errors.
 - **RTL Layout Glitches**: Clear the browser cache or update to the latest supported browser version.
 
 ### 4.2. Contacting Support
@@ -70,4 +70,4 @@ For critical technical issues, please refer to the internal **SOP** or contact t
 
 ---
 *Document Version: 1.0.0 (August 2026)*
-*Author: Manus AI*
+*Engineering Team*

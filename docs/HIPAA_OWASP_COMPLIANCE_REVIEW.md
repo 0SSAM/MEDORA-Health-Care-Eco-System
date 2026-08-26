@@ -1,6 +1,6 @@
 # HIPAA and OWASP Compliance Review — MEDORA Integrated Health System
 # Date: August 25, 2026
-# Author: Manus AI
+# Engineering Team
 
 ## Introduction
 
@@ -41,9 +41,9 @@ The system was audited against the **OWASP Top 10 (2021)** framework, with speci
 | **OWASP** | A04:2021 | Rate Limiting on OAuth and tRPC Routes | **Pass** |
 
 ## 4. References
-- [1] [MEDORA Security Compliance Audit Report (August 2026)](/home/ubuntu/medora-masterpiece/docs/SECURITY_COMPLIANCE_AUDIT_AUG_2026.md)
+- [1] [MEDORA Security Compliance Audit Report (August 2026)](docs/SECURITY_COMPLIANCE_AUDIT_AUG_2026.md)
 - [2] [GitHub CodeQL and Dependabot Security Alerts](https://github.com/MEDORA-Health-Care-Eco-System/MEDORA-Health-Care-Eco-System/security)
 - [3] [HIPAA Technical Safeguards Guidance](https://www.hhs.gov/hipaa/for-professionals/security/guidance/technical-safeguards/index.html)
-- [4] [MEDORA Production Environment Guide](/home/ubuntu/medora-masterpiece/docs/PRODUCTION_ENVIRONMENT_GUIDE.md)
+- [4] [MEDORA Production Environment Guide](docs/PRODUCTION_ENVIRONMENT_GUIDE.md)
 - [5] [OWASP Top 10:2021 Project](https://owasp.org/www-project-top-ten/)
-- [6] [MEDORA Security Verification Test Results](/home/ubuntu/medora-masterpiece/tests/security-verification.ts)
+- [6] [MEDORA Security Verification Test Results](server/integration/security-verification.test.ts)

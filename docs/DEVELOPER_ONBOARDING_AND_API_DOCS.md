@@ -10,7 +10,7 @@ The MEDORA platform is built using a modern, type-safe stack:
 - **Testing**: Vitest (Unit/Integration) and Playwright (E2E).
 
 ### 1.2. Local Development Setup
-1. **Clone the Repository**: `git clone <repository-url>`
+1. **Clone the Repository**: `git clone https://github.com/MEDORA-Health-Care-Eco-System/MEDORA-Health-Care-Eco-System.git`
 2. **Install Dependencies**: `pnpm install`
 3. **Environment Setup**: Create a `.env` file based on `.env.example`.
 4. **Start Development Server**: `pnpm dev`
@@ -51,4 +51,4 @@ Developers contributing to MEDORA must adhere to the following standards:
 
 ---
 *Document Version: 1.0.0 (August 2026)*
-*Author: Manus AI*
+*Engineering Team*
