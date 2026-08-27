@@ -10,6 +10,8 @@
 [![Version: 1.0.0](https://img.shields.io/badge/Version-1.0.0-green.svg)](package.json)
 [![RTL Supported](https://img.shields.io/badge/RTL-Supported-teal.svg)](client/src/contexts/LocalizationContext.tsx)
 
+**Canonical repository:** `0SSAM/MEDORA-Health-Care-Eco-System`
+
 [English](#english) | [العربية](#العربية)
 
 </div>
@@ -18,70 +20,72 @@
 
 ## English
 
-### 🌟 Overview
-**MEDORA** is a next-generation, multi-country healthcare operations platform designed to bridge the gap between clinical excellence and operational efficiency. Built with a "Security-First" philosophy, MEDORA provides a unified ecosystem for pharmacies, hospitals, laboratories, and insurance providers.
+### Overview
+MEDORA is a healthcare operations platform organized around a unified application architecture. This repository is the canonical engineering source of truth for the project.
 
-### 🚀 Key Features
-- **Integrated Operations:** Unified management for CRM, HR, Finance, and Customer Care.
-- **Advanced Security:** Tamper-evident audit trails, encrypted storage, and heuristic privacy deterrents.
-- **Bilingual & RTL:** Native support for Arabic and English with a seamless RTL (Right-to-Left) interface.
-- **AI-Powered Insights:** Automated reporting and intelligent procurement flows.
-- **Omnichannel Communication:** Integrated WhatsApp API and VoIP readiness for patient engagement.
+### Current verified engineering capabilities
+- React + TypeScript frontend with Arabic/English localization and RTL/LTR direction handling.
+- Node.js + Express + tRPC backend.
+- Drizzle ORM with MySQL.
+- Automated TypeScript, unit/contract, build and isolated database lifecycle checks through GitHub Actions.
+- CodeQL security analysis configured in the repository's GitHub security workflow.
 
-### 🛠️ Tech Stack
-- **Frontend:** React 19 + TypeScript + Vite + Tailwind CSS + Wouter.
-- **Backend:** Node.js + Express + tRPC (Type-safe API).
+### Capability-status rule
+Marketing, investor, RFP, or product material must distinguish between implemented functionality, partial functionality, planned integrations, and claims requiring external validation. References to regulated clinical, financial, insurance, government, WhatsApp, VoIP, AI, or production capabilities must not be treated as proof of operational readiness unless the corresponding implementation and validation evidence exists.
+
+### Tech Stack
+- **Frontend:** React + TypeScript + Vite + Tailwind CSS.
+- **Backend:** Node.js + Express + tRPC.
 - **Database:** Drizzle ORM + MySQL.
-- **Testing:** Vitest + Playwright (E2E).
-- **DevOps:** GitHub Actions (CI/CD) + Docker.
+- **Testing:** Vitest + Playwright.
+- **DevOps/Security:** GitHub Actions + Docker + CodeQL.
 
 ---
 
 ## العربية
 
-### 🌟 نظرة عامة
-**ميدورا (MEDORA)** هي منصة عمليات رعاية صحية متطورة ومتعددة الدول، مصممة لسد الفجوة بين التميز السريري والكفاءة التشغيلية. بُنيت ميدورا بفلسفة "الأمان أولاً"، وتوفر منظومة موحدة للصيدليات والمستشفيات والمختبرات ومزودي التأمين.
+### نظرة عامة
+ميدورا هي منصة لعمليات الرعاية الصحية مبنية حول معمارية تطبيق موحدة. هذا المستودع هو **المصدر الهندسي المرجعي الرسمي** للمشروع.
 
-### 🚀 المميزات الرئيسية
-- **عمليات متكاملة:** إدارة موحدة لعلاقات العملاء (CRM)، الموارد البشرية (HR)، المالية، وخدمة العملاء.
-- **أمان متقدم:** سجلات تدقيق غير قابلة للتلاعب، تخزين مشفر، ووسائل ردع للخصوصية.
-- **ثنائي اللغة وRTL:** دعم أصيل للغتين العربية والإنجليزية مع واجهة مستخدم متوافقة تماماً مع اتجاه الكتابة من اليمين إلى اليسار.
-- **رؤى مدعومة بالذكاء الاصطناعي:** تقارير مؤتمتة وتدفقات شراء ذكية.
-- **اتصال متعدد القنوات:** تكامل مع WhatsApp API وجاهزية VoIP للتفاعل مع المرضى.
+### القدرات الهندسية المتحققة حاليًا
+- واجهة React وTypeScript مع دعم العربية والإنجليزية واتجاهي RTL/LTR.
+- خادم Node.js وExpress وtRPC.
+- Drizzle ORM مع MySQL.
+- اختبارات آلية للـTypeScript والوحدات والعقود والبناء ودورة حياة قاعدة بيانات معزولة عبر GitHub Actions.
+- تفعيل تحليل CodeQL الأمني ضمن منظومة أمان GitHub الخاصة بالمستودع.
 
-### 🛠️ البنية التقنية
-- **الواجهة الأمامية:** React 19 + TypeScript + Vite + Tailwind CSS.
-- **الواجهة الخلفية:** Node.js + Express + tRPC.
+### قاعدة إثبات القدرات
+يجب أن تميز المواد التسويقية أو الاستثمارية أو عروض RFP بين الوظائف المنفذة فعليًا، والوظائف الجزئية، والتكاملات المخطط لها، والادعاءات التي تحتاج إلى تحقق خارجي. ولا يجوز اعتبار الإشارات إلى الوظائف السريرية أو المالية أو التأمينية أو الحكومية المنظمة، أو WhatsApp أو VoIP أو الذكاء الاصطناعي أو الجاهزية الإنتاجية، دليلًا على الجاهزية التشغيلية ما لم توجد أدلة تنفيذ واختبار مناسبة.
+
+### البنية التقنية
+- **الواجهة:** React + TypeScript + Vite + Tailwind CSS.
+- **الخادم:** Node.js + Express + tRPC.
 - **قاعدة البيانات:** Drizzle ORM + MySQL.
 - **الاختبارات:** Vitest + Playwright.
-- **العمليات:** GitHub Actions + Docker.
+- **DevOps والأمان:** GitHub Actions + Docker + CodeQL.
 
 ---
 
-## 🏗️ Architecture | المعمارية
+## Architecture
 
 ```mermaid
 graph TD
     A[Client - React/Vite] -->|tRPC| B[Server - Node/Express]
     B -->|Drizzle| C[(MySQL Database)]
-    B -->|API| D[WhatsApp/Meta]
-    B -->|AI| E[Manus Forge AI]
-    A -->|PWA| F[Service Worker]
+    B -->|External integrations only when implemented and configured| D[External Services]
+    A -->|PWA where implemented| E[Service Worker]
 ```
 
-## 📦 Installation | التثبيت
+## Installation
 
 ```bash
-# Clone the repository | استنساخ المستودع
-git clone https://github.com/MEDORA-Health-Care-Eco-System/MEDORA-Health-Care-Eco-System.git
-
-# Install dependencies | تثبيت التبعيات
+git clone https://github.com/0SSAM/MEDORA-Health-Care-Eco-System.git
+cd MEDORA-Health-Care-Eco-System
 pnpm install
-
-# Setup environment | إعداد البيئة
 cp .env.example .env
-
-# Start development | بدء التطوير
+pnpm check
+pnpm test
+pnpm build
 pnpm dev
 ```
 
@@ -89,10 +93,9 @@ pnpm dev
 
 <div align="center">
 
-**🏥 MEDORA — Where Healthcare Meets Innovation**
+**MEDORA — Where Healthcare Meets Innovation**
 **ميدورا — حيث تلتقي الرعاية الصحية بالابتكار**
 
-*Created and Maintained by **Hossam Naeim Osman***
-*تم الإنشاء والتطوير بواسطة **حسام نعيم عثمان***
+*Canonical repository: 0SSAM/MEDORA-Health-Care-Eco-System*
 
 </div>
