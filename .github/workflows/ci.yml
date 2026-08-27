@@ -140,12 +140,11 @@ jobs:
         run: pnpm exec vitest run server/integration/test-database-lifecycle.test.ts
 
   dependency-review:
-    name: Dependency review (advisory)
-    # GitHub reports dependency-review-action as unsupported because this repository
-    # does not expose the Dependency Graph API. Keep this advisory job disabled rather
-    # than presenting a permanent false failure; CodeQL remains enabled through GitHub default setup.
-    if: ${{ false }}
-    continue-on-error: true
+    name: Dependency review
+    # This action evaluates a pull-request diff. Restrict it to pull requests so push
+    # workflows do not invoke it without a comparison base, and fail on high-severity
+    # dependency changes before they reach main.
+    if: ${{ github.event_name == 'pull_request' }}
     runs-on: ubuntu-latest
     permissions:
       contents: read
