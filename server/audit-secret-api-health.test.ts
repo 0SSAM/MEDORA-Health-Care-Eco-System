@@ -6,7 +6,8 @@ describe("audit secret API health", () => {
     expect(process.env.AUDIT_SIGNING_KEY, "AUDIT_SIGNING_KEY must be injected by managed secrets").toMatch(/^.{32,}$/);
     const signature = hashAuditRecord({ eventType: "secret_health", userId: 1, organizationId: 1, branchId: null, jurisdictionId: null, requestId: "health", createdAt: "2026-08-16T00:00:00.000Z" });
     expect(signature).toMatch(/^[a-f0-9]{64}$/);
-    const response = await fetch("http://127.0.0.1:3000/api/trpc/auth.me?input=%7B%22json%22%3Anull%7D");
+    const baseUrl = process.env.MEDORA_TEST_BASE_URL ?? "http://127.0.0.1:3000";
+    const response = await fetch(`${baseUrl}/api/trpc/auth.me?input=%7B%22json%22%3Anull%7D`);
     expect(response.status).toBeLessThan(500);
   });
 });

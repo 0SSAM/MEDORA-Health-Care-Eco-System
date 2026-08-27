@@ -25,12 +25,47 @@ jobs:
         with:
           node-version: 22
           cache: pnpm
-      - name: Install dependencies and reconcile lockfile
-        run: pnpm install --no-frozen-lockfile
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
       - name: Typecheck
         run: pnpm check
+      - name: Start isolated test server
+        run: |
+          NODE_ENV=development \
+          PORT=4173 \
+          JWT_SECRET="$(openssl rand -hex 48)" \
+          DATABASE_URL="mysql://ci:ci@127.0.0.1:3306/medora_ci" \
+          AUDIT_SIGNING_KEY="$(openssl rand -hex 48)" \
+          SHOWCASE_TEST_PASSWORD="CI-only-showcase-password-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-$(openssl rand -hex 18)" \
+          VITE_APP_ID="ci-verification" \
+          VITE_APP_TITLE="ميدورا | منظومة الرعاية الصحية المتكاملة" \
+          VITE_APP_LOGO="https://example.invalid/medora-ci-logo.png" \
+          VITE_ANALYTICS_ENDPOINT="https://analytics.invalid" \
+          VITE_ANALYTICS_WEBSITE_ID="ci-verification" \
+          OAUTH_SERVER_URL="http://127.0.0.1:3999" \
+          OWNER_OPEN_ID="ci-verification" \
+          OWNER_NAME="MEDORA CI" \
+          BUILT_IN_FORGE_API_URL="https://ci.invalid" \
+          BUILT_IN_FORGE_API_KEY="ci-only-disabled" \
+          setsid pnpm dev > /tmp/medora-verification-server.log 2>&1 &
+          echo $! > /tmp/medora-verification-server.pid
+          for attempt in $(seq 1 30); do
+            if curl --fail --silent http://127.0.0.1:4173/ >/dev/null; then exit 0; fi
+            sleep 1
+          done
+          cat /tmp/medora-verification-server.log
+          exit 1
       - name: Unit and integration tests
-        run: pnpm test -- --reporter=verbose
+        run: MEDORA_TEST_BASE_URL="http://127.0.0.1:4173" pnpm test -- --reporter=verbose
+      - name: Stop isolated test server
+        if: always()
+        run: |
+          if [[ -f /tmp/medora-verification-server.pid ]]; then
+            kill -- "-$(cat /tmp/medora-verification-server.pid)" 2>/dev/null || true
+          fi
+          if [[ -f /tmp/medora-verification-server.log ]]; then
+            tail -n 80 /tmp/medora-verification-server.log || true
+          fi
       - name: Build
         run: pnpm build
 
@@ -50,8 +85,8 @@ jobs:
         with:
           node-version: 22
           cache: pnpm
-      - name: Install dependencies and reconcile lockfile
-        run: pnpm install --no-frozen-lockfile
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
       - name: Install Playwright browsers
         run: pnpm exec playwright install --with-deps chromium
       - name: Browser tests
