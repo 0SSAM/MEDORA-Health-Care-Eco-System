@@ -24,8 +24,6 @@ import { policyKnowledgeRouter } from "./routers/policyKnowledge";
 import { procurementRouter } from "./routers/procurement";
 import { secondaryModulesRouter } from "./routers/secondaryModules";
 import { kpiRouter } from "./routers/kpi";
-import { deliveryRouter } from "./routers/delivery";
-import { adminAccountRouter } from "./routers/adminAccount";
 import { rbacRouter } from "./routers/rbac";
 import { aiReviewRouter } from "./routers/ai-review";
 import { createPasswordResetToken, getInternalCredentialByUsername, getInternalScopeForUser, createInternalSession, recordAuthenticationEvent, resetInternalPasswordWithToken, revokeInternalSession, getUserById } from "./db";
@@ -278,8 +276,6 @@ export const appRouter = router({
   }),
   erp: erpRouter,
   rbac: rbacRouter,
-  delivery: deliveryRouter,
-  adminAccount: adminAccountRouter,
   aiReview: aiReviewRouter,
   regional: regionalRouter,
   organizations: organizationsRouter,

@@ -4,7 +4,7 @@
   "description": "MEDORA Integrated Health System — a multi-country healthcare operations platform",
   "author": "Hossam Naeim Osman",
   "type": "module",
-  "license": "UNLICENSED",
+  "license": "MIT",
   "private": true,
   "copyright": "Copyright (c) 2026 Hossam Naeim Osman. All rights reserved.",
   "scripts": {

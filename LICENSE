@@ -1,14 +1,21 @@
-MEDORA Health Care Eco System
-Copyright (c) 2024-2026 MEDORA. All rights reserved.
+MIT License
 
-This software, including its source code, object code, architecture, databases,
-documentation, designs, visual identity, workflow definitions, and confidential
-business logic, is proprietary and confidential.
+Copyright (c) 2026 MEDORA — MEDORA Health Care Eco System contributors
 
-No permission, express or implied, is granted to copy, modify, distribute,
-publish, sublicense, reverse engineer, decompile, create derivative works from,
-or otherwise use any portion of this software except under a written agreement
-signed by an authorized representative of MEDORA.
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
 
-Unauthorized use may violate copyright, trade-secret, contract, and other
-applicable laws. All rights not expressly granted are reserved.
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.

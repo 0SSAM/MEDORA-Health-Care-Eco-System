@@ -1,0 +1,18 @@
+import mysql from "mysql2/promise";
+const db = await mysql.createConnection(process.env.DATABASE_URL);
+const q = async (s) => { try { await db.query(s); } catch (e) { console.log("E:", e.message.slice(0,120)); } };
+await q("CREATE TABLE IF NOT EXISTS ai_review_runs (id INT AUTO_INCREMENT PRIMARY KEY, organization_id INT NOT NULL, `trigger` VARCHAR(16) NOT NULL, status VARCHAR(16) NOT NULL, score_overall INT, report_markdown TEXT, started_at DATETIME DEFAULT CURRENT_TIMESTAMP, finished_at DATETIME, KEY ai_review_runs_org_idx (organization_id)) ENGINE=InnoDB");
+await q("INSERT IGNORE INTO rbac_user_roles (organization_id,user_id,role_id) SELECT 1,1,id FROM rbac_roles WHERE organization_id=1 AND code='org_admin'");
+const n = async (sql) => { const [r] = await db.query(sql); return Number(Object.values(r[0]||{})[0] ?? -1); };
+console.log("TABLES=" + await n("SELECT COUNT(*) c FROM information_schema.tables WHERE table_schema=DATABASE()"));
+console.log("AI_RUNS_TBL=" + await n("SELECT COUNT(*) c FROM information_schema.tables WHERE table_schema=DATABASE() AND table_name='ai_review_runs'"));
+console.log("RBAC_PERMS=" + await n("SELECT COUNT(*) c FROM rbac_permissions"));
+console.log("RBAC_ROLES=" + await n("SELECT COUNT(*) c FROM rbac_roles"));
+console.log("RBAC_USER_ROLES=" + await n("SELECT COUNT(*) c FROM rbac_user_roles"));
+console.log("DELIVERY_ZONES=" + await n("SELECT COUNT(*) c FROM delivery_zones"));
+console.log("DELIVERY_DRIVERS=" + await n("SELECT COUNT(*) c FROM delivery_drivers"));
+console.log("DELIVERY_ORDERS=" + await n("SELECT COUNT(*) c FROM delivery_orders"));
+console.log("DELIVERY_EVENTS=" + await n("SELECT COUNT(*) c FROM delivery_tracking_events"));
+console.log("ADMIN_CREDS=" + await n("SELECT COUNT(*) c FROM internal_credentials WHERE username='admin'"));
+console.log("DRUGS=" + await n("SELECT COUNT(*) c FROM catalog_items WHERE sourceAuthority='EGYPTIAN_DRUG_DATABASE_CC0'"));
+await db.end();

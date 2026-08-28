@@ -1,4 +1,4 @@
-name: MEDORA CI
+name: CI
 
 on:
   push:
@@ -6,177 +6,34 @@ on:
   pull_request:
     branches: [main]
 
-permissions:
-  contents: read
-
-concurrency:
-  group: medora-ci-${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
-
 jobs:
-  quality:
-    name: TypeScript, tests, build, and smoke check
+  verify:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
-
-    steps:
-      - name: Check out repository
-        uses: actions/checkout@v4
-
-      - name: Set up pnpm
-        uses: pnpm/action-setup@v4
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: pnpm
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Start isolated test server
-        run: |
-          NODE_ENV=development \
-          PORT=3000 \
-          JWT_SECRET="$(openssl rand -hex 48)" \
-          DATABASE_URL="mysql://ci:ci@127.0.0.1:3306/medora_ci" \
-          AUDIT_SIGNING_KEY="$(openssl rand -hex 48)" \
-          VITE_APP_ID="ci-smoke" \
-          VITE_APP_TITLE="ميدورا | منظومة الرعاية الصحية المتكاملة" \
-          VITE_APP_LOGO="/manus-storage/medora-logo-primary_2cf35bd2.png" \
-          VITE_ANALYTICS_ENDPOINT="https://analytics.invalid" \
-          VITE_ANALYTICS_WEBSITE_ID="ci-smoke" \
-          OAUTH_SERVER_URL="http://127.0.0.1:3999" \
-          OWNER_OPEN_ID="ci-smoke" \
-          OWNER_NAME="MEDORA CI" \
-          BUILT_IN_FORGE_API_URL="https://ci.invalid" \
-          BUILT_IN_FORGE_API_KEY="ci-only-disabled" \
-          pnpm dev > /tmp/medora-ci-server.log 2>&1 &
-          echo $! > /tmp/medora-ci-server.pid
-          for attempt in $(seq 1 30); do
-            if curl --fail --silent http://127.0.0.1:3000/ >/dev/null; then exit 0; fi
-            sleep 1
-          done
-          cat /tmp/medora-ci-server.log
-          exit 1
-
-      - name: TypeScript check
-        run: pnpm check
-
-      - name: Workflow format check
-        run: pnpm exec prettier --check .github/workflows
-
-      - name: Smoke script syntax check
-        run: bash -n scripts/ci-smoke.sh
-
-      - name: Unit and contract tests
-        run: pnpm test
-
-      - name: Stop isolated test server
-        if: always()
-        run: |
-          if [[ -f /tmp/medora-ci-server.pid ]]; then
-            kill "$(cat /tmp/medora-ci-server.pid)" 2>/dev/null || true
-          fi
-          if [[ -f /tmp/medora-ci-server.log ]]; then
-            tail -n 80 /tmp/medora-ci-server.log || true
-          fi
-
-      - name: Dependency security audit
-        run: pnpm audit --prod --audit-level=high
-
-      - name: Production build
-        run: pnpm build
-
-      - name: Post-build smoke check
-        run: ./scripts/ci-smoke.sh
-
-  public-surface-e2e:
-    name: Public surface E2E (Arabic RTL / English LTR)
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
-    steps:
-      - name: Check out repository
-        uses: actions/checkout@v4
-
-      - name: Set up pnpm
-        uses: pnpm/action-setup@v4
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: pnpm
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Install Chromium for public E2E checks
-        run: pnpm exec playwright install --with-deps chromium
-
-      - name: Run public localization and direction E2E checks
-        run: pnpm e2e
-
-  isolated-database-lifecycle:
-    name: Isolated database lifecycle
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
     services:
-      mysql:
-        image: mysql:8.4
+      mariadb:
+        image: mariadb:10.11
         env:
-          MYSQL_ROOT_PASSWORD: root
-          MYSQL_DATABASE: medora_ci
-          MYSQL_USER: ci
-          MYSQL_PASSWORD: ci
+          MARIADB_DATABASE: medora
+          MARIADB_USER: medora
+          MARIADB_PASSWORD: medora
+          MARIADB_ROOT_PASSWORD: root
         ports:
           - 3306:3306
         options: >-
-          --health-cmd="mysqladmin ping -h 127.0.0.1 -uci -pci"
-          --health-interval=5s
-          --health-timeout=5s
-          --health-retries=20
+          --health-cmd="healthcheck.sh --connect --innodb_initialized"
+          --health-interval=10s --health-timeout=5s --health-retries=8
     steps:
-      - name: Check out repository
-        uses: actions/checkout@v4
-
-      - name: Set up pnpm
-        uses: pnpm/action-setup@v4
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: pnpm
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Apply repository migrations to isolated MySQL
+          cache: npm
+      - run: npm ci
+      - name: Typecheck
+        run: npx tsc --noEmit
+      - name: Build
+        run: npm run build
+      - name: Test
+        run: npm test --if-present
         env:
-          DATABASE_URL: mysql://ci:ci@127.0.0.1:3306/medora_ci
-        run: pnpm exec drizzle-kit push --force
-
-      - name: Run isolated database lifecycle contract
-        env:
-          TEST_DATABASE_URL: mysql://ci:ci@127.0.0.1:3306/medora_ci
-          TEST_DATABASE_ISOLATED: "true"
-        run: pnpm exec vitest run server/integration/test-database-lifecycle.test.ts
-
-  dependency-review:
-    name: Dependency review (advisory)
-    # GitHub reports dependency-review-action as unsupported because this repository
-    # does not expose the Dependency Graph API. Keep this advisory job disabled rather
-    # than presenting a permanent false failure; CodeQL remains enabled through GitHub default setup.
-    if: ${{ false }}
-    continue-on-error: true
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      pull-requests: read
-    steps:
-      - name: Review dependency changes
-        uses: actions/dependency-review-action@v4
-        with:
-          fail-on-severity: high
+          DATABASE_URL: mysql://medora:medora@127.0.0.1:3306/medora

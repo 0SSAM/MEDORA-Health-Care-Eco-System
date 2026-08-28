@@ -1,0 +1,33 @@
+services:
+  db:
+    image: mariadb:10.11
+    restart: unless-stopped
+    environment:
+      MARIADB_DATABASE: medora
+      MARIADB_USER: medora
+      MARIADB_PASSWORD: medora
+      MARIADB_ROOT_PASSWORD: change-me-root
+    volumes:
+      - medora_db:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 10s
+      timeout: 5s
+      retries: 8
+
+  app:
+    build: .
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: mysql://medora:medora@db:3306/medora
+      PORT: 3000
+      NODE_ENV: production
+      VITE_APP_TITLE: MEDORA
+    ports:
+      - "3000:3000"
+
+volumes:
+  medora_db:
