@@ -1,0 +1,24 @@
+{
+  "name": "medora-desktop",
+  "version": "1.0.0",
+  "private": true,
+  "description": "MEDORA desktop wrapper (Electron) - loads the deployed web app",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "pack": "electron-builder --dir",
+    "dist": "electron-builder"
+  },
+  "devDependencies": {
+    "electron": "^31.0.0",
+    "electron-builder": "^24.13.3"
+  },
+  "build": {
+    "appId": "com.medora.health",
+    "productName": "MEDORA",
+    "files": ["main.js"],
+    "win": { "target": "nsis" },
+    "mac": { "target": "dmg" },
+    "linux": { "target": "AppImage" }
+  }
+}
