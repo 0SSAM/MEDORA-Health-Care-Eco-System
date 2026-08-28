@@ -1,11 +1,10 @@
 {
   "name": "medora-health-care-eco-system",
   "version": "1.0.0",
-  "description": "MEDORA Integrated Health System — a multi-country healthcare operations platform",
+  "description": "MEDORA — 100% free & open-source integrated healthcare platform (CRM, ERP, HR, POS, pharmacy, insurance, medical contracts, delivery, AI). مجاني بالكامل ومفتوح المصدر.",
   "author": "Hossam Naeim Osman",
   "type": "module",
   "license": "MIT",
-  "private": true,
   "copyright": "Copyright (c) 2026 Hossam Naeim Osman. All rights reserved.",
   "scripts": {
     "dev": "NODE_ENV=development tsx watch server/_core/index.ts",
@@ -112,5 +111,32 @@
     "vite-plugin-manus-runtime": "0.0.59",
     "vitest": "^4.1.10"
   },
-  "packageManager": "pnpm@10.34.4"
+  "packageManager": "pnpm@10.34.4",
+  "keywords": [
+    "medora",
+    "healthcare",
+    "erp",
+    "crm",
+    "hr",
+    "pos",
+    "pharmacy",
+    "egypt",
+    "insurance",
+    "delivery",
+    "open-source",
+    "typescript",
+    "react",
+    "trpc",
+    "drizzle",
+    "mysql",
+    "arabic"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/0SSAM/MEDORA-Health-Care-Eco-System.git"
+  },
+  "homepage": "https://github.com/0SSAM/MEDORA-Health-Care-Eco-System",
+  "bugs": {
+    "url": "https://github.com/0SSAM/MEDORA-Health-Care-Eco-System/issues"
+  }
 }

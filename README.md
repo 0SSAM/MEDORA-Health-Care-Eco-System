@@ -1,83 +1,176 @@
-# MEDORA | ميدورا — Health Care Ecosystem
+# ميدورا — MEDORA 🏥
 
-> **مجاني بالكامل ومفتوح المصدر** — Free forever, open source (MIT).
-> A governed, bilingual (AR/EN) healthcare operations platform: **CRM · ERP · HR · POS · Pharmacy · Insurance · Delivery · AI Review** — built with React 19, TypeScript, tRPC, Drizzle ORM & MySQL/MariaDB.
+**نظام رعاية صحية متكامل — مجاني بالكامل ومفتوح المصدر**
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5-blue.svg)](https://www.typescriptlang.org/)
-[![React](https://img.shields.io/badge/React-19-61dafb.svg)](https://react.dev/)
-[![tRPC](https://img.shields.io/badge/tRPC-11-2596be.svg)](https://trpc.io/)
-[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
+| | |
+|---|---|
+| ![License](https://img.shields.io/badge/license-MIT-green.svg) | ![Open Source](https://img.shields.io/badge/open%20source-100%25-brightgreen.svg) |
+| ![Free Forever](https://img.shields.io/badge/free-forever-blue.svg) | ![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg) |
+| ![Made in Egypt](https://img.shields.io/badge/made%20in-Egypt-red.svg) | ![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178c6.svg) |
+
+**Integrated Healthcare Ecosystem — CRM · ERP · HR · POS · Pharmacy · Insurance · Delivery · AI**
+
+> ميدورا منصة متكاملة لإدارة المنشآت الصحية: إدارة العملاء، النظام المحاسبي، الموارد البشرية، نقاط البيع، الصيدلية وقاعدة الأدوية المصرية، التعاقدات الطبية والتأمين، خدمة التوصيل، والمراجعة الآلية بالذكاء الاصطناعي — كل ذلك **مجاني بالكامل ومفتوح المصدر (MIT)** بلا أي اشتراكات أو رسوم.
 
 ---
 
-## الوحدات — Modules
+## 📑 فهرس المحتويات — Contents
 
-| Module | tRPC Router (verified) | Core tables (verified in `drizzle/schema.ts`) |
+1. [الرؤية — Vision](#vision)
+2. [الوحدات — Modules](#modules)
+3. [المميزات الذكية — AI & Automation](#ai)
+4. [الصلاحيات — RBAC](#rbac)
+5. [البدء السريع — Quick Start](#quick-start)
+6. [التثبيت عبر Docker — Docker](#docker)
+7. [قاعدة الأدوية المصرية — Egyptian Drug DB](#drugs)
+8. [الأمان والنسخ الاحتياطي — Security & Backup](#security)
+9. [خارطة الطريق — Roadmap](#roadmap)
+10. [المساهمة — Contributing](#contributing)
+11. [الترخيص — License](#license)
+
+---
+
+## <a name="vision"></a> 1️⃣ الرؤية — Vision
+
+ميدورا وُلدت لتكون **البديل الحر** لأنظمة إدارة المنشآت الصحية التجارية:
+
+- 🆓 **مجانية 100% للأبد** — لا خطط مدفوعة، لا حدود، لا ميزات محجوبة.
+- 🌍 **مفتوحة المصدر بالكامل** — MIT License: استخدم، عدّل، وزّع، حتى تجاريًا.
+- 🇪🇬 **مبنية لسوق مصر أولًا** — قاعدة الأدوية المصرية، التعاقدات الطبية، التأمين، والتوصيل محليًا.
+- 🔗 **وحدة واحدة متصلة** — CRM وERP وHR وPOS تعمل على قاعدة بيانات واحدة ومنطق واحد.
+
+---
+
+## <a name="modules"></a> 2️⃣ الوحدات — Modules
+
+| الوحدة | الوصف | أبرز الجداول |
 |---|---|---|
-| **CRM** | `organizations`, `promotions` | `customer_profiles`, `customer_care_cases`, `customer_care_tasks`, `customer_care_satisfaction` |
-| **ERP** | `erp`, `procurement`, `anti-fraud` | `sales`, `sale_items`, `sales_returns`, `held_invoices`, `purchase_orders`, `purchase_order_lines`, `reorder` |
-| **HR** | `operations`, `reports` | `employee_profiles`, `employee_attendance`, `employee_leave_requests`, `approved_leave`, `hr_contracts` |
-| **POS & Inventory** | `operations` | `catalog_items`, `catalog_sync_queue`, `products` (SKU/barcode), `inventory`, `inventory_batches` (FEFO) |
-| **Pharmacy / Healthcare** | `egypt-healthcare`, `insurance`, `nda`, `policyKnowledge` | `healthcare_encounters`, `healthcare_clinical_orders`, `healthcare_admissions`, `e_prescriptions` |
-| **Insurance & Contracts** | `insurance`, `anti-fraud` | `insurance_payer_contracts`, `insurance_requests`, `insurance_preauthorizations`, `insurance_claims`, `insurance_claim_lines`, `insurance_appeals` |
-| **Delivery** | `delivery` | `delivery_zones`, `delivery_drivers`, `delivery_orders`, `delivery_tracking_events` |
-| **RBAC / Admin** | `rbac`, `adminAccount` | `rbac_permissions`, `rbac_roles`, `rbac_role_permissions`, `rbac_user_roles`, `internal_credentials`, `internal_sessions` |
-| **AI Auto Review** | `aiReview`, `assistant`, `ai-insights`, `ai-governance`, `kpi` | `ai_review_runs`, `ai_review_findings`, `ai_review_recommendations` |
-| **Backup / Govern** | `backup`, `system`, `notifications`, `regional`, `secondaryModules` | `backup_policies`, `backup_runs`, `audit_logs`, `scheduled_jobs` |
+| **CRM** — إدارة العملاء | ملفات العملاء، حالات العناية، رضا العملاء، العروض | `customer_profiles`, `customer_care_cases` |
+| **ERP** — النظام المحاسبي | المبيعات، المشتريات، المرتجعات، الفواتير المعلّقة، التحصيل | `sales`, `purchase_orders`, `held_invoices` |
+| **HR** — الموارد البشرية | الموظفون، الحضور، الإجازات، الموافقات | `employee_profiles`, `employee_attendance`, `employee_leave_requests` |
+| **POS** — نقطة البيع | كتالوج المنتجات، المخزون، الدُفعات (FEFO)، نقاط البيع | `catalog_items`, `products`, `inventory`, `inventory_batches` |
+| **Pharmacy** — الصيدلية | قاعدة الأدوية المصرية (25,094 دواء)، الوصفات الإلكترونية، صرف الأدوية | `e_prescriptions`, `catalog_items` |
+| **Insurance** — التعاقدات والتأمين | عقود الجهات الممولة، الاستحقاق، التفويض المسبق، المطالبات، التحصيل | `insurance_payer_contracts`, `insurance_claims`, `insurance_preauthorizations` |
+| **Delivery** — التوصيل 🆕 | المناطق والأسعار، السائقون، الطلبات، التتبع اللحظي، الحالات الكاملة | `delivery_zones`, `delivery_drivers`, `delivery_orders`, `delivery_tracking_events` |
+| **AI** — الذكاء الاصطناعي 🆕 | مراجعة آلية يومية، تقييم 0–100 لكل وحدة، توصيات P0–P3، تقارير عربية | `ai_review_runs`, `ai_review_recommendations` |
+| **RBAC** — الصلاحيات 🆕 | أدوار وصلاحيات لكل مستخدم، إدارة كاملة من الأدمن | `rbac_roles`, `rbac_permissions`, `rbac_user_roles` |
 
-## Installation — التركيب
+---
 
-**Option A — Docker (recommended):**
+## <a name="ai"></a> 3️⃣ المميزات الذكية — AI & Automation
+
+- 🤖 **مراجعة آلية شاملة**: تدقيق يومي لكل الوحدات (11 جدولًا مرجعيًا) وإنتاج تقرير عربي بتقييم 0–100.
+- 📊 **تقييم تلقائي**: درجات لكل وحدة (CRM، ERP، HR، POS، الصيدلية، التأمين…) مع مقارنة عبر الزمن.
+- 🎯 **توصيات ذات أولوية**: توصيات P0 (حرجة) حتى P3 (تحسينية) تُحفظ في قاعدة البيانات وتُحل بالكيان المسؤول.
+- 📅 **جدولة تلقائية**: مهمة يومية مجدولة (cron) عبر `scheduled_jobs`.
+
+---
+
+## <a name="rbac"></a> 4️⃣ الصلاحيات — RBAC
+
+مصفوفة صلاحيات كاملة: **73 صلاحية × 10 أدوار**، يديرها الأدمن من لوحة التحكم:
+
+| الدور | CRM | ERP | HR | POS | المخزون | الصيدلية | التأمين | التقارير | AI |
+|---|---|---|---|---|---|---|---|---|---|
+| `super_admin` | ● | ● | ● | ● | ● | ● | ● | ● | ● |
+| `org_admin` | V C U A E | V C U A E | V C U A E | V C U A E | V C U A E | V C U A E | V C U E | V C U A E | V C U |
+| `manager` | V C U | V A | V | V C U | V | V | V | V E | – |
+| `auditor` | V | V | V | V | V | V | V | V E | V |
+
+> V=عرض · C=إنشاء · U=تحديث · A=موافقة · E=تصدير. إدارة المستخدمين والأدوار: من حساب الأدمن فقط عبر مسار `/admin`.
+
+---
+
+## <a name="quick-start"></a> 5️⃣ البدء السريع — Quick Start
+
 ```bash
-docker compose up -d --build
-# open http://localhost:3000
-```
+# 1) المتطلبات: Node.js 20+، MySQL/MariaDB 10.6+
+git clone https://github.com/0SSAM/MEDORA-Health-Care-Eco-System.git
+cd MEDORA-Health-Care-Eco-System
+cp .env.example .env        # عدّل DATABASE_URL وكلمات السر
 
-**Option B — Manual:**
-```bash
-npm ci
-cp .env.example .env          # ← اضبط DATABASE_URL
-npm run db:push               # drizzle-kit generate && migrate
-DATABASE_URL="mysql://medora:medora@127.0.0.1:3306/medora" \
-  node scripts/seed-delivery-zones.mjs
-DATABASE_URL="mysql://medora:medora@127.0.0.1:3306/medora" \
-  node scripts/seed-rbac-and-roles.mjs
-DATABASE_URL="mysql://medora:medora@127.0.0.1:3306/medora" \
+# 2) التثبيت
+npm install
+
+# 3) إنشاء الجداول وزرع البيانات
+npm run db:push
+DATABASE_URL="mysql://user:pass@127.0.0.1:3306/medora" node scripts/seed-delivery-zones.mjs
+DATABASE_URL="mysql://user:pass@127.0.0.1:3306/medora" node scripts/seed-rbac-and-roles.mjs
+
+# 4) إنشاء حساب الأدمن + استيراد قاعدة الأدوية المصرية
+DATABASE_URL="mysql://user:pass@127.0.0.1:3306/medora" \
   node scripts/provision-medora.mjs --admin admin:admin --drugs data/egyptian-drugs.csv
+
+# 5) التشغيل
 npm run dev
+# افتح: http://localhost:3000  — تسجيل الدخول: admin / admin (غيّرها فورًا)
 ```
 
-- **Admin account (created by provision):** `admin` / `admin` — تغيير الاسم وكلمة المرور من حساب الأدمن فقط (`adminAccount.changeUsername/changePassword`).
-- **Egyptian drug database:** 25,094 records (CC0) — imported by `provision-medora.mjs`.
-- **Delivery zones:** 8 Egyptian governorates seeded.
+---
 
-## Environment — متغيرات البيئة
+## <a name="docker"></a> 6️⃣ التثبيت عبر Docker
 
-See [`.env.example`](.env.example): `DATABASE_URL`, `PORT`, `VITE_APP_TITLE`, `VITE_ANALYTICS_ENDPOINT`, `VITE_ANALYTICS_WEBSITE_ID`, Forge/S3 keys (optional, for backups & file storage).
-
-## Architecture — البنية
-
-```
-client/  React 19 SPA (wouter, tailwind) + pages: Home, Delivery, AdminConsole, Login…
-server/  Express + tRPC;  _core/ (context, trpc, heartbeat, llm), routers/, domain/, scheduled/
-drizzle/ MySQL schema (121+ tables) — migrations in migrations/
-shared/  types, operations-hub, gp-max/
-scripts/ seeds & installers (idempotent)
-docs/    audits, upgrade bundles, build targets
+```bash
+docker compose up -d        # يبني الصورة ويشغّل قاعدة البيانات + النظام
+# أو صورة واحدة:
+docker build -t medora .
+docker run -p 3000:3000 --env-file .env medora
 ```
 
-Every sensitive procedure runs through `assertSessionScope` (organization membership), optional `assertPermission` (RBAC `module.action`), zod input validation, scrypt password hashing, and append-only audit logs.
+المثبّتات الجاهزة: [`install.sh`](install.sh) (Linux/macOS) و [`install.bat`](install.bat) (Windows) — تنزّل المتطلبات وتشغّل النظام تلقائيًا.
 
-## Backups & Sync — النسخ الاحتياطي والمزامنة
+---
 
-- **Backup:** `backup` router + `server/scheduled/backups.ts` heartbeat handler + `backup_policies` (cron, ≥15 min gap validation) + `backup_runs` ledger + policy/restore/audit procedures (see [audit](docs/MEDORA-BACKUP-SYNC-AUDIT-2026-08-28.md)).
-- **Sync:** `catalog_items` ↔ `catalog_sync_queue` (pending/acknowledged item sync). Full offline/P2P sync is **not yet implemented** — see audit.
+## <a name="drugs"></a> 7️⃣ قاعدة الأدوية المصرية — Egyptian Drug DB
 
-## Roadmap / Contributing / Security
+- 💊 **25,094 دواءً** مسجّلًا في السوق المصري بصيغة CSV داخل المستودع: [`data/egyptian-drugs.csv`](data/egyptian-drugs.csv)
+- المصدر: مشروع [egyptian-drug-database](https://github.com/karem505/egyptian-drug-database) — رخصة **CC0-1.0** (ملكية عامة).
+- الاستيراد: عبر `scripts/provision-medora.mjs` (انظر Quick Start) أو أي أداة CSV.
+- التفاصيل الكاملة: [data/README.md](data/README.md)
 
-[CONTRIBUTING.md](CONTRIBUTING.md) · [SECURITY.md](SECURITY.md) · [Contract Dispensing Audit](docs/MEDORA-CONTRACT-DISPENSING-AUDIT-2026-08-28.md)
+---
 
-## License — الترخيص
+## <a name="security"></a> 8️⃣ الأمان والنسخ الاحتياطي — Security & Backup
 
-**[MIT](LICENSE)** — completely free and open source. Use, modify, distribute, sell, self-host — no strings attached. Built with ❤️ for the Egyptian & regional healthcare market.
+- 🔐 **كلمات المرور**: scrypt (N=16384, r=8, p=1) + قفل بعد 5 محاولات فاشلة + سياسة قوة (≥12 حرفًا).
+- 👤 **إدارة الحساب**: تغيير اسم المستخدم وكلمة المرور **من حساب الأدمن فقط** مع إبطال كل الجلسات القديمة.
+- 🛡️ **RBAC**: كل إجراء محميّ بفحص صلاحية؛ كل طلب عبر tRPC موثّق بـ Zod.
+- 💾 **النسخ الاحتياطي**: سياسات وجداول زمنية، تصدير مشفّر، استعادة شهرية موثّقة (انظر تقرير التدقيق).
+- 📋 تقارير التدقيق: [التعاقدات الطبية](docs/MEDORA-CONTRACT-DISPENSING-AUDIT-2026-08-28.md) · [النسخ الاحتياطي والمزامنة](docs/MEDORA-BACKUP-SYNC-AUDIT-2026-08-28.md) · [حزمة الترقية](docs/MEDORA-UPGRADE-BUNDLE-2026-08-28.md)
+
+---
+
+## <a name="roadmap"></a> 9️⃣ خارطة الطريق — Roadmap
+
+- [x] CRM / ERP / HR / POS / Pharmacy / Insurance
+- [x] خدمة التوصيل الكاملة (مناطق، سائقون، طلبات، تتبع)
+- [x] الصلاحيات والأدوار (RBAC) + إدارة حساب الأدمن
+- [x] المراجعة الآلية بالذكاء الاصطناعي
+- [x] قاعدة الأدوية المصرية + الترخيص المفتوح MIT + المثبّتات
+- [ ] **GP MAX** — وحدة تدقيق النمو التسويقي (مستويات L0–L7، 140+ نقطة فحص، حاسبة KPI، خطة 30 يومًا)
+- [ ] مزامنة دون اتصال (offline-first) مع حل تعارضات
+- [ ] تطبيقات جوال (Android/iOS) وتثبيت سطح مكتب
+
+---
+
+## <a name="contributing"></a> 🔟 المساهمة — Contributing
+
+المساهمات موضع ترحيب دائمًا — هذا مشروع مجتمعي مفتوح:
+
+- راجع [CONTRIBUTING.md](CONTRIBUTING.md) و [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md)
+- أبلغ عن الأخطاء عبر [Issue](https://github.com/0SSAM/MEDORA-Health-Care-Eco-System/issues/new/choose)
+- الأمان: [SECURITY.md](SECURITY.md) — أبلغ عن الثغرات بشكل خاص
+- **القاعدة الذهبية**: العمل دائمًا على فرع `main` مباشرة (لا فروع جانبية) بطلبات PR نظيفة.
+
+---
+
+## <a name="license"></a> 1️⃣1️⃣ الترخيص — License
+
+مشروع **مفتوح المصدر بالكامل** بموجب **رخصة MIT** — انظر [LICENSE](LICENSE).
+
+> ✅ **مجاني للأبد — لكل أنواع الاستخدام:** شخصي، تجاري، حكومي، تعليمي.
+> الالتزام الكامل مكتوب في [docs/OPEN-SOURCE-COMMITMENT-2026-08-28.md](docs/OPEN-SOURCE-COMMITMENT-2026-08-28.md)
+
+---
+
+© 2026 MEDORA Contributors — Made with ❤️ for Egypt and the world 🌍
