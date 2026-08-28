@@ -1,3 +1,8 @@
+## 2026-08-28 — PWA installable + ICD-11 dataset import path
+- PWA: manifest.webmanifest + sw.js + أيقونات 192/512 + ربط index.html/main.tsx (تثبيت كتطبيق + عمل دون اتصال).
+- توثيق التركيب: docs/PWA-INSTALL-2026-08-28.md.
+- استيراد موسّع لبيانات ICD-11 عند توفر مصدر كامل (HL7 terminology) مع إبقاء المجموعة الابتدائية.
+
 ## 2026-08-28 — ICD-11 module + sync execution + full live verification
 - إضافة وحدة ICD-11: مخطط drizzle، زراعة (started + full ingest عبر --data)، موجه tRPC (stats/search/getByCode/listChapters)، صفحة /icd11 عربية RTL، ربط e_prescriptions (icd11_code/icd11_version).
 - تنفيذ المزامنة: shared/sync-engine.ts (Outbox + LWW)، drizzle/sync-schema.ts، server/routers/sync.ts (pull/push/stats)، scripts/seed-sync.mjs.
