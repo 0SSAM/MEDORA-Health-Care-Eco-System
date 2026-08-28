@@ -4,6 +4,7 @@ import { lazy, Suspense } from "react";
 const Home = lazy(() => import("@/pages/Home"));
 const DeliveryPage = lazy(() => import("./pages/Delivery"));
 const GpMaxPage = lazy(() => import("./pages/GpMax"));
+const Icd11Page = lazy(() => import("./pages/Icd11"));
 const Welcome = lazy(() => import("@/pages/Welcome"));
 const Login = lazy(() => import("@/pages/Login"));
 const AdminConsole = lazy(() => import("@/pages/AdminConsole"));
@@ -27,6 +28,7 @@ function Router() {
       <Route path={"/operations"} component={Home} />
       <Route path={"/delivery"} component={DeliveryPage} />
       <Route path={"/gp-max"} component={GpMaxPage} />
+      <Route path={"/icd11"} component={Icd11Page} />
       <Route path={"/finance"} component={Home} />
       <Route path={"/admin"} component={AdminConsole} />
       <Route path={"/"} component={Welcome} />

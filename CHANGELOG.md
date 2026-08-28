@@ -1,3 +1,8 @@
+## 2026-08-28 — ICD-11 module + sync execution + full live verification
+- إضافة وحدة ICD-11: مخطط drizzle، زراعة (started + full ingest عبر --data)، موجه tRPC (stats/search/getByCode/listChapters)، صفحة /icd11 عربية RTL، ربط e_prescriptions (icd11_code/icd11_version).
+- تنفيذ المزامنة: shared/sync-engine.ts (Outbox + LWW)، drizzle/sync-schema.ts، server/routers/sync.ts (pull/push/stats)، scripts/seed-sync.mjs.
+- اختبار تحقق بصري حي كامل للمسارات (تسجيل دخول + كل القطاعات + ICD-11 + GP MAX) ولقطات شاشة موثقة.
+
 # Changelog — سجل التغييرات
 
 All notable changes to MEDORA. Format based on [Keep a Changelog](https://keepachangelog.com/).
