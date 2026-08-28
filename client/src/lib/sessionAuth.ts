@@ -1,11 +1,7 @@
-// MEDORA | ميدورا — Integrated Health Care System
-// Copyright (c) 2026 Hossam Naeim Osman | حسام نعيم عثمان. All rights reserved.
-// Proprietary and confidential. Unauthorized copying, distribution, or use of this
-// software, or of any portion of it, is strictly prohibited.
-// Source: https://github.com/0SSAM/MEDORA-Health-Care-Eco-System
 import { COOKIE_NAME } from "@shared/const";
 
 type StorageLike = Pick<Storage, "getItem">;
+type MutableStorageLike = StorageLike & Pick<Storage, "removeItem">;
 
 type CachedHeader = {
   expiresAt: number;
@@ -13,8 +9,6 @@ type CachedHeader = {
 };
 
 const CACHE_WINDOW_MS = 10_000;
-const PREVIEW_FALLBACK_ENABLED =
-  import.meta.env.DEV || import.meta.env.VITE_MANUS_PREVIEW_AUTH_FALLBACK === "true";
 let cached: CachedHeader | null = null;
 
 export function getSessionAuthHeader(
@@ -24,10 +18,6 @@ export function getSessionAuthHeader(
   if (cached && cached.expiresAt > now) return cached.header;
 
   let header: Record<string, string> = {};
-  if (!PREVIEW_FALLBACK_ENABLED) {
-    cached = { expiresAt: now + CACHE_WINDOW_MS, header };
-    return header;
-  }
   try {
     const raw = storage?.getItem("manus-cookie");
     if (raw) {
@@ -46,4 +36,21 @@ export function getSessionAuthHeader(
 
 export function clearSessionAuthHeaderCache() {
   cached = null;
+}
+
+/**
+ * Removes the browser-side mirror of an OAuth credential. Internal employee
+ * login uses an HttpOnly internal-session cookie instead; retaining an older
+ * mirror would otherwise cause the shared tRPC transport to send a competing
+ * bearer identity on subsequent requests.
+ */
+export function clearStoredSessionAuth(
+  storage: MutableStorageLike | undefined = typeof window !== "undefined" ? window.sessionStorage : undefined,
+) {
+  clearSessionAuthHeaderCache();
+  try {
+    storage?.removeItem("manus-cookie");
+  } catch {
+    // Storage can be unavailable in private or embedded browsing contexts.
+  }
 }

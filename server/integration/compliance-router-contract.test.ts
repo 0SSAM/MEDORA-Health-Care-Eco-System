@@ -3,8 +3,8 @@ import { appRouter } from "../routers";
 import { REQUIRED_COUNTRY_PACK_DOMAINS } from "../domain/country-pack-policy";
 import type { TrpcContext } from "../_core/context";
 
-const { getDbMock } = vi.hoisted(() => ({ getDbMock: vi.fn() }));
-vi.mock("../db", () => ({ getDb: getDbMock }));
+const { getDbMock, hasCurrentNdaAcceptanceMock, recordAuthenticationEventMock } = vi.hoisted(() => ({ getDbMock: vi.fn(), hasCurrentNdaAcceptanceMock: vi.fn().mockResolvedValue(true), recordAuthenticationEventMock: vi.fn() }));
+vi.mock("../db", () => ({ getDb: getDbMock, hasCurrentNdaAcceptance: hasCurrentNdaAcceptanceMock, recordAuthenticationEvent: recordAuthenticationEventMock }));
 
 type TestUser = NonNullable<TrpcContext["user"]>;
 

@@ -25,14 +25,14 @@ describe("internal logout", () => {
     expect(result).toEqual({ success: true });
     expect(clearedCookies).toContainEqual({
       name: INTERNAL_SESSION_COOKIE,
-      options: { httpOnly: true, sameSite: "lax", secure: true, maxAge: 0, path: "/" },
+      options: { httpOnly: true, sameSite: "lax", secure: true, path: "/" },
     });
   });
 
   it("wires the client logout flow to internal logout and clears its cached auth header", () => {
     const source = readFileSync(resolve(process.cwd(), "client/src/_core/hooks/useAuth.ts"), "utf8");
     expect(source).toContain("trpc.auth.internalLogout.useMutation");
-    expect(source).toContain("clearSessionAuthHeaderCache();");
+    expect(source).toContain("resetIdentityBoundClientState(queryClient);");
     expect(source).toContain('sessionStorage.removeItem("manus-cookie")');
   });
 });

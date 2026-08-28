@@ -1,8 +1,8 @@
-# MEDORA traceability, encryption, and ledger boundary
+# ALDO traceability, encryption, and ledger boundary
 
 ## Implemented safeguards
 
-MEDORA exposes a pure domain contract for a GS1-style Data Matrix trace payload containing GTIN, expiry date, batch, and serial identifiers. The contract also carries the jurisdiction, organization scope, and source reference as server-side metadata. Patient identifiers are explicitly excluded from the payload. The contract marks the official tracking adapter as required and remains externally unverified until an authorized governmental or supply-chain connector is configured and acceptance-tested.
+ALDO now exposes a pure domain contract for a GS1-style Data Matrix trace payload containing GTIN, expiry date, batch, and serial identifiers. The contract also carries the jurisdiction, organization scope, and source reference as server-side metadata. Patient identifiers are explicitly excluded from the payload. The contract marks the official tracking adapter as required and remains externally unverified until an authorized governmental or supply-chain connector is configured and acceptance-tested.
 
 Sensitive bytes can be encrypted with **AES-256-GCM** using a runtime-supplied 32-byte key and explicit key version. The envelope contains only the algorithm identifier, key version, random IV, authentication tag, and ciphertext. Keys must remain in the approved secret-management path; they must not be stored in source code, browser storage, the database payload, or this document. This helper does not create or distribute keys.
 
@@ -18,6 +18,6 @@ No blockchain network, wallet, smart contract, token, or third-party ledger is a
 
 ## Limited-device operating mode
 
-When a device cannot present trusted native attestation, MEDORA remains usable in a restricted mode. The client may display the approved interface and retain non-regulated drafts locally for user review. It must not queue regulated sales, prescriptions, invoices, controlled-substance actions, or government submissions for offline replay. Server-side replay and submission remain subject to organization scope, jurisdiction readiness, authorization, connectivity, and trusted-device verification. This is an operational compromise, not a bypass of security controls.
+When a device cannot present trusted native attestation, ALDO remains usable in a restricted mode. The client may display the approved interface and retain non-regulated drafts locally for user review. It must not queue regulated sales, prescriptions, invoices, controlled-substance actions, or government submissions for offline replay. Server-side replay and submission remain subject to organization scope, jurisdiction readiness, authorization, connectivity, and trusted-device verification. This is an operational compromise, not a bypass of security controls.
 
 The UI labels this state as a limited mode so staff can distinguish local drafting from a completed transaction. No local draft is treated as an authoritative record until the server accepts it and writes the applicable audit event.

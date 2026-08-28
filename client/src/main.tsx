@@ -1,8 +1,3 @@
-// MEDORA | ميدورا — Integrated Health Care System
-// Copyright (c) 2026 Hossam Naeim Osman | حسام نعيم عثمان. All rights reserved.
-// Proprietary and confidential. Unauthorized copying, distribution, or use of this
-// software, or of any portion of it, is strictly prohibited.
-// Source: https://github.com/0SSAM/MEDORA-Health-Care-Eco-System
 import { trpc } from "@/lib/trpc";
 import { UNAUTHED_ERR_MSG } from '@shared/const';
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -13,6 +8,15 @@ import App from "./App";
 import { startLogin } from "./const";
 import "./index.css";
 import { getSessionAuthHeader } from "./lib/sessionAuth";
+import { installSafeGlobalDiagnostics, recordSafeUiDiagnostic } from "./lib/safeDiagnostics";
+
+installSafeGlobalDiagnostics();
+
+if ("serviceWorker" in navigator && window.isSecureContext) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("/sw.js").catch(() => undefined);
+  }, { once: true });
+}
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -44,6 +48,7 @@ const logClientApiError = (label: string, error: unknown) => {
   // Never emit API response bodies or user-provided messages in production logs.
   if (!import.meta.env.DEV) return;
   const trpcError = error instanceof TRPCClientError ? error : undefined;
+  recordSafeUiDiagnostic("unhandled_ui_error", error, label);
   console.error(label, {
     code: trpcError?.data?.code ?? "UNKNOWN",
     httpStatus: trpcError?.data?.httpStatus ?? undefined,

@@ -7,9 +7,9 @@ function request(overrides: Record<string, unknown> = {}) {
     protocol: "https",
     path: "/api/trpc/auth.internalLogin",
     ip: "203.0.113.10",
-    headers: { host: "medora.example", origin: "https://medora.example" },
+    headers: { host: "aldo.example", origin: "https://aldo.example" },
     get(name: string) {
-      return name.toLowerCase() === "host" ? "medora.example" : undefined;
+      return name.toLowerCase() === "host" ? "aldo.example" : undefined;
     },
     ...overrides,
   } as never;
@@ -34,11 +34,11 @@ function response() {
 describe("HTTP security boundaries", () => {
   it("accepts same-origin mutations and rejects cross-site fetches", () => {
     expect(isTrustedMutationRequest(request())).toEqual({ allowed: true });
-    expect(isTrustedMutationRequest(request({ headers: { host: "medora.example", origin: "https://evil.example", "sec-fetch-site": "cross-site" } }))).toMatchObject({ allowed: false, status: 403 });
+    expect(isTrustedMutationRequest(request({ headers: { host: "aldo.example", origin: "https://evil.example", "sec-fetch-site": "cross-site" } }))).toMatchObject({ allowed: false, status: 403 });
   });
 
   it("rejects a mismatched origin even without fetch metadata", () => {
-    expect(isTrustedMutationRequest(request({ headers: { host: "medora.example", origin: "https://evil.example" } }))).toMatchObject({ allowed: false, status: 403 });
+    expect(isTrustedMutationRequest(request({ headers: { host: "aldo.example", origin: "https://evil.example" } }))).toMatchObject({ allowed: false, status: 403 });
   });
 
   it("adds defensive headers and throttles repeated auth attempts", () => {
@@ -47,13 +47,21 @@ describe("HTTP security boundaries", () => {
     middleware(request(), first, (() => {}) as never);
     expect(first.headers.get("X-Content-Type-Options")).toBe("nosniff");
     expect(first.headers.get("X-Frame-Options")).toBe("DENY");
+    expect(first.headers.get("Origin-Agent-Cluster")).toBe("?1");
+    expect(first.headers.get("RateLimit-Limit")).toBe("12");
+    expect(first.headers.get("RateLimit-Remaining")).toBe("11");
 
     let rejected = false;
+    let retryAfter: string | undefined;
     for (let i = 0; i < 20; i += 1) {
       const current = response();
       middleware(request(), current, (() => {}) as never);
-      if (current.result.statusCode === 429) rejected = true;
+      if (current.result.statusCode === 429) {
+        rejected = true;
+        retryAfter = current.headers.get("Retry-After");
+      }
     }
     expect(rejected).toBe(true);
+    expect(Number(retryAfter)).toBeGreaterThan(0);
   });
 });

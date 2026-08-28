@@ -19,7 +19,7 @@ describe("internal employee session transport", () => {
   it("refreshes auth state and opens the protected workspace after a successful employee login", () => {
     const source = read("client/src/pages/Login.tsx");
 
-    expect(source).toContain("await utils.auth.me.invalidate();");
-    expect(source).toContain('setLocation("/workspace");');
+    expect(source).toContain("resetIdentityBoundClientState(queryClient);");
+    expect(source).toContain('window.location.assign("/workspace");');
   });
 });

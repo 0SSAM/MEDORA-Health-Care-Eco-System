@@ -1,3 +1,4 @@
+// © 2024-2026 MEDORA Health Care Eco System. All rights reserved. Proprietary and confidential.
 import type { NextFunction, Request, Response } from "express";
 
 const MAX_RATE_ENTRIES = 10_000;
@@ -5,9 +6,14 @@ const WINDOW_MS = 60_000;
 const AUTH_LIMIT = 12;
 const MUTATION_LIMIT = 120;
 const UPLOAD_LIMIT = 20;
-const PUBLIC_READ_LIMIT = 600;
 
 type Bucket = { count: number; resetAt: number };
+
+type RateLimitResult = {
+  allowed: boolean;
+  remaining: number;
+  resetAt: number;
+};
 
 export type SecurityDecision =
   | { allowed: true }
@@ -63,36 +69,60 @@ function clientKey(req: Request): string {
   return req.ip || "unknown";
 }
 
-function rateLimitFor(path: string, isMutation: boolean): { category: "auth" | "upload" | "mutation" | "public-read"; limit: number } | null {
+function rateLimitFor(path: string, isMutation: boolean): { category: "auth" | "upload" | "mutation"; limit: number } | null {
   if (path === "/api/trpc/auth.internalLogin" || path === "/api/trpc/auth.requestPasswordReset" || path === "/api/trpc/auth.resetPassword" || path === "/api/oauth/callback") {
     return { category: "auth", limit: AUTH_LIMIT };
   }
-  if (!isMutation) {
-    // The Vite/static SPA fallbacks read index.html from disk for every public
-    // navigation. Bound those requests without throttling protected API reads
-    // or authorized storage delivery, which enforce their own controls.
-    if (!path.startsWith("/api/") && !path.startsWith("/manus-storage/")) {
-      return { category: "public-read", limit: PUBLIC_READ_LIMIT };
-    }
-    return null;
-  }
+  if (!isMutation) return null;
   if (/\.(upload|extract|import)\b/i.test(path)) return { category: "upload", limit: UPLOAD_LIMIT };
   return { category: "mutation", limit: MUTATION_LIMIT };
 }
 
-function take(bucketMap: Map<string, Bucket>, key: string, limit: number, now: number): boolean {
+function take(bucketMap: Map<string, Bucket>, key: string, limit: number, now: number): RateLimitResult {
   if (bucketMap.size >= MAX_RATE_ENTRIES && !bucketMap.has(key)) {
     const oldest = bucketMap.keys().next().value as string | undefined;
     if (oldest) bucketMap.delete(oldest);
   }
   const current = bucketMap.get(key);
   if (!current || current.resetAt <= now) {
-    bucketMap.set(key, { count: 1, resetAt: now + WINDOW_MS });
-    return true;
+    const resetAt = now + WINDOW_MS;
+    bucketMap.set(key, { count: 1, resetAt });
+    return { allowed: true, remaining: limit - 1, resetAt };
   }
-  if (current.count >= limit) return false;
+  if (current.count >= limit) return { allowed: false, remaining: 0, resetAt: current.resetAt };
   current.count += 1;
-  return true;
+  return { allowed: true, remaining: limit - current.count, resetAt: current.resetAt };
+}
+
+function configuredHttpsOrigin(value: string | undefined): string | undefined {
+  if (!value) return undefined;
+  try {
+    const parsed = new URL(value);
+    if (parsed.protocol !== "https:" || parsed.username || parsed.password) return undefined;
+    return parsed.origin;
+  } catch {
+    return undefined;
+  }
+}
+
+export function createContentSecurityPolicy(analyticsEndpoint = process.env.VITE_ANALYTICS_ENDPOINT, upgradeInsecureRequests = true): string {
+  const analyticsOrigin = configuredHttpsOrigin(analyticsEndpoint);
+  const scriptSources = ["'self'", "https://files.manuscdn.com", analyticsOrigin].filter(Boolean).join(" ");
+  const connectSources = ["'self'", analyticsOrigin].filter(Boolean).join(" ");
+  return [
+    "default-src 'self'",
+    "base-uri 'self'",
+    "frame-ancestors 'none'",
+    "form-action 'self'",
+    "object-src 'none'",
+    `script-src ${scriptSources}`,
+    "style-src 'self' 'unsafe-inline'",
+    "img-src 'self' data: blob: https:",
+    "font-src 'self' data: https:",
+    `connect-src ${connectSources}`,
+    "worker-src 'self' blob:",
+    ...(upgradeInsecureRequests ? ["upgrade-insecure-requests"] : []),
+  ].join("; ");
 }
 
 export function createSecurityMiddleware() {
@@ -109,8 +139,15 @@ export function createSecurityMiddleware() {
     const rateLimit = rateLimitFor(path, isMutation);
     if (rateLimit) {
       const key = `${rateLimit.category}:${clientKey(req)}`;
-      if (!take(buckets, key, rateLimit.limit, Date.now())) {
-        res.set("Retry-After", "60");
+      const rateLimitResult = take(buckets, key, rateLimit.limit, Date.now());
+      const resetAfterSeconds = Math.max(1, Math.ceil((rateLimitResult.resetAt - Date.now()) / 1000));
+      res.set({
+        "RateLimit-Limit": String(rateLimit.limit),
+        "RateLimit-Remaining": String(rateLimitResult.remaining),
+        "RateLimit-Reset": String(resetAfterSeconds),
+      });
+      if (!rateLimitResult.allowed) {
+        res.set("Retry-After", String(resetAfterSeconds));
         res.status(429).json({ error: "Too many requests" });
         return;
       }
@@ -120,14 +157,16 @@ export function createSecurityMiddleware() {
       "X-Content-Type-Options": "nosniff",
       "X-Frame-Options": "DENY",
       "Referrer-Policy": "strict-origin-when-cross-origin",
-      "Permissions-Policy": "camera=(), microphone=(), geolocation=(), payment=()",
+      "Permissions-Policy": "camera=(), microphone=(), geolocation=(), payment=(), display-capture=()",
       "Cross-Origin-Opener-Policy": "same-origin",
       "Cross-Origin-Resource-Policy": "same-origin",
+      "Origin-Agent-Cluster": "?1",
       "X-DNS-Prefetch-Control": "off",
       "X-Permitted-Cross-Domain-Policies": "none",
+      "X-Download-Options": "noopen",
     });
     if (process.env.NODE_ENV === "production") {
-      res.set("Content-Security-Policy", "default-src 'self'; base-uri 'self'; frame-ancestors 'none'; form-action 'self'; object-src 'none'; script-src 'self' https:; style-src 'self' 'unsafe-inline' https:; img-src 'self' data: blob: https:; font-src 'self' data: https:; connect-src 'self' https:; worker-src 'self' blob:; upgrade-insecure-requests");
+      res.set("Content-Security-Policy", createContentSecurityPolicy(process.env.VITE_ANALYTICS_ENDPOINT, req.protocol === "https"));
     }
     if (req.protocol === "https") {
       res.set("Strict-Transport-Security", "max-age=31536000; includeSubDomains");
@@ -137,4 +176,4 @@ export function createSecurityMiddleware() {
   };
 }
 
-export const securityInternals = { normalizedOrigin, requestOrigin, clientKey, rateLimitFor, take, isTrustedMutationRequest };
+export const securityInternals = { normalizedOrigin, requestOrigin, clientKey, rateLimitFor, take, configuredHttpsOrigin, isTrustedMutationRequest };

@@ -178,7 +178,7 @@
 
 
 @layer components {
-  .medora-app-shell {
+  .aldo-app-shell {
     background:
       radial-gradient(circle at 10% 8%, rgba(25, 197, 209, 0.18), transparent 28%),
       radial-gradient(circle at 88% 18%, rgba(124, 92, 252, 0.12), transparent 24%),
@@ -187,7 +187,7 @@
     isolation: isolate;
   }
 
-  .medora-app-shell::before {
+  .aldo-app-shell::before {
     content: "";
     position: fixed;
     inset: 0;
@@ -196,18 +196,18 @@
     background: radial-gradient(circle at 18% 12%, rgba(25, 197, 209, 0.12), transparent 30%), radial-gradient(circle at 82% 76%, rgba(124, 92, 252, 0.08), transparent 28%);
   }
 
-  .medora-brand-mark {
+  .aldo-brand-mark {
     background: linear-gradient(145deg, #19c5d1, #b8f0e7);
     box-shadow: 0 10px 24px rgba(25, 197, 209, 0.22);
   }
 
   @media (prefers-reduced-motion: no-preference) {
-    .medora-brand-mark {
-      animation: medora-breathe 5s ease-in-out infinite;
+    .aldo-brand-mark {
+      animation: aldo-breathe 5s ease-in-out infinite;
     }
   }
 
-  @keyframes medora-breathe {
+  @keyframes aldo-breathe {
     0%, 100% { transform: translateY(0); box-shadow: 0 10px 24px rgba(25, 197, 209, 0.18); }
     50% { transform: translateY(-2px); box-shadow: 0 14px 30px rgba(25, 197, 209, 0.28); }
   }
@@ -215,11 +215,48 @@
 
 
 @layer components {
-  .medora-loading-shell { isolation: isolate; }
-  .medora-loading-orb { position: absolute; width: 22rem; height: 22rem; border-radius: 9999px; filter: blur(10px); opacity: .45; pointer-events: none; background: radial-gradient(circle, rgba(25, 197, 209, .26), rgba(159, 242, 228, 0) 68%); }
-  .medora-loading-orb-one { inset: -8rem auto auto -7rem; }
-  .medora-loading-orb-two { inset: auto -8rem -9rem auto; background: radial-gradient(circle, rgba(111, 130, 255, .18), rgba(159, 242, 228, 0) 68%); }
-  .medora-loading-bar { animation: medora-loading-slide 1.35s cubic-bezier(.23, 1, .32, 1) infinite; transform-origin: right center; }
-  @keyframes medora-loading-slide { 0% { transform: translateX(120%); opacity: .45; } 45%, 70% { transform: translateX(0); opacity: 1; } 100% { transform: translateX(-120%); opacity: .45; } }
-  @media (prefers-reduced-motion: reduce) { .medora-loading-bar { animation: none; transform: translateX(0); } }
+  .cashier-touch-ui button:not(:disabled),
+  .cashier-touch-ui [role="button"]:not([aria-disabled="true"]) {
+    min-height: 2.75rem;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    transition: transform 160ms cubic-bezier(.23, 1, .32, 1), box-shadow 160ms cubic-bezier(.23, 1, .32, 1), background-color 160ms ease, border-color 160ms ease;
+  }
+
+  .cashier-touch-ui button:not(:disabled):active,
+  .cashier-touch-ui [role="button"]:not([aria-disabled="true"]):active {
+    transform: scale(.97);
+  }
+
+  .cashier-touch-card {
+    transition: transform 180ms cubic-bezier(.23, 1, .32, 1), box-shadow 180ms cubic-bezier(.23, 1, .32, 1), border-color 180ms ease;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .cashier-touch-card:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 8px 20px rgba(15, 23, 42, .08);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .cashier-touch-ui button:not(:disabled),
+    .cashier-touch-ui [role="button"]:not([aria-disabled="true"]),
+    .cashier-touch-card {
+      transition: none;
+    }
+    .cashier-touch-ui button:not(:disabled):active,
+    .cashier-touch-ui [role="button"]:not([aria-disabled="true"]):active,
+    .cashier-touch-card:hover {
+      transform: none;
+    }
+  }
+
+  .aldo-loading-shell { isolation: isolate; }
+  .aldo-loading-orb { position: absolute; width: 22rem; height: 22rem; border-radius: 9999px; filter: blur(10px); opacity: .45; pointer-events: none; background: radial-gradient(circle, rgba(25, 197, 209, .26), rgba(159, 242, 228, 0) 68%); }
+  .aldo-loading-orb-one { inset: -8rem auto auto -7rem; }
+  .aldo-loading-orb-two { inset: auto -8rem -9rem auto; background: radial-gradient(circle, rgba(111, 130, 255, .18), rgba(159, 242, 228, 0) 68%); }
+  .aldo-loading-bar { animation: aldo-loading-slide 1.35s cubic-bezier(.23, 1, .32, 1) infinite; transform-origin: right center; }
+  @keyframes aldo-loading-slide { 0% { transform: translateX(120%); opacity: .45; } 45%, 70% { transform: translateX(0); opacity: 1; } 100% { transform: translateX(-120%); opacity: .45; } }
+  @media (prefers-reduced-motion: reduce) { .aldo-loading-bar { animation: none; transform: translateX(0); } }
 }

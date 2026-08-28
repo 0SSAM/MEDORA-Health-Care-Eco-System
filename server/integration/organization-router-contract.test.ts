@@ -2,8 +2,8 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { appRouter } from "../routers";
 import type { TrpcContext } from "../_core/context";
 
-const { getDbMock } = vi.hoisted(() => ({ getDbMock: vi.fn() }));
-vi.mock("../db", () => ({ getDb: getDbMock }));
+const { getDbMock, hasCurrentNdaAcceptanceMock, recordAuthenticationEventMock } = vi.hoisted(() => ({ getDbMock: vi.fn(), hasCurrentNdaAcceptanceMock: vi.fn().mockResolvedValue(true), recordAuthenticationEventMock: vi.fn() }));
+vi.mock("../db", () => ({ getDb: getDbMock, hasCurrentNdaAcceptance: hasCurrentNdaAcceptanceMock, recordAuthenticationEvent: recordAuthenticationEventMock }));
 
 type TestUser = NonNullable<TrpcContext["user"]>;
 
@@ -45,8 +45,16 @@ const baseUser: TestUser = {
   lastSignedIn: new Date(0),
 };
 
-describe("organizations.members protected tRPC contract", () => {
+describe("organizations protected tRPC contract", () => {
   beforeEach(() => getDbMock.mockReset());
+
+  it("fails closed when the organization scope read cannot access the database", async () => {
+    getDbMock.mockResolvedValue(null);
+
+    const caller = appRouter.createCaller(contextFor(baseUser));
+    await expect(caller.organizations.mine()).rejects.toMatchObject({ code: "SERVICE_UNAVAILABLE" });
+    expect(getDbMock).toHaveBeenCalledTimes(1);
+  });
 
   it("denies a non-manager member from reading an organization directory", async () => {
     getDbMock.mockResolvedValue(

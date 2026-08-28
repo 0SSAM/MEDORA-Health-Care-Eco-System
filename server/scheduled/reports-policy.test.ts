@@ -32,8 +32,9 @@ describe("report execution lifecycle policy", () => {
     expect(buildReportDeliveryAudit({ reportRunId: 11, definitionId: 7, organizationId: 3, jurisdictionId: 2, channel: "in_app", status: "delivered", notificationId: 90 })).toEqual({ reportRunId: 11, definitionId: 7, organizationId: 3, jurisdictionId: 2, channel: "in_app", status: "delivered", notificationId: 90, errorCode: null });
   });
 
-  it("blocks external report channels and unscoped audit records", () => {
-    expect(() => buildReportDeliveryAudit({ reportRunId: 11, definitionId: 7, organizationId: 3, jurisdictionId: 2, channel: "email", status: "queued" })).toThrow(/External/);
+  it("allows approved email channel audits while rejecting unsupported channels and unscoped records", () => {
+    expect(buildReportDeliveryAudit({ reportRunId: 11, definitionId: 7, organizationId: 3, jurisdictionId: 0, channel: "email", status: "queued" })).toMatchObject({ channel: "email", jurisdictionId: 0, status: "queued" });
+    expect(() => buildReportDeliveryAudit({ reportRunId: 11, definitionId: 7, organizationId: 3, jurisdictionId: 2, channel: "webhook", status: "queued" })).toThrow(/Unsupported/);
     expect(() => buildReportDeliveryAudit({ reportRunId: 11, definitionId: 7, organizationId: 3, jurisdictionId: null, channel: "in_app", status: "queued" })).toThrow(/jurisdiction/);
   });
 });

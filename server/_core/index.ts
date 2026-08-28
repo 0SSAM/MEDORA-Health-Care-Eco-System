@@ -10,9 +10,10 @@ import { createContext } from "./context";
 import { serveStatic, setupVite } from "./vite";
 import { inventoryAlertHandler } from "../scheduled/inventory";
 import { reportExecutionHandler } from "../scheduled/reports";
+import { backupHandler } from "../scheduled/backups";
 import { createSecurityMiddleware } from "./security";
 import { attachRequestCookies } from "./request-cookies";
-import { bootstrapSystem } from "../bootstrap";
+import { registerPublicReadinessRoute } from "./readiness";
 
 function isPortAvailable(port: number): Promise<boolean> {
   return new Promise(resolve => {
@@ -34,9 +35,6 @@ async function findAvailablePort(startPort: number = 3000): Promise<number> {
 }
 
 async function startServer() {
-  // Automated System Bootstrap & Admin Provisioning
-  await bootstrapSystem();
-
   const app = express();
   const server = createServer(app);
   app.disable("x-powered-by");
@@ -56,6 +54,7 @@ async function startServer() {
     attachRequestCookies(req);
     next();
   });
+  registerPublicReadinessRoute(app);
   registerStorageProxy(app);
   registerOAuthRoutes(app);
   // tRPC API
@@ -69,6 +68,7 @@ async function startServer() {
   // Heartbeat callback: production cron only; handler authenticates task UID.
   app.post("/api/scheduled/inventory-alerts", inventoryAlertHandler);
   app.post("/api/scheduled/report-execution", reportExecutionHandler);
+  app.post("/api/scheduled/backup", backupHandler);
   // development mode uses Vite, production mode uses static files
   if (process.env.NODE_ENV === "development") {
     await setupVite(app, server);

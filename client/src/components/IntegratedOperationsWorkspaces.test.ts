@@ -1,8 +1,3 @@
-// MEDORA | ميدورا — Integrated Health Care System
-// Copyright (c) 2026 Hossam Naeim Osman | حسام نعيم عثمان. All rights reserved.
-// Proprietary and confidential. Unauthorized copying, distribution, or use of this
-// software, or of any portion of it, is strictly prohibited.
-// Source: https://github.com/0SSAM/MEDORA-Health-Care-Eco-System
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 
@@ -31,7 +26,7 @@ describe("integrated operations workspace contracts", () => {
 
   it("communicates fail-closed external integration boundaries", () => {
     expect(source).toContain("الإرسال الشبكي معطل حتى اعتماد الموصل الرسمي");
-    expect(source).toContain("التسليم التلقائي معطل حتى الجدولة الصريحة");
+    expect(source).toContain("لا تُرسل إشعارات تلقائياً قبل الجدولة الصريحة");
     expect(source).toContain("الحد القانوني للخصم النسبي يطبقه الخادم");
   });
 });

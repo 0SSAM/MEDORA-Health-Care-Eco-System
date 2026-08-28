@@ -7,7 +7,8 @@ describe("local starter catalog importer", () => {
   it("is guarded, idempotent, and preserves review provenance", async () => {
     const source = await readFile(importerPath, "utf8");
     expect(source).toContain("const commit = args.commit === true");
-    expect(source).toContain('org.environment !== "production"');
+    expect(source).toContain('org.status !== "active"');
+    expect(source).not.toMatch(/showcase|environment/iu);
     expect(source).toContain('verificationStatus: "PENDING_REVIEW"');
     expect(source).toContain("sourceLicense");
     expect(source).toContain("sourceNotes");

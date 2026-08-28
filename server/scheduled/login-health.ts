@@ -1,5 +1,5 @@
 import type { Request, Response } from "express";
-import { getDb, getInternalCredentialByUsername, getInternalScopeForUser } from "../db";
+import { getDb } from "../db";
 import { sdk } from "../_core/sdk";
 
 export function safeLoginHealthError(_error: unknown) {
@@ -14,19 +14,13 @@ export async function loginHealthHandler(req: Request, res: Response) {
     const db = await getDb();
     if (!db) return res.status(503).json({ ok: false, error: "database-unavailable" });
 
-    const credential = await getInternalCredentialByUsername("test");
-    const scope = credential?.active && credential.accountType === "showcase"
-      ? await getInternalScopeForUser(credential.userId)
-      : undefined;
-    const healthy = Boolean(credential?.active && credential.accountType === "showcase" && scope);
-
-    return res.status(healthy ? 200 : 503).json({
-      ok: healthy,
+    return res.status(200).json({
+      ok: true,
       taskUid: user.taskUid,
       checks: {
         database: "ok",
-        showcaseCredential: credential?.active && credential.accountType === "showcase" ? "ok" : "blocked",
-        showcaseScope: scope ? "ok" : "blocked",
+        credentialPath: "not-invoked",
+        scopePath: "not-invoked",
         passwordExposure: "none",
         loginMutation: "not_attempted",
       },

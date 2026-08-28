@@ -7,7 +7,7 @@ describe("MEDORA shortcuts contract", () => {
 
   it("keeps core operational shortcuts discoverable", () => {
     for (const key of ["F2", "F4", "F6", "F7", "F8", "F9"]) expect(home).toContain(`key: "${key}"`);
-    expect(home).toContain("الاختصارات الأساسية");
+    expect(home).toContain('t("home.shortcutsTitle")');
     expect(home).toContain("availableShortcuts");
   });
 

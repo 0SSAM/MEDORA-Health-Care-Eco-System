@@ -1,8 +1,3 @@
-// MEDORA | ميدورا — Integrated Health Care System
-// Copyright (c) 2026 Hossam Naeim Osman | حسام نعيم عثمان. All rights reserved.
-// Proprietary and confidential. Unauthorized copying, distribution, or use of this
-// software, or of any portion of it, is strictly prohibited.
-// Source: https://github.com/0SSAM/MEDORA-Health-Care-Eco-System
 import {
   Accordion,
   AccordionContent,
@@ -1295,7 +1290,7 @@ export default function ComponentsShowcase() {
             <Card>
               <CardContent className="pt-6">
                 <ResizablePanelGroup
-                  orientation="horizontal"
+                  direction="horizontal"
                   className="min-h-[200px] rounded-lg border"
                 >
                   <ResizablePanel defaultSize={50}>

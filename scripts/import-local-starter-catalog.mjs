@@ -5,9 +5,9 @@ import process from "node:process";
 import mysql from "mysql2/promise";
 
 const DEFAULT_FILES = [
-  "/home/ubuntu/medora-catalog-research/derived/medicines-pending-review.csv",
-  "/home/ubuntu/medora-catalog-research/derived/cosmetics-pending-review.csv",
-  "/home/ubuntu/medora-catalog-research/derived/medical-equipment-supplies-leads-pending-review.csv",
+  "/home/ubuntu/aldora-catalog-research/derived/medicines-pending-review.csv",
+  "/home/ubuntu/aldora-catalog-research/derived/cosmetics-pending-review.csv",
+  "/home/ubuntu/aldora-catalog-research/derived/medical-equipment-supplies-leads-pending-review.csv",
 ];
 
 function parseArgs(argv) {
@@ -85,12 +85,12 @@ async function main() {
   }
   const connection = await mysql.createConnection(process.env.DATABASE_URL);
   try {
-    const [[org]] = await connection.query("SELECT id, status, environment FROM organizations WHERE id=? LIMIT 1", [organizationId]);
+    const [[org]] = await connection.query("SELECT id, status FROM organizations WHERE id=? LIMIT 1", [organizationId]);
     const [[branch]] = await connection.query("SELECT id, organizationId, active FROM branches WHERE id=? LIMIT 1", [branchId]);
     const [[jurisdiction]] = await connection.query("SELECT id, countryCode, active FROM jurisdiction_profiles WHERE id=? LIMIT 1", [jurisdictionId]);
     const [[binding]] = await connection.query("SELECT branchId, jurisdictionId FROM branch_jurisdictions WHERE branchId=? AND jurisdictionId=? LIMIT 1", [branchId, jurisdictionId]);
     const [[user]] = await connection.query("SELECT id FROM users WHERE id=? LIMIT 1", [userId]);
-    if (!org || org.status !== "active" || org.environment !== "production") throw new Error("Target organization must be active production; showcase is refused.");
+    if (!org || org.status !== "active") throw new Error("Target organization must be active.");
     if (!branch || Number(branch.organizationId) !== organizationId || !branch.active) throw new Error("Branch is not active or outside organization scope.");
     if (!jurisdiction || !jurisdiction.active || !binding) throw new Error("Active jurisdiction and branch binding are required.");
     if (!user) throw new Error("Import actor does not exist.");

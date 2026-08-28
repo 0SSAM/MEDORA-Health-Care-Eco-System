@@ -50,6 +50,10 @@ pids
 coverage/
 *.lcov
 
+# Browser-test artifacts (generated locally or in CI, never source-controlled)
+playwright-report/
+test-results/
+
 # nyc test coverage
 .nyc_output
 
@@ -112,6 +116,3 @@ temp/
 # Manus version file (auto-generated, not part of source)
 client/public/__manus__/version.json
 .project-config.json
-
-# MEDORA project local artifacts
-test-results/
