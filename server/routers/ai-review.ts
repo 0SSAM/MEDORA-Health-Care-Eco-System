@@ -19,7 +19,7 @@ import { getDb } from "../db";
 
 /** getDb مع ضمان عدم القيمة الفارغة (قاعدة MEDORA مطلوبة) */
 async function getDbOrThrow(): Promise<any> {
-  const db = await getDbOrThrow();
+  const db = await getDb();
   if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "قاعدة البيانات غير متاحة." });
   return db;
 }

@@ -1,24 +1,42 @@
 # Changelog — سجل التغييرات
 
 All notable changes to MEDORA. Format based on [Keep a Changelog](https://keepachangelog.com/).
-This project adheres to single-branch workflow: all work lands on `main` (no side branches).
+Single-branch workflow: all work lands on `main` (no side branches).
+
+## [1.1.0] — 2026-08-28
+
+### Added
+- **GP MAX growth-audit module (proposals 1–4)**
+  - Expanded checkpoint library: 96 checkpoints across layers L0–L7 (`scripts/seed-gp-max.mjs`).
+  - KPI calculator: per-layer + overall weighted 0–100 scores (`shared/gp-max-kpi.ts`).
+  - tRPC router `gpMax`: `listLayers`, `listCheckpoints`, `runAssessment`, `listAssessments`, `latestAssessment`, `generate30DayPlan`, `resolveRecommendation` (`server/routers/gp-max.ts`).
+  - Arabic RTL page `/gp-max` with interactive audit, results, recommendations, and 30-day plan generator (`client/src/pages/GpMax.tsx`).
+  - Schema tables `gp_max_*` (DDL in `scripts/seed-gp-max.mjs`).
+- **Prescription dispense workflow (closes audit P0 gap, contract-dispensing stage 6)**
+  - `dispensing` tRPC router: `recordDispense`, `listDispenses`, `recordReturn`.
+  - `prescription_dispenses` table via `scripts/seed-dispensing.mjs`.
+- **Docs** — `docs/GP-MAX-EXECUTION-2026-08-28.md`, `docs/DISPENSING-IMPLEMENTATION-2026-08-28.md`, `docs/SYNC-DESIGN-2026-08-28.md` (design only).
+
+### Fixed
+- `server/routers/ai-review.ts`: `getDbOrThrow` called itself recursively (infinite recursion at runtime) — now calls `getDb()` from `../db` and checks null.
+
+### Notes
+- The original GP MAX sheet (140+ checkpoints) was never provided in this session; the 96-point library is a standard framework replacement and will be superseded when the sheet is ingested.
+- Offline-first sync is design-only at this stage.
+- Desktop/mobile installers (exe/apk/ipa) still blocked by environment (no Electron / Android SDK / Xcode).
 
 ## [1.0.0] — 2026-08-28
 
 ### Added
-- **Delivery module** — `delivery_zones`, `delivery_drivers`, `delivery_orders`, `delivery_tracking_events`; tRPC router `delivery` (14 procedures) with auto-assignment and full state machine (`created → assigned → picked_up → in_transit → delivered`, plus `cancelled`/`failed`); Arabic RTL UI at `/delivery`; seed for 8 Egyptian zones.
+- **Delivery module** — `delivery_zones`, `delivery_drivers`, `delivery_orders`, `delivery_tracking_events`; tRPC router `delivery` (14 procedures) with auto-assignment and full state machine; Arabic RTL UI at `/delivery`; seed for 8 Egyptian zones.
 - **Admin account management** — `adminAccount` router: change username/password **admin-only**, uniqueness check, scrypt hashing, session revocation on change.
-- **RBAC** — `rbac` router (9 procedures), 73 permissions × 10 roles, `seed-rbac-and-roles.mjs`; org admins auto-assigned `org_admin`.
-- **AI daily review** — `aiReview` router (5 procedures): auto-reviews 11 reference tables, scores 0–100 per module, Arabic markdown report with P0–P3 recommendations, persisted in `ai_review_runs` / `ai_review_recommendations`, daily schedule via `scheduled_jobs`.
-- **Egyptian drug database** — `data/egyptian-drugs.csv` (25,094 records, CC0-1.0) + `scripts/provision-medora.mjs` (admin provisioning + import).
+- **RBAC** — `rbac` router (9 procedures), 73 permissions × 10 roles, `seed-rbac-and-roles.mjs`.
+- **AI daily review** — `aiReview` router (5 procedures), 11 reference tables, scores 0–100, Arabic reports, P0–P3 recommendations, daily schedule.
+- **Egyptian drug database** — `data/egyptian-drugs.csv` (25,094 records, CC0-1.0) + `scripts/provision-medora.mjs`.
 - **Open-source release (MIT)** — `LICENSE`, `docs/OPEN-SOURCE-COMMITMENT-2026-08-28.md`, `package.json` license=MIT, `private` removed.
-- **Community & docs** — bilingual `README.md`, `CONTRIBUTING.md`, `SECURITY.md`, `CODE_OF_CONDUCT.md`, issue/PR templates, audit reports (contract dispensing, backup/sync), upload bundle docs.
-- **Installers** — `install.sh` (Linux/macOS), `install.bat` (Windows), `Dockerfile`, `docker-compose.yml` (MariaDB 10.11 + app), `.env.example`.
+- **Community & docs** — bilingual `README.md`, `CONTRIBUTING.md`, `SECURITY.md`, `CODE_OF_CONDUCT.md`, issue/PR templates, audit reports, architecture doc, changelog.
+- **CI/CD & installers** — `ci.yml`, `release.yml`, `install.sh` (Linux/macOS), `install.bat` (Windows), `Dockerfile`, `docker-compose.yml`, complete `.env.example`, `engines.node >=22`.
 
 ### Changed
-- `client/src/pages/ComponentShowcase.tsx`: demo menu item `Subscription` renamed to `Settings` (free/open-source alignment).
+- `client/src/pages/ComponentShowcase.tsx`: demo menu item `Subscription` → `Settings`.
 - Repository metadata: bilingual description, topics, Issues/Wiki/Projects/Discussions enabled.
-
-### Notes
-- Base commit: `11255f1` — bundle commits: `7341f6f` (full bundle), `3d468ac` (cleanup), `5ced465` (open-source commitment & redesign), `dd7d361` (bilingual README).
-- GP MAX (growth-audit module L0–L7) scaffolded — see `drizzle/gp-max-schema.ts`, `scripts/seed-gp-max.mjs`, `docs/GP-MAX-PLAN-2026-08-28.md`; full 140+ checkpoints import pending (sheets not yet ingested).

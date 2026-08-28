@@ -28,6 +28,8 @@ import { deliveryRouter } from "./routers/delivery";
 import { adminAccountRouter } from "./routers/adminAccount";
 import { rbacRouter } from "./routers/rbac";
 import { aiReviewRouter } from "./routers/ai-review";
+import { gpMaxRouter } from "./routers/gp-max";
+import { dispensingRouter } from "./routers/dispensing";
 import { createPasswordResetToken, getInternalCredentialByUsername, getInternalScopeForUser, createInternalSession, recordAuthenticationEvent, resetInternalPasswordWithToken, revokeInternalSession, getUserById } from "./db";
 import { assertPasswordPolicy, createInternalSessionToken, INTERNAL_LOCKOUT_MS, INTERNAL_MAX_FAILED_ATTEMPTS, INTERNAL_SESSION_COOKIE, INTERNAL_SESSION_TTL_MS, isLocked, normalizeInternalUsername, verifyInternalPassword } from "./domain/internal-auth";
 import { hashInternalPassword, hashAuditRecord } from "./domain/internal-auth";
@@ -281,6 +283,8 @@ export const appRouter = router({
   delivery: deliveryRouter,
   adminAccount: adminAccountRouter,
   aiReview: aiReviewRouter,
+  gpMax: gpMaxRouter,
+  dispensing: dispensingRouter,
   regional: regionalRouter,
   organizations: organizationsRouter,
   notifications: notificationsRouter,

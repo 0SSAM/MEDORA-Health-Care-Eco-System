@@ -3,6 +3,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { lazy, Suspense } from "react";
 const Home = lazy(() => import("@/pages/Home"));
 const DeliveryPage = lazy(() => import("./pages/Delivery"));
+const GpMaxPage = lazy(() => import("./pages/GpMax"));
 const Welcome = lazy(() => import("@/pages/Welcome"));
 const Login = lazy(() => import("@/pages/Login"));
 const AdminConsole = lazy(() => import("@/pages/AdminConsole"));
@@ -25,6 +26,7 @@ function Router() {
       <Route path={"/pos"} component={Home} />
       <Route path={"/operations"} component={Home} />
       <Route path={"/delivery"} component={DeliveryPage} />
+      <Route path={"/gp-max"} component={GpMaxPage} />
       <Route path={"/finance"} component={Home} />
       <Route path={"/admin"} component={AdminConsole} />
       <Route path={"/"} component={Welcome} />
