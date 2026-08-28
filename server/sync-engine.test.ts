@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from "vitest";
-import { ConflictResolver, SyncEngine } from "./sync-engine";
+import { ConflictResolver, SyncEngine } from "../shared/sync-engine";
 
 describe("MEDORA sync engine (Outbox + LWW)", () => {
   it("enqueues a local change into the outbox", () => {
