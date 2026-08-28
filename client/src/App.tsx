@@ -8,6 +8,8 @@ const Icd11Page = lazy(() => import("./pages/Icd11"));
 const AttendanceMobilePage = lazy(() => import("./pages/AttendanceMobile"));
 const KpiDashboardPage = lazy(() => import("./pages/KpiDashboard"));
 const ComplianceCenterPage = lazy(() => import("./pages/ComplianceCenter"));
+const FinanceHubPage = lazy(() => import("./pages/FinanceHub"));
+const SupplyHubPage = lazy(() => import("./pages/SupplyHub"));
 const Welcome = lazy(() => import("@/pages/Welcome"));
 const Login = lazy(() => import("@/pages/Login"));
 const AdminConsole = lazy(() => import("@/pages/AdminConsole"));
@@ -35,6 +37,8 @@ function Router() {
       <Route path={"/attendance"} component={AttendanceMobilePage} />
       <Route path={"/kpi"} component={KpiDashboardPage} />
       <Route path={"/compliance"} component={ComplianceCenterPage} />
+      <Route path={"/finance-hub"} component={FinanceHubPage} />
+      <Route path={"/supply"} component={SupplyHubPage} />
       <Route path={"/finance"} component={Home} />
       <Route path={"/admin"} component={AdminConsole} />
       <Route path={"/"} component={Welcome} />

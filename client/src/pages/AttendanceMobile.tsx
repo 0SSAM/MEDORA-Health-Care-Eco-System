@@ -18,6 +18,14 @@ async function m<T = unknown>(path: string, input: unknown): Promise<T> {
 interface Scope { organizationId: number; branchId: number; jurisdictionId: number; }
 interface Fence { name: string; radiusMeters: number; }
 interface Rec { checkInAt?: string | null; checkOutAt?: string | null; status?: string; }
+const fmtTime = (v?: string | null) => {
+  if (!v) return "—";
+  const d = new Date(v);
+  return isNaN(d.getTime()) ? "—" : d.toLocaleTimeString("ar-EG", { hour: "2-digit", minute: "2-digit" });
+};
+const statusAr = (s?: string) =>
+  s === "present" ? "حاضر" : s === "late" ? "متأخر" : s === "absent" ? "غائب" : s === "planned" ? "مخطط" : s ?? "—";
+
 export default function AttendanceMobile() {
   const [myLat, setMyLat] = useState<number | null>(null);
   const [myLng, setMyLng] = useState<number | null>(null);
@@ -61,7 +69,9 @@ export default function AttendanceMobile() {
       <div style={S.card}>
         <div style={{ fontWeight: 700, marginBottom: 8 }}>📋 سجل اليوم</div>
         {rec ? (
-          <div style={{ fontSize: 13, color: "#334155" }}>حضور: {String(rec.checkInAt ?? "-")} · انصراف: {String(rec.checkOutAt ?? "—")} · الحالة: {String(rec.status)}</div>
+          <div style={{ fontSize: 13, color: "#334155" }}>
+            حضور: {fmtTime(rec.checkInAt)} · انصراف: {fmtTime(rec.checkOutAt)} · الحالة: {statusAr(rec.status)}
+          </div>
         ) : <div style={{ fontSize: 13, color: "#94a3b8" }}>لا يوجد تسجيل اليوم بعد</div>}
       </div>
       <button data-testid="btn-checkin" style={{ ...S.btn, background: "#16a34a", color: "#fff" }} onClick={() => run("check_in")}>تسجيل حضور</button>
