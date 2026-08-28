@@ -121,7 +121,63 @@ const CHECKPOINTS = [
   ["L7", "GP-L7-09", "دليل تشغيل الإعلانات", "Ads playbook", "ads", 1, "توثيق الإعدادات والنتائج"],
   ["L7", "GP-L7-10", "أرشفة التعلم", "Knowledge base", "ops", 1, "مستودع دروس مستفادة"],
   ["L7", "GP-L7-11", "تقييم ربع سنوي", "Quarterly review", "planning", 2, "تقرير ربع سنوي"],
-  ["L7", "GP-L7-12", "تحديث خطة النمو السنوية", "Annual growth plan update", "planning", 1, "خطة سنوية محدثة"],
+  ["L7", "GP-L7-12", "تحديث خطة النمو السنوية", "Annual growth plan update", "planning", 1, "خطة سنوية محدثة"],  // L0 extensions (13-18)
+  ["L0", "GP-L0-13", "نموذج عمل موثق", "Documented business model", "planning", 2, "مصدر أرباح وتكاليف موثق"],
+  ["L0", "GP-L0-14", "سياسة الخصوصية والبيانات", "Privacy & data policy", "compliance", 2, "سياسة منشورة ومطبقة"],
+  ["L0", "GP-L0-15", "خطة محتوى أولية", "Starter content plan", "content", 1, "اتجاه محتوى موثق"],
+  ["L0", "GP-L0-16", "قنوات التواصل الداخلية", "Internal comms channels", "team", 1, "أداة تواصل موحدة"],
+  ["L0", "GP-L0-17", "صندوق طوارئ تشغيلي", "Operational buffer", "finance", 1, "سيولة احتياطية محددة"],
+  ["L0", "GP-L0-18", "معايير الجودة الدنيا", "Minimum quality standards", "service", 2, "قائمة معايير مكتوبة"],
+  // L1 extensions (13-18)
+  ["L1", "GP-L1-13", "قوائم الأدلة المتخصصة", "Niche directory listings", "local", 1, "مدخل في دليل قطاعي"],
+  ["L1", "GP-L1-14", "صورة الغلاف موحدة", "Consistent cover visuals", "brand", 1, "هوية بصرية موحدة"],
+  ["L1", "GP-L1-15", "رصد الإشارات للعلامة", "Brand mentions monitoring", "reputation", 1, "تنبيه شهري للإشارات"],
+  ["L1", "GP-L1-16", "أسئلة وأجوبة خرائط جوجل", "Google Maps Q&A", "local", 1, "10+ سؤال مجاب"],
+  ["L1", "GP-L1-17", "تحسين سرعة الموقع", "Site speed optimization", "web", 2, "زمن تحميل أقل من 3 ثوان"],
+  ["L1", "GP-L1-18", "صفحة خدمات وتسعير واضحة", "Clear services & pricing page", "web", 2, "صفحة محدثة"],
+  // L2 extensions (13-18)
+  ["L2", "GP-L2-13", "إعلانات محلية مستهدفة", "Local targeted ads", "ads", 2, "حملة جيوجرافية"],
+  ["L2", "GP-L2-14", "مقالات تعليمية", "Educational articles", "content", 2, "مقالان شهريًا"],
+  ["L2", "GP-L2-15", "تعاون مؤثرين محليين", "Local influencer collaboration", "growth", 2, "شراكة واحدة منفذة"],
+  ["L2", "GP-L2-16", "نشرة بريدية دورية", "Email/SMS newsletter", "retention", 1, "نشرة شهرية"],
+  ["L2", "GP-L2-17", "بكسل إعادة الاستهداف", "Retargeting pixel", "ads", 1, "بكسل مفعل"],
+  ["L2", "GP-L2-18", "تحليل منافسين شهري", "Monthly competitor scan", "data", 1, "تقرير مقارنة"],
+  // L3 extensions (13-18)
+  ["L3", "GP-L3-13", "عرض ترحيبي للعملاء الجدد", "Welcome offer", "conversion", 2, "عرض قائم"],
+  ["L3", "GP-L3-14", "رسائل متابعة آلية", "Automated follow-up sequences", "automation", 2, "سلسلة 3 رسائل"],
+  ["L3", "GP-L3-15", "صفحة شكر وإحالة", "Thank-you & referral page", "referral", 1, "صفحة مفعلة"],
+  ["L3", "GP-L3-16", "دعم محادثة مباشرة", "Live chat support", "service", 1, "دردشة متاحة"],
+  ["L3", "GP-L3-17", "اختبار عرضين متنافسين", "A/B test two offers", "conversion", 1, "نتيجة موثقة"],
+  ["L3", "GP-L3-18", "سياسة استرجاع واضحة", "Clear refund/guarantee policy", "service", 2, "سياسة منشورة"],
+  // L4 extensions (13-18)
+  ["L4", "GP-L4-13", "برنامج ولاء عملاء", "Customer loyalty program", "retention", 2, "برنامج قائم"],
+  ["L4", "GP-L4-14", "عروض موسمية مجدولة", "Seasonal offers calendar", "revenue", 2, "تقويم موسمي"],
+  ["L4", "GP-L4-15", "دليل البيع المتقاطع", "Cross-selling playbook", "revenue", 1, "سيناريوهات موثقة"],
+  ["L4", "GP-L4-16", "حساب تكلفة اكتساب العميل", "CAC estimation", "finance", 2, "رقم CAC شهري"],
+  ["L4", "GP-L4-17", "خطة احتفاظ شهرية", "Monthly retention plan", "retention", 1, "خطة موثقة"],
+  ["L4", "GP-L4-18", "استهداف متوسط قيمة الطلب", "AOV target", "revenue", 1, "هدف AOV محدد"],
+  // L5 extensions (13-18)
+  ["L5", "GP-L5-13", "شراكات القطاع", "Industry partnerships", "growth", 2, "شراكة رسمية"],
+  ["L5", "GP-L5-14", "برنامج إحالة رسمي", "Official referral program", "referral", 2, "برنامج بحوافز"],
+  ["L5", "GP-L5-15", "توسع جغرافي متدرج", "Phased geographic expansion", "growth", 1, "خطة توسع"],
+  ["L5", "GP-L5-16", "توثيق عمليات التسويق", "Marketing ops documentation", "ops", 1, "دليل عمليات"],
+  ["L5", "GP-L5-17", "ميزانية نمو ربع سنوية", "Quarterly growth budget", "finance", 2, "ميزانية معتمدة"],
+  ["L5", "GP-L5-18", "فريق نمو متخصص", "Dedicated growth team", "team", 2, "أدوار محددة"],
+  // L6 extensions (13-18)
+  ["L6", "GP-L6-13", "لوحة مؤشرات شهرية", "Monthly KPI dashboard", "data", 2, "لوحة محدثة"],
+  ["L6", "GP-L6-14", "اختبارات A/B مستمرة", "Continuous A/B testing", "optimization", 2, "اختبار شهري"],
+  ["L6", "GP-L6-15", "خريطة رحلة العميل", "Customer journey map", "data", 1, "خريطة موثقة"],
+  ["L6", "GP-L6-16", "مراجعة القمع التحويلي", "Funnel review", "analytics", 2, "تقرير قمع شهري"],
+  ["L6", "GP-L6-17", "أتمتة التقارير", "Automated reporting", "automation", 1, "تقرير تلقائي"],
+  ["L6", "GP-L6-18", "معايير أداء الفريق", "Team performance metrics", "team", 1, "مؤشرات فردية"],
+  // L7 extensions (13-18)
+  ["L7", "GP-L7-13", "دليل تشغيل النمو", "Growth SOPs", "ops", 2, "SOP موثقة"],
+  ["L7", "GP-L7-14", "اجتماع مراجعة أسبوعي", "Weekly growth review", "ops", 1, "اجتماع مثبت بالجدول"],
+  ["L7", "GP-L7-15", "خطة 90 يومًا متجددة", "Rolling 90-day plan", "planning", 2, "خطة محدثة"],
+  ["L7", "GP-L7-16", "رصد NPS/CSAT شهري", "Monthly NPS/CSAT", "data", 1, "استطلاع شهري"],
+  ["L7", "GP-L7-17", "سجل تجارب وأفكار", "Experiments backlog", "optimization", 1, "سجل حي"],
+  ["L7", "GP-L7-18", "مراجعة ربع سنوية شاملة", "Quarterly deep review", "planning", 2, "تقرير ربع سنوي"],
+
 ];
 
 async function main() {
