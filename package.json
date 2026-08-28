@@ -138,5 +138,8 @@
   "homepage": "https://github.com/0SSAM/MEDORA-Health-Care-Eco-System",
   "bugs": {
     "url": "https://github.com/0SSAM/MEDORA-Health-Care-Eco-System/issues"
+  },
+  "engines": {
+    "node": ">=22"
   }
 }
