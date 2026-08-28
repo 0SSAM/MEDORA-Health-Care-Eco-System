@@ -9,6 +9,8 @@ function createWindow() {
     title: "MEDORA Health Care Ecosystem",
     webPreferences: { contextIsolation: true, nodeIntegration: false },
   });
+  // OS-level screenshot / screen-recording block (Windows shows black, macOS hides from capture)
+  win.setContentProtection(true);
   win.loadURL(APP_URL);
   win.webContents.setWindowOpenHandler(({ url }) => {
     shell.openExternal(url);

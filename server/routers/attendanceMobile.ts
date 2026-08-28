@@ -97,7 +97,7 @@ async function handlePunch(ctx: { internalSession: { session: { organizationId: 
     attendanceId = existing.id;
     await pool.query(`UPDATE employee_attendance SET checkOutAt=NOW(), ${latCol}=?, ${lngCol}=?, geofenceStatus='in', distanceMeters=?, serverReceivedAt=NOW(), riskFlags=COALESCE(riskFlags, ?) WHERE id=?`, [input.lat, input.lng, evalRes.distanceMeters, risk, attendanceId]);
   } else {
-    const ins = await pool.query(
+    const [ins] = await pool.query(
       "INSERT INTO employee_attendance (organizationId,branchId,jurisdictionId,employeeProfileId,workDate,checkInAt,status,source,reviewedByUserId,checkInLat,checkInLng,deviceId,deviceModel,biometricMethod,biometricVerifiedAt,geofenceStatus,distanceMeters,serverReceivedAt,riskFlags) VALUES (?,?,?,?,NOW(),NOW(),'present','verified_device',?,?,?,?,?,?,?,?,?,NOW(),?)",
       [input.organizationId, input.branchId, input.jurisdictionId, profile.id, ctx.user.id, input.lat, input.lng, input.deviceId, input.deviceModel ?? null, input.biometricMethod, new Date(input.biometricVerifiedAt), "in", evalRes.distanceMeters, risk],
     );

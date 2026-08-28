@@ -7,6 +7,7 @@ const GpMaxPage = lazy(() => import("./pages/GpMax"));
 const Icd11Page = lazy(() => import("./pages/Icd11"));
 const AttendanceMobilePage = lazy(() => import("./pages/AttendanceMobile"));
 const KpiDashboardPage = lazy(() => import("./pages/KpiDashboard"));
+const ComplianceCenterPage = lazy(() => import("./pages/ComplianceCenter"));
 const Welcome = lazy(() => import("@/pages/Welcome"));
 const Login = lazy(() => import("@/pages/Login"));
 const AdminConsole = lazy(() => import("@/pages/AdminConsole"));
@@ -33,6 +34,7 @@ function Router() {
       <Route path={"/icd11"} component={Icd11Page} />
       <Route path={"/attendance"} component={AttendanceMobilePage} />
       <Route path={"/kpi"} component={KpiDashboardPage} />
+      <Route path={"/compliance"} component={ComplianceCenterPage} />
       <Route path={"/finance"} component={Home} />
       <Route path={"/admin"} component={AdminConsole} />
       <Route path={"/"} component={Welcome} />
