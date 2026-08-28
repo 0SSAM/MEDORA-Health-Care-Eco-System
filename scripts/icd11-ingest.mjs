@@ -109,7 +109,13 @@ const titleValue = (e, lang) =>
 
 async function main() {
   if (CFG.dryRun) {
-    console.log("DRY_RUN config:", JSON.stringify(CFG, null, 1));
+    // Never print database credentials or OAuth client secrets in logs.
+    const safeConfig = {
+      ...CFG,
+      dbUrl: CFG.dbUrl.replace(/\/\/[^@/]+@/, "//[redacted]@"),
+      clientSecret: "[redacted]",
+    };
+    console.log("DRY_RUN config:", JSON.stringify(safeConfig, null, 1));
     console.log("FIELD_MAP: uri(@id), code, title_lang(prefLabel), definition, parent, child, browserUrl");
     console.log("DB table : icd11_codes (code,title_en,title_ar,chapter,version,is_starter,uri,parent_code)");
     console.log("AUTH     :", IS_LOCAL ? "none (local deployment)" : "OAuth2 client_credentials");
