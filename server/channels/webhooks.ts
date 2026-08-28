@@ -3,20 +3,37 @@
  * Verified flows: WhatsApp GET verify (hub.mode/verify_token/challenge) + POST inbound; Twilio status callback.
  */
 import express, { Router, type Request, type Response } from "express";
+import { rateLimit } from "express-rate-limit";
 import { getRawPool } from "./db";
 import { parseWebhookPayload, verifyWebhook } from "./whatsapp";
 import { parseStatusCallback } from "./twilio";
 
 const DEFAULT_ORG = Number(process.env.MEDORA_DEFAULT_ORG_ID ?? 1);
 
+// Webhooks are public internet-facing endpoints. Keep the limit high enough for
+// legitimate provider bursts while preventing unbounded request flooding.
+const webhookRateLimit = rateLimit({
+  windowMs: 60_000,
+  limit: 300,
+  standardHeaders: "draft-8",
+  legacyHeaders: false,
+});
+
 export function webhookRouter(): Router {
   const r = Router();
+  r.use(webhookRateLimit);
 
   r.get("/whatsapp/webhook", (req: Request, res: Response) => {
     const expected = process.env.WHATSAPP_WEBHOOK_VERIFY_TOKEN ?? "";
     const challenge = verifyWebhook(req.query as Record<string, unknown>, expected);
     if (challenge === null) {
       res.status(403).send("Verification failed");
+      return;
+    }
+    // Meta's challenge is expected to be an opaque token, but reject HTML-like
+    // control characters so an attacker cannot reflect markup into a browser.
+    if (!/^[^<>"'&\r\n]{1,256}$/.test(challenge)) {
+      res.status(400).send("Invalid verification challenge");
       return;
     }
     res.type("text/plain").send(challenge);
