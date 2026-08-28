@@ -1,5 +1,5 @@
 {
-  "name": "MEDORA Health Care Ecosystem",
+  "name": "MEDORA Health Care Eco System",
   "short_name": "MEDORA",
   "start_url": "/",
   "scope": "/",
@@ -9,18 +9,14 @@
   "theme_color": "#4f46e5",
   "lang": "ar",
   "dir": "rtl",
+  "description": "MEDORA Integrated Health System — ميدورا: منصة رعاية صحية متكاملة مفتوحة المصدر",
   "icons": [
-    {
-      "src": "/icons/medora-192.png",
-      "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "any maskable"
-    },
-    {
-      "src": "/icons/medora-512.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any maskable"
-    }
+    { "src": "/icons/medora-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "/icons/medora-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ],
+  "shortcuts": [
+    { "name": "نقطة البيع POS", "short_name": "POS", "url": "/pos", "icons": [{ "src": "/icons/medora-192.png", "sizes": "192x192" }] },
+    { "name": "لوحة العمل Workspace", "short_name": "Workspace", "url": "/workspace", "icons": [{ "src": "/icons/medora-192.png", "sizes": "192x192" }] },
+    { "name": "تدقيق النمو GP MAX", "short_name": "GP MAX", "url": "/gp-max", "icons": [{ "src": "/icons/medora-192.png", "sizes": "192x192" }] }
   ]
 }

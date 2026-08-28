@@ -1,27 +1,15 @@
-MEDORA Health Care Eco System
-Copyright and Intellectual Property Notice
+MEDORA Health Care Eco System — Intellectual Property Notice
 
-The MEDORA Health Care Eco System name, source code, architecture, user
-interfaces, documentation, data models, security controls, operational
-workflows, and design assets are proprietary works of MEDORA and are protected
-by applicable intellectual-property and moral-rights laws.
+Copyright (c) 2026 MEDORA Health Care Eco System. All rights reserved.
 
-This repository is distributed only for authorized development, deployment,
-audit, and maintenance. Possession of a copy does not transfer ownership or
-grant a license. Contributors and contractors must preserve these notices in
-source and derivative materials, protect confidential information, and comply
-with their governing written agreements.
+This repository and everything in it (source code, documentation, schemas,
+data assets, and build tooling) is made available under the MIT License for
+use, study, modification, and distribution, subject to the following clarity:
 
-Third-party software remains subject to its own license terms. This NOTICE does
-not alter, replace, or claim ownership of third-party components.
-
-## Non-public source and access agreement
-
-Access to non-public MEDORA source code, builds, credentials, design materials,
-operational data, and project workspaces is subject to the current MEDORA
-Non-Disclosure and Use Agreement. The application records an explicit,
-versioned acceptance before it exposes protected workspace data or operations.
-Repository visibility, collaborator permissions, and device-level controls are
-separate controls: an in-application agreement does not make a public
-repository private, does not prevent copying by itself, and does not replace a
-signed agreement or legal review where one is required.
+- The MEDORA name, logo, and visual identity are owned by the MEDORA project.
+- Licensing the code under MIT does not transfer ownership of the project,
+  the brand, or any trademarks; it does not transfer ownership of the
+  repository history or of the project name.
+- This notice is provided for intellectual-property clarity: contributors
+  retain copyright over their contributions, and the project retains
+  ownership of the integrated product identity.
