@@ -66,6 +66,15 @@ docs/             → التوثيق (audits, دليل التركيب، الأم
 
 راجع [CONTRIBUTING.md](CONTRIBUTING.md)، [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md)، و[SECURITY.md](SECURITY.md). افتح Issue/PR عبر القوالب في `.github/`.
 
+
+## ICD-11 reference data — بيانات التصنيف الدولي
+
+- مصدر مُتحقَّق: واجهة NLM العامة `clinicaltables.nlm.nih.gov/api/icd11_codes/v3/search` (مجانية، "as is") — انظر [التوثيق](https://clinicaltables.nlm.nih.gov/apidoc/icd11_codes/v3/doc.html).
+- الاستيراد: `DATABASE_URL="mysql://..." node scripts/icd11-import-nlm.mjs` (أو `--max N` للحد).
+- البديل الرسمي الكامل (متعدد اللغات): حاوية WHO `whoicd/icd-api` محليًا بدون OAuth، ثم `node scripts/icd11-ingest.mjs` مع `ICD11_BASE_URL=http://localhost:8080/icd`.
+- الربط: `e_prescriptions.icd11_code`/`icd11_version` + صفحة `/icd11` (بحث/فصول/إحصاءات).
+- ملاحظة ترخيص: محتوى ICD-11 ملك منظمة الصحة العالمية؛ الواجهتان (WHO/NLM) للاستخدام الرسمي "as is" — لا يوجد مرآة مفتوحة كاملة قانونية.
+
 ## License — الترخيص
 
 MIT — انظر [LICENSE](LICENSE) و[NOTICE](NOTICE). المشروع مجاني بالكامل ومفتوح المصدر.

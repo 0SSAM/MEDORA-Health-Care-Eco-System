@@ -1,3 +1,7 @@
+## 2026-08-28 — ICD-11 integrated reference data (NLM clinicaltables v3)
+- استيعاب فعلي لرموز ICD-11 من واجهة NLM العامة في icd11_codes (is_starter=0)، سكربت scripts/icd11-import-nlm.mjs، تصدير CSV.
+- ربط: .env.example (ICD11_SOURCE/ICD11_BASE_URL/ICD_API_*), README, docs/ICD11-DATA-INTEGRATION-2026-08-28.md.
+
 ## 2026-08-28 — PWA installable + ICD-11 dataset import path
 - PWA: manifest.webmanifest + sw.js + أيقونات 192/512 + ربط index.html/main.tsx (تثبيت كتطبيق + عمل دون اتصال).
 - توثيق التركيب: docs/PWA-INSTALL-2026-08-28.md.
