@@ -77,3 +77,9 @@ The verified managed application source was reconciled only into the temporary b
 This record remains a local evidence document until the reviewed pull request is created and merged. It does not claim remote CI completion, production deployment, security-alert access, or external system activation.
 
 يبقى هذا السجل وثيقة أدلة محلية إلى أن يُنشأ طلب المراجعة ويُدمج. ولا يدعي نجاح CI البعيد أو نشر الإنتاج أو الوصول إلى تنبيهات الأمان أو تفعيل أي نظام خارجي.
+
+### Remote CI correction pending review | تصحيح CI البعيد قيد المراجعة
+
+The initial pull-request run exposed an inherited `MEDORA Verification` workflow mismatch: `pnpm/action-setup` pinned pnpm `10.12.4`, while the reconciled `package.json` declares `pnpm@10.34.4`. The action correctly stopped before installation rather than selecting an implicit version. The branch now aligns both verification jobs with pnpm `10.34.4` and removes the unused `SHOWCASE_TEST_PASSWORD` runtime variable. Remote checks must rerun and succeed before any merge claim is made.
+
+كشف التشغيل الأول لطلب المراجعة تعارضاً موروثاً في workflow `MEDORA Verification`: إذ ثبّت `pnpm/action-setup` pnpm عند `10.12.4`، بينما يعلن `package.json` الموحّد `pnpm@10.34.4`. أوقف الإجراء التنفيذ قبل التثبيت كما ينبغي بدلاً من اختيار إصدار ضمني. أصبح الفرع الآن يوائم وظيفتي التحقق مع pnpm `10.34.4` ويحذف متغير وقت التشغيل غير المستخدم `SHOWCASE_TEST_PASSWORD`. يجب إعادة تشغيل الفحوص البعيدة ونجاحها قبل الادعاء بأي دمج.
