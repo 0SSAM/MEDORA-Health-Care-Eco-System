@@ -2,6 +2,7 @@ import "dotenv/config";
 import express from "express";
 import { createServer } from "http";
 import net from "net";
+import { rateLimit } from "express-rate-limit";
 import { createExpressMiddleware } from "@trpc/server/adapters/express";
 import { registerOAuthRoutes } from "./oauth";
 import { registerStorageProxy } from "./storageProxy";
@@ -14,6 +15,7 @@ import { backupHandler } from "../scheduled/backups";
 import { createSecurityMiddleware } from "./security";
 import { attachRequestCookies } from "./request-cookies";
 import { registerPublicReadinessRoute } from "./readiness";
+import { scheduledCallbackRateLimitOptions } from "./scheduled-rate-limit";
 
 function isPortAvailable(port: number): Promise<boolean> {
   return new Promise(resolve => {
@@ -37,6 +39,7 @@ async function findAvailablePort(startPort: number = 3000): Promise<number> {
 async function startServer() {
   const app = express();
   const server = createServer(app);
+  const scheduledCallbackRateLimit = rateLimit(scheduledCallbackRateLimitOptions);
   app.disable("x-powered-by");
   // The managed edge terminates TLS before forwarding one hop to this process.
   // Trust exactly that hop so Express resolves the browser-visible HTTPS origin
@@ -66,9 +69,9 @@ async function startServer() {
     })
   );
   // Heartbeat callback: production cron only; handler authenticates task UID.
-  app.post("/api/scheduled/inventory-alerts", inventoryAlertHandler);
-  app.post("/api/scheduled/report-execution", reportExecutionHandler);
-  app.post("/api/scheduled/backup", backupHandler);
+  app.post("/api/scheduled/inventory-alerts", scheduledCallbackRateLimit, inventoryAlertHandler);
+  app.post("/api/scheduled/report-execution", scheduledCallbackRateLimit, reportExecutionHandler);
+  app.post("/api/scheduled/backup", scheduledCallbackRateLimit, backupHandler);
   // development mode uses Vite, production mode uses static files
   if (process.env.NODE_ENV === "development") {
     await setupVite(app, server);
