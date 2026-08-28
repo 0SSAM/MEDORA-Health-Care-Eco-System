@@ -1,0 +1,2 @@
+ALTER TABLE `sales` ADD `saleStatus` enum('completed','voided','cancelled') DEFAULT 'completed' NOT NULL;--> statement-breakpoint
+ALTER TABLE `sales` ADD `recordMode` enum('production','demo') DEFAULT 'production' NOT NULL;

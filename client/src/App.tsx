@@ -1,21 +1,17 @@
-// MEDORA | ميدورا — Integrated Health Care System
-// Copyright (c) 2026 Hossam Naeim Osman | حسام نعيم عثمان. All rights reserved.
-// Proprietary and confidential. Unauthorized copying, distribution, or use of this
-// software, or of any portion of it, is strictly prohibited.
-// Source: https://github.com/0SSAM/MEDORA-Health-Care-Eco-System
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { lazy, Suspense } from "react";
 const Home = lazy(() => import("@/pages/Home"));
 const Welcome = lazy(() => import("@/pages/Welcome"));
 const Login = lazy(() => import("@/pages/Login"));
+const AdminConsole = lazy(() => import("@/pages/AdminConsole"));
 const NotFound = lazy(() => import("@/pages/NotFound"));
 import { Route, Switch } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
+import InstallShortcutBanner from "./components/InstallShortcutBanner";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { LocalizationProvider } from "./contexts/LocalizationContext";
-import { SecurityOverlay } from "./components/SecurityOverlay";
-import { AssistantSidebar } from "./components/AssistantSidebar";
+import { NdaAccessGate } from "./components/NdaAccessGate";
 
 function Router() {
   // make sure to consider if you need authentication for certain routes
@@ -25,6 +21,10 @@ function Router() {
       <Route path={"/login"} component={Login} />
       <Route path={"/sales"} component={Home} />
       <Route path={"/workspace"} component={Home} />
+      <Route path={"/pos"} component={Home} />
+      <Route path={"/operations"} component={Home} />
+      <Route path={"/finance"} component={Home} />
+      <Route path={"/admin"} component={AdminConsole} />
       <Route path={"/"} component={Welcome} />
       <Route path={"/404"}>
         <Suspense fallback={<RouteLoadingState />}>
@@ -65,9 +65,8 @@ function App() {
         <LocalizationProvider>
           <TooltipProvider>
             <Toaster />
-            <SecurityOverlay />
-            <AssistantSidebar />
-            <Router />
+            <NdaAccessGate><Router /></NdaAccessGate>
+            <InstallShortcutBanner />
           </TooltipProvider>
         </LocalizationProvider>
       </ThemeProvider>

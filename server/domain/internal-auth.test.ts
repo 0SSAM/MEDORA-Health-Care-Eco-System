@@ -6,7 +6,6 @@ import {
   hashSessionToken,
   hashAuditRecord,
   isLocked,
-  isSessionEnvironmentConsistent,
   normalizeInternalUsername,
   verifyInternalPassword,
 } from "./internal-auth";
@@ -35,13 +34,6 @@ describe("internal employee authentication contract", () => {
     expect(() => hashAuditRecord({ eventType: "test", createdAt: new Date().toISOString() })).toThrow(/Audit signing key/);
     if (previous === undefined) delete process.env.AUDIT_SIGNING_KEY;
     else process.env.AUDIT_SIGNING_KEY = previous;
-  });
-
-  it("rejects cross-environment session elevation", () => {
-    expect(isSessionEnvironmentConsistent("showcase", "showcase")).toBe(true);
-    expect(isSessionEnvironmentConsistent("production", "production")).toBe(true);
-    expect(isSessionEnvironmentConsistent("showcase", "production")).toBe(false);
-    expect(isSessionEnvironmentConsistent("production", "showcase")).toBe(false);
   });
 
   it("uses a bounded lockout threshold", () => {

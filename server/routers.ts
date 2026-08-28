@@ -4,6 +4,7 @@ import { z } from "zod";
 import { getSessionCookieOptions, isSecureRequest } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
 import { adminProcedure, protectedProcedure, publicProcedure, router } from "./_core/trpc";
+import { ndaRouter } from "./routers/nda";
 import { allowNlmManualRefresh, clearNlmIcd10Cache, getNlmIcd10CacheStats, searchNlmIcd10Cm } from "./domain/nlm-icd10";
 import { erpRouter } from "./routers/erp";
 import { regionalRouter } from "./routers/regional";
@@ -17,7 +18,13 @@ import { operationsRouter } from "./routers/operations";
 import { aiGovernanceRouter } from "./routers/ai-governance";
 import { aiInsightsRouter } from "./routers/ai-insights";
 import { antiFraudRouter } from "./routers/anti-fraud";
-import { createPasswordResetToken, ensureShowcaseAccount, getInternalCredentialByUsername, getInternalScopeForUser, createInternalSession, recordAuthenticationEvent, resetInternalPasswordWithToken, revokeInternalSession } from "./db";
+import { assistantRouter } from "./routers/assistant";
+import { backupRouter } from "./routers/backup";
+import { policyKnowledgeRouter } from "./routers/policyKnowledge";
+import { procurementRouter } from "./routers/procurement";
+import { secondaryModulesRouter } from "./routers/secondaryModules";
+import { kpiRouter } from "./routers/kpi";
+import { createPasswordResetToken, getInternalCredentialByUsername, getInternalScopeForUser, createInternalSession, recordAuthenticationEvent, resetInternalPasswordWithToken, revokeInternalSession, getUserById } from "./db";
 import { assertPasswordPolicy, createInternalSessionToken, INTERNAL_LOCKOUT_MS, INTERNAL_MAX_FAILED_ATTEMPTS, INTERNAL_SESSION_COOKIE, INTERNAL_SESSION_TTL_MS, isLocked, normalizeInternalUsername, verifyInternalPassword } from "./domain/internal-auth";
 import { hashInternalPassword, hashAuditRecord } from "./domain/internal-auth";
 import { safeErrorLabel } from "./domain/safe-error";
@@ -64,12 +71,11 @@ const connectorReadinessRegistry = [
 
 export const appRouter = router({
   system: systemRouter,
+  nda: ndaRouter,
   auth: router({
     me: publicProcedure.query(opts => opts.ctx.user),
     sessionInfo: publicProcedure.query(({ ctx }) => ctx.user ? {
       authenticated: true as const,
-      accountType: ctx.internalSession?.user ? (ctx.internalSession.user.openId === "showcase-test-user" ? "showcase" as const : "employee" as const) : "employee" as const,
-      sessionMode: ctx.internalSession?.session.sessionMode ?? "production" as const,
       role: ctx.user.role,
       expiresAt: ctx.internalSession?.session.expiresAt ?? null,
     } : { authenticated: false as const }),
@@ -183,7 +189,6 @@ export const appRouter = router({
       };
       try {
       const username = normalizeInternalUsername(input.username);
-      await ensureShowcaseAccount(username);
       const credential = await getInternalCredentialByUsername(username);
       const now = new Date();
       const invalid = () => ({ success: false as const, message: "اسم المستخدم أو كلمة المرور غير صحيحة" });
@@ -208,11 +213,24 @@ export const appRouter = router({
         await recordLoginFailure({ username, userId: credential.userId, eventType: "login_failure", source: "internal" });
         return invalid();
       }
+      const authenticatedUser = await getUserById(credential.userId);
+      if (!authenticatedUser) {
+        await recordLoginFailure({ username, userId: credential.userId, ...scope, eventType: "login_failure", source: "internal" });
+        return invalid();
+      }
+      // `scope.role` is deliberately the organization-membership role used for
+      // tenant scope/audit records. Return the app role separately so callers do
+      // not mislabel a cashier as the membership fallback (`staff`).
+      const applicationRole = authenticatedUser.role;
       const token = createInternalSessionToken();
-      await createInternalSession({ token, userId: credential.userId, ...scope, sessionMode: credential.accountType === "showcase" ? "showcase" : "production", expiresAt: new Date(now.getTime() + INTERNAL_SESSION_TTL_MS) });
+      await createInternalSession({ token, userId: credential.userId, ...scope, expiresAt: new Date(now.getTime() + INTERNAL_SESSION_TTL_MS) });
       await recordAuthenticationEvent({ username, userId: credential.userId, ...scope, eventType: "login_success", source: "internal" });
-      ctx.res.cookie(INTERNAL_SESSION_COOKIE, token, { httpOnly: true, sameSite: "lax", secure: isSecureRequest(ctx.req), path: "/" });
-      return { success: true as const, mode: "internal" as const, scope, accountType: credential.accountType, sessionMode: credential.accountType === "showcase" ? "showcase" as const : "production" as const };
+      // An employee login is an intentional identity boundary. Clear any older
+      // OAuth session before issuing the internal cookie so `createContext`
+      // cannot select a prior account ahead of this role-scoped session.
+      ctx.res.clearCookie(COOKIE_NAME, getSessionCookieOptions(ctx.req));
+      ctx.res.cookie(INTERNAL_SESSION_COOKIE, token, { httpOnly: true, sameSite: "lax", secure: isSecureRequest(ctx.req), maxAge: INTERNAL_SESSION_TTL_MS, path: "/" });
+      return { success: true as const, mode: "internal" as const, scope, role: applicationRole, organizationRole: scope.role };
       } catch (error) {
         console.error("[Auth] internal login unavailable:", safeErrorLabel(error));
         return { success: false as const, message: "تعذر التحقق من البيانات حالياً. تأكد من الاتصال وحاول مرة أخرى." };
@@ -245,12 +263,12 @@ export const appRouter = router({
     internalLogout: publicProcedure.mutation(async ({ ctx }) => {
       const token = ctx.req.cookies?.[INTERNAL_SESSION_COOKIE];
       if (token) await revokeInternalSession(token);
-      ctx.res.clearCookie(INTERNAL_SESSION_COOKIE, { httpOnly: true, sameSite: "lax", secure: isSecureRequest(ctx.req), maxAge: 0, path: "/" });
+      ctx.res.clearCookie(INTERNAL_SESSION_COOKIE, { httpOnly: true, sameSite: "lax", secure: isSecureRequest(ctx.req), path: "/" });
       return { success: true as const };
     }),
     logout: publicProcedure.mutation(({ ctx }) => {
       const cookieOptions = getSessionCookieOptions(ctx.req);
-      ctx.res.clearCookie(COOKIE_NAME, { ...cookieOptions, maxAge: -1 });
+      ctx.res.clearCookie(COOKIE_NAME, cookieOptions);
       return { success: true } as const;
     }),
   }),
@@ -266,32 +284,12 @@ export const appRouter = router({
   aiGovernance: aiGovernanceRouter,
   aiInsights: aiInsightsRouter,
   antiFraud: antiFraudRouter,
-  communication: router({
-    sendWhatsApp: protectedProcedure
-      .input(z.object({
-        to: z.string(),
-        text: z.string().optional(),
-        templateName: z.string().optional()
-      }))
-      .mutation(async ({ input, ctx }) => {
-        // Enforce role-based access control based on valid application roles.
-        // The 'operations_manager' is a placeholder for future granular roles.
-        if (!["admin", "manager"].includes(ctx.user.role)) {
-          throw new TRPCError({ code: "FORBIDDEN", message: "لا تملك صلاحية إرسال رسائل التواصل. تتطلب هذه العملية صلاحيات إدارية." });
-        }
-        const { sendWhatsAppMessage } = await import("./connectors/whatsapp");
-        const result = await sendWhatsAppMessage(input);
-        
-        if (!result.success && result.state === "blocked") {
-          throw new TRPCError({ 
-            code: "PRECONDITION_FAILED", 
-            message: "خدمة WhatsApp غير مفعلة حالياً. يرجى إعداد مفاتيح API في لوحة التحكم." 
-          });
-        }
-        
-        return result;
-      }),
-  }),
+  assistant: assistantRouter,
+  backup: backupRouter,
+  policyKnowledge: policyKnowledgeRouter,
+  procurement: procurementRouter,
+  secondaryModules: secondaryModulesRouter,
+  kpi: kpiRouter,
   reference: router({
     nlmIcd10CmSearch: protectedProcedure.input(z.object({ terms: z.string().min(2).max(120), count: z.number().int().min(1).max(50).optional() })).query(async ({ ctx, input }) => {
       if (!["admin", "manager", "pharmacist"].includes(ctx.user.role)) throw new TRPCError({ code: "FORBIDDEN", message: "لا تملك صلاحية البحث السريري المرجعي." });

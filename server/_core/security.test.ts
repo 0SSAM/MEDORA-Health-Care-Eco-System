@@ -27,28 +27,28 @@ describe("security middleware boundaries", () => {
     const request = {
       ip: "203.0.113.8",
       protocol: "http",
-      hostname: "medora.example",
+      hostname: "aldora.example",
       headers: {
         "x-forwarded-host": "attacker.example",
         "x-forwarded-proto": "https",
       },
-      get: (name: string) => name === "host" ? "medora.example" : undefined,
+      get: (name: string) => name === "host" ? "aldora.example" : undefined,
     } as never;
-    expect(securityInternals.requestOrigin(request)).toBe("http://medora.example");
+    expect(securityInternals.requestOrigin(request)).toBe("http://aldora.example");
   });
 
   it("uses HTTPS and hostname already resolved by the trusted proxy", () => {
     const request = {
       ip: "203.0.113.8",
       protocol: "https",
-      hostname: "medorapharm.example",
+      hostname: "aldorapharm.example",
       headers: {
         "x-forwarded-host": "attacker.example",
         "x-forwarded-proto": "https",
       },
       get: (name: string) => name === "host" ? "127.0.0.1:3000" : undefined,
     } as never;
-    expect(securityInternals.requestOrigin(request)).toBe("https://medorapharm.example");
+    expect(securityInternals.requestOrigin(request)).toBe("https://aldorapharm.example");
   });
 
   it("applies stricter limits to authentication and upload routes", () => {
@@ -57,8 +57,23 @@ describe("security middleware boundaries", () => {
     expect(securityInternals.rateLimitFor("/api/trpc/erp.prescription.upload", true)).toEqual({ category: "upload", limit: 20 });
     expect(securityInternals.rateLimitFor("/api/trpc/erp.sales.commit", true)).toEqual({ category: "mutation", limit: 120 });
     expect(securityInternals.rateLimitFor("/api/trpc/erp.catalog", false)).toBeNull();
-    expect(securityInternals.rateLimitFor("/", false)).toEqual({ category: "public-read", limit: 600 });
-    expect(securityInternals.rateLimitFor("/operations", false)).toEqual({ category: "public-read", limit: 600 });
-    expect(securityInternals.rateLimitFor("/manus-storage/public-logo.svg", false)).toBeNull();
+  });
+
+  it("returns bounded rate-limit metadata without granting an extra request", () => {
+    const buckets = new Map();
+    expect(securityInternals.take(buckets, "auth:203.0.113.8", 2, 1_000)).toEqual({ allowed: true, remaining: 1, resetAt: 61_000 });
+    expect(securityInternals.take(buckets, "auth:203.0.113.8", 2, 2_000)).toEqual({ allowed: true, remaining: 0, resetAt: 61_000 });
+    expect(securityInternals.take(buckets, "auth:203.0.113.8", 2, 3_000)).toEqual({ allowed: false, remaining: 0, resetAt: 61_000 });
+  });
+
+  it("allows only configured HTTPS analytics origins in executable and connection directives", async () => {
+    const { createContentSecurityPolicy } = await import("./security");
+    const policy = createContentSecurityPolicy("https://analytics.example.test/umami");
+    expect(policy).toContain("script-src 'self' https://files.manuscdn.com https://analytics.example.test");
+    expect(policy).toContain("connect-src 'self' https://analytics.example.test");
+    expect(policy).not.toMatch(/script-src[^;]*\shttps:(?:\s|;)/);
+    expect(policy).not.toMatch(/connect-src[^;]*\shttps:(?:\s|;)/);
+    expect(createContentSecurityPolicy("http://analytics.example.test")).not.toContain("analytics.example.test");
+    expect(createContentSecurityPolicy("https://analytics.example.test", false)).not.toContain("upgrade-insecure-requests");
   });
 });

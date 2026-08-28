@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 describe("sales contact configuration", () => {
   it("uses a WhatsApp web link and does not expose a raw phone or email URI", () => {
-    const contactUrl = process.env.VITE_MEDORA_SALES_CONTACT_URL ?? "";
+    const contactUrl = process.env.VITE_ALDO_SALES_CONTACT_URL ?? "";
     if (!contactUrl) {
       expect(contactUrl).toBe("");
       return;

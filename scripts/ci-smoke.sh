@@ -16,7 +16,7 @@ trap cleanup EXIT
 
 NODE_ENV=production \
 PORT="${PORT}" \
-JWT_SECRET="ci-only-non-production-secret" \
+JWT_SECRET="$(openssl rand -hex 48)" \
 DATABASE_URL="mysql://ci:ci@127.0.0.1:3306/medora_ci" \
 VITE_APP_ID="ci-smoke" \
 OAUTH_SERVER_URL="https://api.manus.im" \

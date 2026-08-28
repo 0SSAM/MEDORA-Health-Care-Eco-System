@@ -19,7 +19,7 @@ jobs:
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
         with:
-          version: 10.12.4
+          version: 10.34.4
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
@@ -36,7 +36,6 @@ jobs:
           JWT_SECRET="$(openssl rand -hex 48)" \
           DATABASE_URL="mysql://ci:ci@127.0.0.1:3306/medora_ci" \
           AUDIT_SIGNING_KEY="$(openssl rand -hex 48)" \
-          SHOWCASE_TEST_PASSWORD="CI-only-showcase-password-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-$(openssl rand -hex 18)" \
           VITE_APP_ID="ci-verification" \
           VITE_APP_TITLE="ميدورا | منظومة الرعاية الصحية المتكاملة" \
           VITE_APP_LOGO="https://example.invalid/medora-ci-logo.png" \
@@ -79,7 +78,7 @@ jobs:
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
         with:
-          version: 10.12.4
+          version: 10.34.4
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
@@ -90,7 +89,7 @@ jobs:
       - name: Install Playwright browsers
         run: pnpm exec playwright install --with-deps chromium
       - name: Browser tests
-        run: pnpm test:e2e
+        run: pnpm e2e
       - name: Upload browser evidence
         if: always()
         uses: actions/upload-artifact@v4

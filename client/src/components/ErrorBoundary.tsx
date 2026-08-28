@@ -1,9 +1,5 @@
-// MEDORA | ميدورا — Integrated Health Care System
-// Copyright (c) 2026 Hossam Naeim Osman | حسام نعيم عثمان. All rights reserved.
-// Proprietary and confidential. Unauthorized copying, distribution, or use of this
-// software, or of any portion of it, is strictly prohibited.
-// Source: https://github.com/0SSAM/MEDORA-Health-Care-Eco-System
 import { cn } from "@/lib/utils";
+import { recordSafeUiDiagnostic, safeDiagnosticDigest } from "@/lib/safeDiagnostics";
 import { AlertTriangle, RotateCcw } from "lucide-react";
 import { Component, ReactNode } from "react";
 
@@ -26,22 +22,34 @@ class ErrorBoundary extends Component<Props, State> {
     return { hasError: true, error };
   }
 
+  componentDidCatch(error: Error): void {
+    recordSafeUiDiagnostic("workspace_boundary_error", error, "global-error-boundary");
+  }
+
   render() {
     if (this.state.hasError) {
+      const isEnglish = typeof document !== "undefined" && document.documentElement.lang.toLowerCase().startsWith("en");
+      const direction = isEnglish ? "ltr" : "rtl";
       return (
-        <div className="flex items-center justify-center min-h-screen p-8 bg-background">
+        <div dir={direction} className="flex min-h-screen items-center justify-center bg-background p-8">
           <div className="flex flex-col items-center w-full max-w-2xl p-8">
             <AlertTriangle
               size={48}
               className="text-destructive mb-6 flex-shrink-0"
             />
 
-            <h2 className="text-xl mb-4">An unexpected error occurred.</h2>
+            <h2 className="mb-4 text-xl">{isEnglish ? "The workspace could not be loaded" : "تعذر تحميل مساحة العمل"}</h2>
 
-            <div className="p-4 w-full rounded bg-muted overflow-auto mb-6">
-              <pre className="text-sm text-muted-foreground whitespace-break-spaces">
-                {this.state.error?.stack}
-              </pre>
+            <p className="mb-4 text-center text-muted-foreground">
+              {isEnglish
+                ? "A temporary error occurred while loading a system module. Sensitive technical details are not displayed."
+                : "حدث خطأ مؤقت أثناء تحميل إحدى وحدات النظام. لم يتم عرض تفاصيل تقنية حساسة."}
+            </p>
+
+            <div className="p-4 w-full rounded bg-muted mb-6 text-center" dir="ltr">
+              <code className="text-sm text-muted-foreground">
+                Diagnostic ID: {safeDiagnosticDigest(this.state.error)}
+              </code>
             </div>
 
             <button
@@ -53,7 +61,7 @@ class ErrorBoundary extends Component<Props, State> {
               )}
             >
               <RotateCcw size={16} />
-              Reload Page
+              {isEnglish ? "Reload interface" : "إعادة تحميل الواجهة"}
             </button>
           </div>
         </div>

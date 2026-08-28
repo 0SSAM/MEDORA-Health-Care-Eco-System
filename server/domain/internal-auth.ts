@@ -6,7 +6,7 @@ const SCRYPT_P = 1;
 const KEY_LENGTH = 64;
 const PASSWORD_MIN_LENGTH = 12;
 
-export const INTERNAL_SESSION_COOKIE = "medora_internal_session";
+export const INTERNAL_SESSION_COOKIE = "aldo_internal_session";
 export const INTERNAL_SESSION_TTL_MS = 8 * 60 * 60 * 1000;
 export const INTERNAL_LOCKOUT_MS = 15 * 60 * 1000;
 export const INTERNAL_MAX_FAILED_ATTEMPTS = 5;
@@ -17,10 +17,6 @@ export type InternalScope = {
   jurisdictionId: number;
   role: string;
 };
-
-export function isSessionEnvironmentConsistent(sessionMode: "production" | "showcase", environment: "production" | "showcase") {
-  return sessionMode === environment;
-}
 
 export function assertPasswordPolicy(password: string) {
   if (typeof password !== "string" || password.length < PASSWORD_MIN_LENGTH) {

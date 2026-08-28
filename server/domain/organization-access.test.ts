@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   canAccessOrganization,
   canManageOrganization,
+  canViewFinancialData,
   canViewOrganizationAudit,
   canViewSensitiveClinicalData,
   hasOrganizationCapability,
@@ -48,5 +49,12 @@ describe("organization access policy", () => {
     ];
     expect(hasOrganizationCapability("user", memberships, 7, "manage_members")).toBe(true);
     expect(hasOrganizationCapability("user", memberships, 8, "manage_members")).toBe(false);
+  });
+
+  it("grants financial data only to the designated organization roles", () => {
+    expect(canViewFinancialData("manager", [{ organizationId: 7, active: 1, organizationRole: "operations_manager" }], 7)).toBe(true);
+    expect(canViewFinancialData("user", [{ organizationId: 7, active: 1, organizationRole: "org_admin" }], 7)).toBe(true);
+    expect(canViewFinancialData("pharmacist", [membership], 7)).toBe(false);
+    expect(canViewFinancialData("cashier", [{ organizationId: 7, active: 1, organizationRole: "staff" }], 7)).toBe(false);
   });
 });

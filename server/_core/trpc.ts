@@ -2,7 +2,8 @@ import { NOT_ADMIN_ERR_MSG, UNAUTHED_ERR_MSG } from '@shared/const';
 import { initTRPC, TRPCError } from "@trpc/server";
 import superjson from "superjson";
 import type { TrpcContext } from "./context";
-import { recordAuthenticationEvent } from "../db";
+import { hasCurrentNdaAcceptance } from "../db";
+import { MEDORA_NDA_HASH, MEDORA_NDA_VERSION } from "../domain/nda-policy";
 
 const t = initTRPC.context<TrpcContext>().create({
   transformer: superjson,
@@ -25,25 +26,16 @@ const requireUser = t.middleware(async opts => {
   });
 });
 
-const blockShowcaseMutations = t.middleware(async opts => {
-  const showcaseSession = opts.ctx.internalSession?.session;
-  if (opts.type === "mutation" && showcaseSession?.sessionMode === "showcase") {
-    await recordAuthenticationEvent({
-      userId: opts.ctx.user?.id,
-      username: opts.ctx.user?.email,
-      organizationId: showcaseSession.organizationId,
-      branchId: showcaseSession.branchId,
-      jurisdictionId: showcaseSession.jurisdictionId,
-      eventType: "showcase_mutation_simulated",
-      source: "internal",
-      requestId: String(opts.ctx.req.headers["x-request-id"] ?? "showcase-mutation"),
-    });
-    throw new TRPCError({ code: "FORBIDDEN", message: "هذه العملية محاكاة فقط ولا تُحفظ من حساب العرض." });
+const requireCurrentNda = t.middleware(async opts => {
+  const user = opts.ctx.user;
+  if (!user || !(await hasCurrentNdaAcceptance(user.id, MEDORA_NDA_VERSION, MEDORA_NDA_HASH))) {
+    throw new TRPCError({ code: "FORBIDDEN", message: "NDA_ACCEPTANCE_REQUIRED" });
   }
   return opts.next();
 });
 
-export const protectedProcedure = t.procedure.use(requireUser).use(blockShowcaseMutations);
+export const authenticatedProcedure = t.procedure.use(requireUser);
+export const protectedProcedure = authenticatedProcedure.use(requireCurrentNda);
 
 export const adminProcedure = t.procedure.use(
   t.middleware(async opts => {
@@ -60,4 +52,4 @@ export const adminProcedure = t.procedure.use(
       },
     });
   }),
-).use(blockShowcaseMutations);
+).use(requireCurrentNda);

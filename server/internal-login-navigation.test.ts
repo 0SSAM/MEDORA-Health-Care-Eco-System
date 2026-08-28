@@ -5,8 +5,8 @@ import { resolve } from "node:path";
 describe("internal login navigation contract", () => {
   it("routes successful employee login to the authenticated landing workspace", () => {
     const loginSource = readFileSync(resolve(process.cwd(), "client/src/pages/Login.tsx"), "utf8");
-    expect(loginSource).toContain("await utils.auth.me.invalidate();");
-    expect(loginSource).toContain('setLocation("/workspace")');
+    expect(loginSource).toContain("resetIdentityBoundClientState(queryClient);");
+    expect(loginSource).toContain('window.location.assign("/workspace");');
     expect(loginSource).toContain("فتح مساحة العمل");
     expect(loginSource).toContain("أنت مسجل الدخول بالفعل");
   });

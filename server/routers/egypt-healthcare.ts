@@ -1,10 +1,11 @@
-import { and, desc, eq } from "drizzle-orm";
+import { and, count, desc, eq, or } from "drizzle-orm";
 import { createCipheriv, createHash, randomBytes } from "node:crypto";
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import { protectedProcedure, router } from "../_core/trpc";
 import { getDb } from "../db";
-import { branches, branchJurisdictions, healthcareAdmissions, healthcareAppointments, healthcareBeds, healthcareClinicalOrders, healthcareEncounters, healthcareFacilities, healthcarePatients, healthcareReferrals, hospitalBillingAccounts, insuranceAppeals, insuranceClaims, insuranceMembers, insurancePayerContracts, insurancePreauthorizations, insuranceRemittances, gaharReadinessProfiles, gaharCriteria, gaharEvidence, gaharCorrectiveActions, gaharQualityIndicators, jurisdictionProfiles, organizationMemberships } from "../../drizzle/schema";
+import { auditLogs, branches, branchJurisdictions, branchUsers, healthcareAdmissions, healthcareAppointments, healthcareBeds, healthcareClinicalOrders, healthcareEncounters, healthcareFacilities, healthcarePatients, healthcareReferrals, hospitalBillingAccounts, insuranceAppeals, insuranceClaims, insuranceMembers, insurancePayerContracts, insurancePreauthorizations, insuranceRemittances, gaharReadinessProfiles, gaharCriteria, gaharEvidence, gaharCorrectiveActions, gaharQualityIndicators, jurisdictionProfiles, organizationMemberships } from "../../drizzle/schema";
+import { hashAuditRecord } from "../domain/internal-auth";
 
 const facilityType = z.enum(["government_hospital", "private_hospital", "primary_care", "laboratory", "radiology", "rehabilitation"]);
 const claimStatus = z.enum(["draft", "ready", "submitted", "received", "under_review", "approved", "partially_approved", "rejected", "appealed", "paid", "reconciled", "cancelled"]);
@@ -23,14 +24,89 @@ async function assertEgyptScope(db: NonNullable<Awaited<ReturnType<typeof getDb>
   if (role !== "admin") {
     const membership = await db.select({ id: organizationMemberships.id }).from(organizationMemberships).where(and(eq(organizationMemberships.organizationId, organizationId), eq(organizationMemberships.userId, userId), eq(organizationMemberships.active, 1))).limit(1);
     if (!membership.length) throw new TRPCError({ code: "FORBIDDEN", message: "Organization access denied" });
+    if (branchId !== undefined) {
+      const branchMembership = await db.select({ id: branchUsers.id }).from(branchUsers).where(and(eq(branchUsers.branchId, branchId), eq(branchUsers.userId, userId), eq(branchUsers.active, 1))).limit(1);
+      if (!branchMembership.length) throw new TRPCError({ code: "FORBIDDEN", message: "Branch access denied" });
+    }
   }
   const configured = await db.select({ id: branches.id }).from(branches).innerJoin(branchJurisdictions, eq(branchJurisdictions.branchId, branches.id)).innerJoin(jurisdictionProfiles, eq(jurisdictionProfiles.id, branchJurisdictions.jurisdictionId)).where(and(eq(branches.organizationId, organizationId), eq(branchJurisdictions.jurisdictionId, jurisdictionId), eq(jurisdictionProfiles.countryCode, "EG"), eq(jurisdictionProfiles.active, 1), branchId === undefined ? undefined : eq(branches.id, branchId))).limit(1);
   if (!configured.length) throw new TRPCError({ code: "PRECONDITION_FAILED", message: "Active Egypt jurisdiction and branch configuration is required" });
 }
 
+async function assertAppointmentWriter(db: NonNullable<Awaited<ReturnType<typeof getDb>>>, userId: number, role: string, organizationId: number, jurisdictionId: number, branchId: number) {
+  await assertEgyptScope(db, userId, role, organizationId, jurisdictionId, branchId);
+  if (role === "admin") return;
+  const membership = await db.select({ organizationRole: organizationMemberships.organizationRole }).from(organizationMemberships).where(and(eq(organizationMemberships.organizationId, organizationId), eq(organizationMemberships.userId, userId), eq(organizationMemberships.active, 1))).limit(1);
+  if (!membership.length || !["org_admin", "clinical_lead", "operations_manager"].includes(membership[0].organizationRole)) {
+    throw new TRPCError({ code: "FORBIDDEN", message: "Appointment scheduling permission denied" });
+  }
+}
+
+async function assertBillingWriter(db: NonNullable<Awaited<ReturnType<typeof getDb>>>, userId: number, role: string, organizationId: number, jurisdictionId: number, branchId: number) {
+  await assertEgyptScope(db, userId, role, organizationId, jurisdictionId, branchId);
+  if (role === "admin") return;
+  const membership = await db.select({ organizationRole: organizationMemberships.organizationRole }).from(organizationMemberships).where(and(eq(organizationMemberships.organizationId, organizationId), eq(organizationMemberships.userId, userId), eq(organizationMemberships.active, 1))).limit(1);
+  if (!membership.length || !["org_admin", "operations_manager"].includes(membership[0].organizationRole)) {
+    throw new TRPCError({ code: "FORBIDDEN", message: "Internal billing-account permission denied" });
+  }
+}
+
+async function assertAppointmentReferencesInScope(db: NonNullable<Awaited<ReturnType<typeof getDb>>>, input: { organizationId: number; jurisdictionId: number; branchId: number; patientId: number; facilityId: number }) {
+  const [patient, facility] = await Promise.all([
+    db.select({ id: healthcarePatients.id }).from(healthcarePatients).where(and(eq(healthcarePatients.id, input.patientId), eq(healthcarePatients.organizationId, input.organizationId), eq(healthcarePatients.jurisdictionId, input.jurisdictionId), eq(healthcarePatients.branchId, input.branchId), eq(healthcarePatients.active, 1))).limit(1),
+    db.select({ id: healthcareFacilities.id }).from(healthcareFacilities).where(and(eq(healthcareFacilities.id, input.facilityId), eq(healthcareFacilities.organizationId, input.organizationId), eq(healthcareFacilities.jurisdictionId, input.jurisdictionId), eq(healthcareFacilities.branchId, input.branchId), eq(healthcareFacilities.active, 1))).limit(1),
+  ]);
+  if (!patient.length || !facility.length) throw new TRPCError({ code: "NOT_FOUND", message: "Patient or facility is not available in the active appointment scope" });
+}
+
+async function assertBillingReferencesInScope(db: NonNullable<Awaited<ReturnType<typeof getDb>>>, input: { organizationId: number; jurisdictionId: number; branchId: number; patientId: number; facilityId: number; encounterId?: number }) {
+  const [patient, facility] = await Promise.all([
+    db.select({ id: healthcarePatients.id }).from(healthcarePatients).where(and(eq(healthcarePatients.id, input.patientId), eq(healthcarePatients.organizationId, input.organizationId), eq(healthcarePatients.jurisdictionId, input.jurisdictionId), eq(healthcarePatients.branchId, input.branchId), eq(healthcarePatients.active, 1))).limit(1),
+    db.select({ id: healthcareFacilities.id }).from(healthcareFacilities).where(and(eq(healthcareFacilities.id, input.facilityId), eq(healthcareFacilities.organizationId, input.organizationId), eq(healthcareFacilities.jurisdictionId, input.jurisdictionId), eq(healthcareFacilities.branchId, input.branchId), eq(healthcareFacilities.active, 1))).limit(1),
+  ]);
+  if (!patient.length || !facility.length) throw new TRPCError({ code: "NOT_FOUND", message: "Patient or facility is not available in the active billing scope" });
+  if (input.encounterId === undefined) return;
+  const encounter = await db.select({ id: healthcareEncounters.id }).from(healthcareEncounters).where(and(eq(healthcareEncounters.id, input.encounterId), eq(healthcareEncounters.organizationId, input.organizationId), eq(healthcareEncounters.jurisdictionId, input.jurisdictionId), eq(healthcareEncounters.branchId, input.branchId), eq(healthcareEncounters.patientId, input.patientId), eq(healthcareEncounters.facilityId, input.facilityId))).limit(1);
+  if (!encounter.length) throw new TRPCError({ code: "NOT_FOUND", message: "Encounter is not available in the active billing scope" });
+}
+
 function dbOrThrow(db: Awaited<ReturnType<typeof getDb>>) {
   if (!db) throw new TRPCError({ code: "SERVICE_UNAVAILABLE", message: "Database unavailable" });
   return db;
+}
+
+type AppointmentAuditWriter = Pick<NonNullable<Awaited<ReturnType<typeof getDb>>>, "select" | "insert">;
+type AppointmentAuditAction = "healthcare_appointment_confirmed" | "healthcare_appointment_cancelled" | "healthcare_appointment_no_show" | "healthcare_appointment_checked_in" | "healthcare_appointment_completed";
+
+async function writeAppointmentStatusAudit(db: AppointmentAuditWriter, input: { userId: number; organizationId: number; jurisdictionId: number; branchId: number; appointmentId: number; action: AppointmentAuditAction }) {
+  const previous = await db.select({ recordHash: auditLogs.recordHash }).from(auditLogs).where(and(
+    eq(auditLogs.organizationId, input.organizationId),
+    eq(auditLogs.branchId, input.branchId),
+    eq(auditLogs.jurisdictionId, input.jurisdictionId),
+  )).orderBy(desc(auditLogs.id)).limit(1);
+  const previousHash = previous[0]?.recordHash ?? null;
+  const createdAt = new Date().toISOString();
+  const recordHash = hashAuditRecord({
+    previousHash,
+    eventType: input.action,
+    userId: input.userId,
+    organizationId: input.organizationId,
+    branchId: input.branchId,
+    jurisdictionId: input.jurisdictionId,
+    requestId: `healthcare-appointment:${input.appointmentId}`,
+    createdAt,
+  });
+  await db.insert(auditLogs).values({
+    userId: input.userId,
+    organizationId: input.organizationId,
+    branchId: input.branchId,
+    jurisdictionId: input.jurisdictionId,
+    action: input.action,
+    entityType: "healthcare_appointment",
+    entityId: String(input.appointmentId),
+    previousHash,
+    recordHash,
+  });
 }
 
 export const egyptHealthcareRouter = router({
@@ -52,6 +128,99 @@ export const egyptHealthcareRouter = router({
     const db = dbOrThrow(await getDb());
     await assertEgyptScope(db, ctx.user.id, ctx.user.role, input.organizationId, input.jurisdictionId, input.branchId);
     return db.select().from(healthcareAppointments).where(and(eq(healthcareAppointments.organizationId, input.organizationId), eq(healthcareAppointments.jurisdictionId, input.jurisdictionId), eq(healthcareAppointments.branchId, input.branchId), input.status ? eq(healthcareAppointments.status, input.status) : undefined)).orderBy(desc(healthcareAppointments.scheduledAt)).limit(200);
+  }),
+
+  createAppointment: protectedProcedure.input(z.object({ organizationId: z.number().int().positive(), jurisdictionId: z.number().int().positive(), branchId: z.number().int().positive(), patientId: z.number().int().positive(), facilityId: z.number().int().positive(), specialty: z.string().trim().min(2).max(120), scheduledAt: z.date() })).mutation(async ({ ctx, input }) => {
+    const db = dbOrThrow(await getDb());
+    await assertAppointmentWriter(db, ctx.user.id, ctx.user.role, input.organizationId, input.jurisdictionId, input.branchId);
+    await assertAppointmentReferencesInScope(db, input);
+    const inserted = await db.insert(healthcareAppointments).values({ ...input, status: "requested", createdByUserId: ctx.user.id });
+    return { appointmentId: Number(inserted[0].insertId), status: "requested" as const, externalScheduling: "blocked" as const };
+  }),
+
+  confirmAppointment: protectedProcedure.input(z.object({ organizationId: z.number().int().positive(), jurisdictionId: z.number().int().positive(), branchId: z.number().int().positive(), appointmentId: z.number().int().positive() })).mutation(async ({ ctx, input }) => {
+    const db = dbOrThrow(await getDb());
+    await assertAppointmentWriter(db, ctx.user.id, ctx.user.role, input.organizationId, input.jurisdictionId, input.branchId);
+    const appointment = await db.select({ id: healthcareAppointments.id, status: healthcareAppointments.status }).from(healthcareAppointments).where(and(eq(healthcareAppointments.id, input.appointmentId), eq(healthcareAppointments.organizationId, input.organizationId), eq(healthcareAppointments.jurisdictionId, input.jurisdictionId), eq(healthcareAppointments.branchId, input.branchId))).limit(1);
+    if (!appointment.length) throw new TRPCError({ code: "NOT_FOUND", message: "Appointment is not available in the active scope" });
+    if (appointment[0].status !== "requested") throw new TRPCError({ code: "PRECONDITION_FAILED", message: "Only a requested internal appointment can be confirmed" });
+    const confirmed = await db.transaction(async tx => {
+      const updated = await tx.update(healthcareAppointments).set({ status: "confirmed" }).where(and(eq(healthcareAppointments.id, input.appointmentId), eq(healthcareAppointments.organizationId, input.organizationId), eq(healthcareAppointments.jurisdictionId, input.jurisdictionId), eq(healthcareAppointments.branchId, input.branchId), eq(healthcareAppointments.status, "requested")));
+      if (updated[0].affectedRows !== 1) throw new TRPCError({ code: "PRECONDITION_FAILED", message: "Appointment confirmation could not be completed" });
+      const confirmed = await tx.select({ id: healthcareAppointments.id, status: healthcareAppointments.status }).from(healthcareAppointments).where(and(eq(healthcareAppointments.id, input.appointmentId), eq(healthcareAppointments.organizationId, input.organizationId), eq(healthcareAppointments.jurisdictionId, input.jurisdictionId), eq(healthcareAppointments.branchId, input.branchId))).limit(1);
+      if (!confirmed.length || confirmed[0].status !== "confirmed") throw new TRPCError({ code: "PRECONDITION_FAILED", message: "Appointment confirmation could not be completed" });
+      await writeAppointmentStatusAudit(tx, { userId: ctx.user.id, organizationId: input.organizationId, jurisdictionId: input.jurisdictionId, branchId: input.branchId, appointmentId: input.appointmentId, action: "healthcare_appointment_confirmed" });
+      return confirmed[0];
+    });
+    return { appointmentId: confirmed.id, status: "confirmed" as const, externalScheduling: "blocked" as const };
+  }),
+
+  cancelAppointment: protectedProcedure.input(z.object({ organizationId: z.number().int().positive(), jurisdictionId: z.number().int().positive(), branchId: z.number().int().positive(), appointmentId: z.number().int().positive() })).mutation(async ({ ctx, input }) => {
+    const db = dbOrThrow(await getDb());
+    await assertAppointmentWriter(db, ctx.user.id, ctx.user.role, input.organizationId, input.jurisdictionId, input.branchId);
+    const appointment = await db.select({ id: healthcareAppointments.id, status: healthcareAppointments.status }).from(healthcareAppointments).where(and(eq(healthcareAppointments.id, input.appointmentId), eq(healthcareAppointments.organizationId, input.organizationId), eq(healthcareAppointments.jurisdictionId, input.jurisdictionId), eq(healthcareAppointments.branchId, input.branchId))).limit(1);
+    if (!appointment.length) throw new TRPCError({ code: "NOT_FOUND", message: "Appointment is not available in the active scope" });
+    if (appointment[0].status !== "requested" && appointment[0].status !== "confirmed") throw new TRPCError({ code: "PRECONDITION_FAILED", message: "Only a requested or confirmed internal appointment can be cancelled" });
+    const cancelled = await db.transaction(async tx => {
+      const updated = await tx.update(healthcareAppointments).set({ status: "cancelled" }).where(and(eq(healthcareAppointments.id, input.appointmentId), eq(healthcareAppointments.organizationId, input.organizationId), eq(healthcareAppointments.jurisdictionId, input.jurisdictionId), eq(healthcareAppointments.branchId, input.branchId), or(eq(healthcareAppointments.status, "requested"), eq(healthcareAppointments.status, "confirmed"))));
+      if (updated[0].affectedRows !== 1) throw new TRPCError({ code: "PRECONDITION_FAILED", message: "Appointment cancellation could not be completed" });
+      const cancelled = await tx.select({ id: healthcareAppointments.id, status: healthcareAppointments.status }).from(healthcareAppointments).where(and(eq(healthcareAppointments.id, input.appointmentId), eq(healthcareAppointments.organizationId, input.organizationId), eq(healthcareAppointments.jurisdictionId, input.jurisdictionId), eq(healthcareAppointments.branchId, input.branchId))).limit(1);
+      if (!cancelled.length || cancelled[0].status !== "cancelled") throw new TRPCError({ code: "PRECONDITION_FAILED", message: "Appointment cancellation could not be completed" });
+      await writeAppointmentStatusAudit(tx, { userId: ctx.user.id, organizationId: input.organizationId, jurisdictionId: input.jurisdictionId, branchId: input.branchId, appointmentId: input.appointmentId, action: "healthcare_appointment_cancelled" });
+      return cancelled[0];
+    });
+    return { appointmentId: cancelled.id, status: "cancelled" as const, externalScheduling: "blocked" as const };
+  }),
+
+  markAppointmentNoShow: protectedProcedure.input(z.object({ organizationId: z.number().int().positive(), jurisdictionId: z.number().int().positive(), branchId: z.number().int().positive(), appointmentId: z.number().int().positive() })).mutation(async ({ ctx, input }) => {
+    const db = dbOrThrow(await getDb());
+    await assertAppointmentWriter(db, ctx.user.id, ctx.user.role, input.organizationId, input.jurisdictionId, input.branchId);
+    const appointment = await db.select({ id: healthcareAppointments.id, status: healthcareAppointments.status }).from(healthcareAppointments).where(and(eq(healthcareAppointments.id, input.appointmentId), eq(healthcareAppointments.organizationId, input.organizationId), eq(healthcareAppointments.jurisdictionId, input.jurisdictionId), eq(healthcareAppointments.branchId, input.branchId))).limit(1);
+    if (!appointment.length) throw new TRPCError({ code: "NOT_FOUND", message: "Appointment is not available in the active scope" });
+    if (appointment[0].status !== "confirmed") throw new TRPCError({ code: "PRECONDITION_FAILED", message: "Only a confirmed internal appointment can be marked as no-show" });
+    const noShow = await db.transaction(async tx => {
+      const updated = await tx.update(healthcareAppointments).set({ status: "no_show" }).where(and(eq(healthcareAppointments.id, input.appointmentId), eq(healthcareAppointments.organizationId, input.organizationId), eq(healthcareAppointments.jurisdictionId, input.jurisdictionId), eq(healthcareAppointments.branchId, input.branchId), eq(healthcareAppointments.status, "confirmed")));
+      if (updated[0].affectedRows !== 1) throw new TRPCError({ code: "PRECONDITION_FAILED", message: "Appointment no-show update could not be completed" });
+      const noShow = await tx.select({ id: healthcareAppointments.id, status: healthcareAppointments.status }).from(healthcareAppointments).where(and(eq(healthcareAppointments.id, input.appointmentId), eq(healthcareAppointments.organizationId, input.organizationId), eq(healthcareAppointments.jurisdictionId, input.jurisdictionId), eq(healthcareAppointments.branchId, input.branchId))).limit(1);
+      if (!noShow.length || noShow[0].status !== "no_show") throw new TRPCError({ code: "PRECONDITION_FAILED", message: "Appointment no-show update could not be completed" });
+      await writeAppointmentStatusAudit(tx, { userId: ctx.user.id, organizationId: input.organizationId, jurisdictionId: input.jurisdictionId, branchId: input.branchId, appointmentId: input.appointmentId, action: "healthcare_appointment_no_show" });
+      return noShow[0];
+    });
+    return { appointmentId: noShow.id, status: "no_show" as const, externalScheduling: "blocked" as const };
+  }),
+
+  checkInAppointment: protectedProcedure.input(z.object({ organizationId: z.number().int().positive(), jurisdictionId: z.number().int().positive(), branchId: z.number().int().positive(), appointmentId: z.number().int().positive() })).mutation(async ({ ctx, input }) => {
+    const db = dbOrThrow(await getDb());
+    await assertAppointmentWriter(db, ctx.user.id, ctx.user.role, input.organizationId, input.jurisdictionId, input.branchId);
+    const appointment = await db.select({ id: healthcareAppointments.id, status: healthcareAppointments.status }).from(healthcareAppointments).where(and(eq(healthcareAppointments.id, input.appointmentId), eq(healthcareAppointments.organizationId, input.organizationId), eq(healthcareAppointments.jurisdictionId, input.jurisdictionId), eq(healthcareAppointments.branchId, input.branchId))).limit(1);
+    if (!appointment.length) throw new TRPCError({ code: "NOT_FOUND", message: "Appointment is not available in the active scope" });
+    if (appointment[0].status !== "confirmed") throw new TRPCError({ code: "PRECONDITION_FAILED", message: "Only a confirmed internal appointment can be checked in" });
+    const checkedIn = await db.transaction(async tx => {
+      const updated = await tx.update(healthcareAppointments).set({ status: "checked_in" }).where(and(eq(healthcareAppointments.id, input.appointmentId), eq(healthcareAppointments.organizationId, input.organizationId), eq(healthcareAppointments.jurisdictionId, input.jurisdictionId), eq(healthcareAppointments.branchId, input.branchId), eq(healthcareAppointments.status, "confirmed")));
+      if (updated[0].affectedRows !== 1) throw new TRPCError({ code: "PRECONDITION_FAILED", message: "Appointment check-in could not be completed" });
+      const checkedIn = await tx.select({ id: healthcareAppointments.id, status: healthcareAppointments.status }).from(healthcareAppointments).where(and(eq(healthcareAppointments.id, input.appointmentId), eq(healthcareAppointments.organizationId, input.organizationId), eq(healthcareAppointments.jurisdictionId, input.jurisdictionId), eq(healthcareAppointments.branchId, input.branchId))).limit(1);
+      if (!checkedIn.length || checkedIn[0].status !== "checked_in") throw new TRPCError({ code: "PRECONDITION_FAILED", message: "Appointment check-in could not be completed" });
+      await writeAppointmentStatusAudit(tx, { userId: ctx.user.id, organizationId: input.organizationId, jurisdictionId: input.jurisdictionId, branchId: input.branchId, appointmentId: input.appointmentId, action: "healthcare_appointment_checked_in" });
+      return checkedIn[0];
+    });
+    return { appointmentId: checkedIn.id, status: "checked_in" as const, externalScheduling: "blocked" as const };
+  }),
+
+  completeAppointment: protectedProcedure.input(z.object({ organizationId: z.number().int().positive(), jurisdictionId: z.number().int().positive(), branchId: z.number().int().positive(), appointmentId: z.number().int().positive() })).mutation(async ({ ctx, input }) => {
+    const db = dbOrThrow(await getDb());
+    await assertAppointmentWriter(db, ctx.user.id, ctx.user.role, input.organizationId, input.jurisdictionId, input.branchId);
+    const appointment = await db.select({ id: healthcareAppointments.id, status: healthcareAppointments.status }).from(healthcareAppointments).where(and(eq(healthcareAppointments.id, input.appointmentId), eq(healthcareAppointments.organizationId, input.organizationId), eq(healthcareAppointments.jurisdictionId, input.jurisdictionId), eq(healthcareAppointments.branchId, input.branchId))).limit(1);
+    if (!appointment.length) throw new TRPCError({ code: "NOT_FOUND", message: "Appointment is not available in the active scope" });
+    if (appointment[0].status !== "checked_in") throw new TRPCError({ code: "PRECONDITION_FAILED", message: "Only a checked-in internal appointment can be completed" });
+    const completed = await db.transaction(async tx => {
+      const updated = await tx.update(healthcareAppointments).set({ status: "completed" }).where(and(eq(healthcareAppointments.id, input.appointmentId), eq(healthcareAppointments.organizationId, input.organizationId), eq(healthcareAppointments.jurisdictionId, input.jurisdictionId), eq(healthcareAppointments.branchId, input.branchId), eq(healthcareAppointments.status, "checked_in")));
+      if (updated[0].affectedRows !== 1) throw new TRPCError({ code: "PRECONDITION_FAILED", message: "Appointment completion could not be completed" });
+      const completed = await tx.select({ id: healthcareAppointments.id, status: healthcareAppointments.status }).from(healthcareAppointments).where(and(eq(healthcareAppointments.id, input.appointmentId), eq(healthcareAppointments.organizationId, input.organizationId), eq(healthcareAppointments.jurisdictionId, input.jurisdictionId), eq(healthcareAppointments.branchId, input.branchId))).limit(1);
+      if (!completed.length || completed[0].status !== "completed") throw new TRPCError({ code: "PRECONDITION_FAILED", message: "Appointment completion could not be completed" });
+      await writeAppointmentStatusAudit(tx, { userId: ctx.user.id, organizationId: input.organizationId, jurisdictionId: input.jurisdictionId, branchId: input.branchId, appointmentId: input.appointmentId, action: "healthcare_appointment_completed" });
+      return completed[0];
+    });
+    return { appointmentId: completed.id, status: "completed" as const, externalScheduling: "blocked" as const };
   }),
 
   encounters: protectedProcedure.input(z.object({ organizationId: z.number().int().positive(), jurisdictionId: z.number().int().positive(), branchId: z.number().int().positive(), status: z.enum(["scheduled", "arrived", "in_progress", "referred", "admitted", "discharged", "cancelled"]).optional() })).query(async ({ ctx, input }) => {
@@ -199,9 +368,42 @@ export const egyptHealthcareRouter = router({
     return db.select({ id: hospitalBillingAccounts.id, facilityId: hospitalBillingAccounts.facilityId, patientId: hospitalBillingAccounts.patientId, encounterId: hospitalBillingAccounts.encounterId, payerType: hospitalBillingAccounts.payerType, packageCode: hospitalBillingAccounts.packageCode, status: hospitalBillingAccounts.status, approvalStatus: hospitalBillingAccounts.approvalStatus, depositAmount: hospitalBillingAccounts.depositAmount, billedAmount: hospitalBillingAccounts.billedAmount, paidAmount: hospitalBillingAccounts.paidAmount, externalInvoiceGate: hospitalBillingAccounts.externalInvoiceGate }).from(hospitalBillingAccounts).where(and(eq(hospitalBillingAccounts.organizationId, input.organizationId), eq(hospitalBillingAccounts.jurisdictionId, input.jurisdictionId), eq(hospitalBillingAccounts.branchId, input.branchId))).orderBy(desc(hospitalBillingAccounts.updatedAt)).limit(200);
   }),
 
-  createBillingAccount: protectedProcedure.input(z.object({ organizationId: z.number().int().positive(), jurisdictionId: z.number().int().positive(), branchId: z.number().int().positive(), facilityId: z.number().int().positive(), patientId: z.number().int().positive(), encounterId: z.number().int().positive().optional(), payerType: z.enum(["self_pay", "insurance", "government", "employer"]), packageCode: z.string().max(120).optional(), depositAmount: z.string().regex(/^\\d+(\\.\\d{1,2})?$/).optional(), billedAmount: z.string().regex(/^\\d+(\\.\\d{1,2})?$/).optional() })).mutation(async ({ ctx, input }) => {
+  clinicOperationsSummary: protectedProcedure.input(z.object({ organizationId: z.number().int().positive(), jurisdictionId: z.number().int().positive(), branchId: z.number().int().positive() })).query(async ({ ctx, input }) => {
     const db = dbOrThrow(await getDb());
     await assertEgyptScope(db, ctx.user.id, ctx.user.role, input.organizationId, input.jurisdictionId, input.branchId);
+    const scopedAppointments = and(eq(healthcareAppointments.organizationId, input.organizationId), eq(healthcareAppointments.jurisdictionId, input.jurisdictionId), eq(healthcareAppointments.branchId, input.branchId));
+    const scopedBillingAccounts = and(eq(hospitalBillingAccounts.organizationId, input.organizationId), eq(hospitalBillingAccounts.jurisdictionId, input.jurisdictionId), eq(hospitalBillingAccounts.branchId, input.branchId));
+    const [appointments, requestedAppointments, confirmedAppointments, cancelledAppointments, noShowAppointments, checkedInAppointments, completedAppointments, billingAccounts, pendingBillingAccounts] = await Promise.all([
+      db.select({ total: count() }).from(healthcareAppointments).where(scopedAppointments),
+      db.select({ total: count() }).from(healthcareAppointments).where(and(scopedAppointments, eq(healthcareAppointments.status, "requested"))),
+      db.select({ total: count() }).from(healthcareAppointments).where(and(scopedAppointments, eq(healthcareAppointments.status, "confirmed"))),
+      db.select({ total: count() }).from(healthcareAppointments).where(and(scopedAppointments, eq(healthcareAppointments.status, "cancelled"))),
+      db.select({ total: count() }).from(healthcareAppointments).where(and(scopedAppointments, eq(healthcareAppointments.status, "no_show"))),
+      db.select({ total: count() }).from(healthcareAppointments).where(and(scopedAppointments, eq(healthcareAppointments.status, "checked_in"))),
+      db.select({ total: count() }).from(healthcareAppointments).where(and(scopedAppointments, eq(healthcareAppointments.status, "completed"))),
+      db.select({ total: count() }).from(hospitalBillingAccounts).where(scopedBillingAccounts),
+      db.select({ total: count() }).from(hospitalBillingAccounts).where(and(scopedBillingAccounts, eq(hospitalBillingAccounts.approvalStatus, "pending"))),
+    ]);
+    return {
+      generatedAt: new Date().toISOString(),
+      appointments: {
+        total: Number(appointments[0]?.total ?? 0),
+        requested: Number(requestedAppointments[0]?.total ?? 0),
+        confirmed: Number(confirmedAppointments[0]?.total ?? 0),
+        cancelled: Number(cancelledAppointments[0]?.total ?? 0),
+        noShow: Number(noShowAppointments[0]?.total ?? 0),
+        checkedIn: Number(checkedInAppointments[0]?.total ?? 0),
+        completed: Number(completedAppointments[0]?.total ?? 0),
+      },
+      billingAccounts: { total: Number(billingAccounts[0]?.total ?? 0), pendingApproval: Number(pendingBillingAccounts[0]?.total ?? 0) },
+      externalOperations: "blocked" as const,
+    };
+  }),
+
+  createBillingAccount: protectedProcedure.input(z.object({ organizationId: z.number().int().positive(), jurisdictionId: z.number().int().positive(), branchId: z.number().int().positive(), facilityId: z.number().int().positive(), patientId: z.number().int().positive(), encounterId: z.number().int().positive().optional(), payerType: z.enum(["self_pay", "insurance", "government", "employer"]), packageCode: z.string().max(120).optional(), depositAmount: z.string().regex(/^\\d+(\\.\\d{1,2})?$/).optional(), billedAmount: z.string().regex(/^\\d+(\\.\\d{1,2})?$/).optional() })).mutation(async ({ ctx, input }) => {
+    const db = dbOrThrow(await getDb());
+    await assertBillingWriter(db, ctx.user.id, ctx.user.role, input.organizationId, input.jurisdictionId, input.branchId);
+    await assertBillingReferencesInScope(db, input);
     const inserted = await db.insert(hospitalBillingAccounts).values({ ...input, depositAmount: input.depositAmount ?? "0", billedAmount: input.billedAmount ?? "0", createdByUserId: ctx.user.id, externalInvoiceGate: "not_configured" });
     return { billingAccountId: Number(inserted[0].insertId), externalInvoiceSubmission: "blocked" as const };
   }),
