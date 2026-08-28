@@ -42,9 +42,11 @@ export function webhookRouter(): Router {
         );
         const customer = (cust as Array<{ id: number; organizationId: number; branchId: number | null; jurisdictionId: number | null }>)[0];
         const subject = m.body.length > 160 ? `${m.body.slice(0, 157)}...` : m.body || "WhatsApp message";
+        const disposition = "inbound_whatsapp";
+        const createdByUserId = Number(process.env.MEDORA_SYSTEM_USER_ID ?? 1);
         const [ticket] = await pool.query(
-          "INSERT INTO call_tickets (organizationId, branchId, customerId, channel, direction, subject, priority, status, disposition) VALUES (?,?,?,?,?,?,?,?,?)",
-          [customer?.organizationId ?? DEFAULT_ORG, customer?.branchId ?? null, customer?.id ?? null, "whatsapp", "inbound", subject, "medium", "open", null],
+          "INSERT INTO call_tickets (organizationId, branchId, customerId, channel, direction, subject, priority, status, disposition, createdByUserId) VALUES (?,?,?,?,?,?,?,?,?,?)",
+          [customer?.organizationId ?? DEFAULT_ORG, customer?.branchId ?? null, customer?.id ?? null, "whatsapp", "inbound", subject, "normal", "open", disposition, createdByUserId],
         );
         const ticketId = Number((ticket as { insertId: number }).insertId);
         await pool.query("UPDATE channel_messages SET ticketId=? WHERE id=?", [ticketId, messageId]);
