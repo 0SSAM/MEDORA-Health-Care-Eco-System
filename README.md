@@ -85,3 +85,8 @@ MIT — انظر [LICENSE](LICENSE) و[NOTICE](NOTICE). المشروع مجان�
 - WhatsApp Cloud API webhooks (`/api/channels/whatsapp/webhook`) and outbound text/template messages.
 - Twilio Programmable Voice dial-out, status callbacks, Arabic TwiML.
 - See `docs/COMMS-INTEGRATION-2026-08-28.md`; config via env or tRPC `communicationChannels.config.save`.
+
+## Mobile attendance (GPS + biometric) & KPI
+
+- `/attendance` — punch in/out with GPS geofence + biometric; all tamper decisions server-side (`server/domain/attendance-tamper-policy.ts`), every punch in `attendance_events`.
+- `/kpi` — live KPI dashboard (HR, care, ICD-11, delivery, GP MAX, comms) + definitions/entries. See `docs/ATTENDANCE-ANTI-TAMPER-2026-08-28.md`.

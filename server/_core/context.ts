@@ -27,7 +27,14 @@ export async function createContext(
   }
 
   if (!user) {
-    const internalToken = opts.req.cookies?.[INTERNAL_SESSION_COOKIE];
+    const rawCookie = opts.req.headers.cookie ?? "";
+    const internalToken =
+      opts.req.cookies?.[INTERNAL_SESSION_COOKIE] ??
+      rawCookie
+        .split(";")
+        .map((s) => s.trim())
+        .find((s) => s.startsWith(INTERNAL_SESSION_COOKIE + "="))
+        ?.slice(INTERNAL_SESSION_COOKIE.length + 1);
     if (internalToken) {
       internalSession = (await getInternalSession(internalToken)) ?? null;
       if (internalSession) user = internalSession.user;

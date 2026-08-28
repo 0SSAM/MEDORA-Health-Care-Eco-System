@@ -67,3 +67,9 @@ Single-branch workflow: all work lands on `main` (no side branches).
 - feat: channel_accounts / channel_messages / channel_calls tables (live-applied) + tRPC config & outbound router.
 - feat: inbound WhatsApp auto-creates call tickets linked to matched customer profiles.
 - docs: COMMS-INTEGRATION-2026-08-28.md, UI-UX-PRO-MAX-ADOPTION-2026-08-28.md; .env.example keys.
+
+## 2026-08-28 — Mobile attendance (GPS+biometric, server-side anti-tamper) & full KPI modules
+- feat: server-authoritative punch policy (geofence/mock/emulator/clock-skew/biometric/duplicate/no-check-in guards) — attendance-tamper-policy.ts
+- feat: attendanceMobile tRPC (checkIn/checkOut/today/geofences) + attendance_geofences/attendance_events tables + verified_device source
+- feat: KPI full modules — dashboard (9 live KPIs), definitions, entries + kpi_definitions/kpi_entries tables + /kpi UI
+- feat: /attendance mobile UI (GPS + biometric toggle, live record); routes wired in App.tsx; policy unit tests (8)

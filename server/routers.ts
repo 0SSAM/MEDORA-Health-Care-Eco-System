@@ -24,6 +24,7 @@ import { policyKnowledgeRouter } from "./routers/policyKnowledge";
 import { procurementRouter } from "./routers/procurement";
 import { secondaryModulesRouter } from "./routers/secondaryModules";
 import { kpiRouter } from "./routers/kpi";
+import { attendanceMobileRouter } from "./routers/attendanceMobile";
 import { deliveryRouter } from "./routers/delivery";
 import { adminAccountRouter } from "./routers/adminAccount";
 import { rbacRouter } from "./routers/rbac";
@@ -306,6 +307,7 @@ export const appRouter = router({
   procurement: procurementRouter,
   secondaryModules: secondaryModulesRouter,
   kpi: kpiRouter,
+  attendanceMobile: attendanceMobileRouter,
   reference: router({
     nlmIcd10CmSearch: protectedProcedure.input(z.object({ terms: z.string().min(2).max(120), count: z.number().int().min(1).max(50).optional() })).query(async ({ ctx, input }) => {
       if (!["admin", "manager", "pharmacist"].includes(ctx.user.role)) throw new TRPCError({ code: "FORBIDDEN", message: "لا تملك صلاحية البحث السريري المرجعي." });
