@@ -7,7 +7,7 @@
 - **Organization, branch, and jurisdiction**: every record is scoped to an organization, branch, and jurisdiction.
 - **Jurisdiction ID `0` is a valid legal scope**: النظام يتعامل مع النطاق القانوني `0` كنطاق صالح (لا يُعامل كـ"غير محدد").
 - **The AI assistant is advisory-only**: توصيات الذكاء الاصطناعي استشارية فقط ولا تُتخذ كقرار سريري أو قانوني.
-- **Browser code is never claimed to prevent OS-level or physical capture absolutely**: حماية الشاشة في المتصفح لا تُزعم بأنها تمنع الالتقاط على مستوى النظام أو الفيزيائي بشكل مطلق.
+- **browser code is never claimed to prevent OS-level or physical capture absolutely** — لا تدّعي حماية شاشة المتصفح منع الالتقاط على مستوى النظام أو الفيزيائي بشكل مطلق.
 - **No legal or regulatory certification is claimed**: لا يُدعى أي اعتماد قانوني أو تنظيمي (لا FDA/EMA ولا EDA/UPA إلا عبر الموصلات الرسمية عند التفعيل).
 
 ---
