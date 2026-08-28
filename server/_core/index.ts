@@ -16,10 +16,12 @@ import { createSecurityMiddleware } from "./security";
 import { attachRequestCookies } from "./request-cookies";
 import { registerPublicReadinessRoute } from "./readiness";
 import { scheduledCallbackRateLimitOptions } from "./scheduled-rate-limit";
+import { webhookRouter } from "../channels/webhooks";
 
 function isPortAvailable(port: number): Promise<boolean> {
   return new Promise(resolve => {
     const server = net.createServer();
+
     server.listen(port, () => {
       server.close(() => resolve(true));
     });
@@ -38,6 +40,7 @@ async function findAvailablePort(startPort: number = 3000): Promise<number> {
 
 async function startServer() {
   const app = express();
+app.use("/api/channels", webhookRouter());
   const server = createServer(app);
   const scheduledCallbackRateLimit = rateLimit(scheduledCallbackRateLimitOptions);
   app.disable("x-powered-by");

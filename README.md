@@ -78,3 +78,10 @@ docs/             → التوثيق (audits, دليل التركيب، الأم
 ## License — الترخيص
 
 MIT — انظر [LICENSE](LICENSE) و[NOTICE](NOTICE). المشروع مجاني بالكامل ومفتوح المصدر.
+
+
+## Communication channels (WhatsApp + Twilio)
+
+- WhatsApp Cloud API webhooks (`/api/channels/whatsapp/webhook`) and outbound text/template messages.
+- Twilio Programmable Voice dial-out, status callbacks, Arabic TwiML.
+- See `docs/COMMS-INTEGRATION-2026-08-28.md`; config via env or tRPC `communicationChannels.config.save`.

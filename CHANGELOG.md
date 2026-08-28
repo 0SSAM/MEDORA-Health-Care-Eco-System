@@ -60,3 +60,10 @@ Single-branch workflow: all work lands on `main` (no side branches).
 ### Changed
 - `client/src/pages/ComponentShowcase.tsx`: demo menu item `Subscription` → `Settings`.
 - Repository metadata: bilingual description, topics, Issues/Wiki/Projects/Discussions enabled.
+
+## 2026-08-28 — Communication channels (WhatsApp Cloud API + Twilio Programmable Voice)
+- feat: WhatsApp channel (webhook verify + inbound messages/statuses, send text/template) — Meta-doc-verified payload shapes.
+- feat: Twilio Programmable Voice (dial out via Calls.json, status callbacks, Arabic TwiML dialog, signature verification).
+- feat: channel_accounts / channel_messages / channel_calls tables (live-applied) + tRPC config & outbound router.
+- feat: inbound WhatsApp auto-creates call tickets linked to matched customer profiles.
+- docs: COMMS-INTEGRATION-2026-08-28.md, UI-UX-PRO-MAX-ADOPTION-2026-08-28.md; .env.example keys.
