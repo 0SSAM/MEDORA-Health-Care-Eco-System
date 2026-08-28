@@ -1,3 +1,9 @@
+## 2026-08-28 — 4 suggestions executed
+- (1) Sync: اختبار عقد محرك المزامنة shared/sync-engine.test.ts (LWW + outbox) — أخضر.
+- (2) Seeding حي متحقق: أدوية 25094، صلاحيات 73، مناطق 8، ICD 7512، جداول sync جاهزة.
+- (3) GP MAX: مكتبة النقاط 96→144 (18/طبقة) + إعادة زراعة حية.
+- (4) Installers: PWA (جارٍ) + سقالة Electron installers/electron (البناء محليًا؛ لا ثنائيات هنا).
+
 ## 2026-08-28 — ICD-11 integrated reference data (NLM clinicaltables v3)
 - استيعاب فعلي لرموز ICD-11 من واجهة NLM العامة في icd11_codes (is_starter=0)، سكربت scripts/icd11-import-nlm.mjs، تصدير CSV.
 - ربط: .env.example (ICD11_SOURCE/ICD11_BASE_URL/ICD_API_*), README, docs/ICD11-DATA-INTEGRATION-2026-08-28.md.
