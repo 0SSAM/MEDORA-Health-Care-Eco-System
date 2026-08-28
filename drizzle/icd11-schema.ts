@@ -7,6 +7,7 @@ import {
   date,
   datetime,
   index,
+  text,
 } from "drizzle-orm/mysql-core";
 
 export const Icd11Codes = mysqlTable(
@@ -21,6 +22,7 @@ export const Icd11Codes = mysqlTable(
     version: varchar("version", { length: 128 }).notNull(),
     releaseDate: date("release_date"),
     source: varchar("source", { length: 128 }),
+    uri: text("uri"),
     isStarter: tinyint("is_starter").notNull().default(1),
     createdAt: datetime("created_at").notNull(),
   },
