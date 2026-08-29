@@ -30,13 +30,17 @@ export function webhookRouter(): Router {
       res.status(403).send("Verification failed");
       return;
     }
-    // Meta's challenge is expected to be an opaque token, but reject HTML-like
-    // control characters so an attacker cannot reflect markup into a browser.
-    if (!/^[^<>"'&\r\n]{1,256}$/.test(challenge)) {
+    // Meta's challenge is an opaque token that must be returned verbatim for
+    // verification. Constrain it to a short, printable token and force the
+    // response to remain non-HTML so it cannot become executable markup.
+    if (!/^[A-Za-z0-9._~:/?#[\]@!$'()*+,;=% -]{1,256}$/.test(challenge)) {
       res.status(400).send("Invalid verification challenge");
       return;
     }
-    res.type("text/plain").send(challenge);
+    res.setHeader("Content-Type", "text/plain; charset=utf-8");
+    res.setHeader("X-Content-Type-Options", "nosniff");
+    res.setHeader("Content-Security-Policy", "default-src 'none'; frame-ancestors 'none'");
+    res.status(200).end(challenge);
   });
 
   r.post("/whatsapp/webhook", express.json(), async (req: Request, res: Response) => {
