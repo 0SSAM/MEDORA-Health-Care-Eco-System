@@ -12,9 +12,10 @@ import { installSafeGlobalDiagnostics, recordSafeUiDiagnostic } from "./lib/safe
 
 installSafeGlobalDiagnostics();
 
-// The Cloudflare preview is an isolated static preview. Do not let a service
-// worker from another MEDORA deployment serve stale assets into this preview.
-const isCloudflarePreview = window.location.hostname === "medora-preview.hossam-naeim2002.workers.dev";
+// This flag is injected at build time by .env.cloudflare-preview. Using a
+// compile-time flag avoids depending on the deployed hostname and guarantees
+// the static preview never registers a production service worker.
+const isCloudflarePreview = import.meta.env.VITE_CLOUDFLARE_PREVIEW === "true";
 if ("serviceWorker" in navigator && window.isSecureContext && !isCloudflarePreview) {
   window.addEventListener("load", () => {
     navigator.serviceWorker.register("/sw.js").catch(() => undefined);
@@ -30,23 +31,18 @@ const queryClient = new QueryClient({
       refetchOnReconnect: true,
       retry: 1,
     },
-    mutations: {
-      retry: 0,
-    },
+    mutations: { retry: 0 },
   },
 });
 
 const redirectToLoginIfUnauthorized = (error: unknown) => {
   if (!(error instanceof TRPCClientError)) return;
   if (typeof window === "undefined") return;
-
-  const isUnauthorized = error.message === UNAUTHED_ERR_MSG;
-  if (!isUnauthorized) return;
+  if (error.message !== UNAUTHED_ERR_MSG) return;
   startLogin();
 };
 
 const logClientApiError = (label: string, error: unknown) => {
-  // Never emit API response bodies or user-provided messages in production logs.
   if (!import.meta.env.DEV) return;
   const trpcError = error instanceof TRPCClientError ? error : undefined;
   recordSafeUiDiagnostic("unhandled_ui_error", error, label);
@@ -73,21 +69,14 @@ queryClient.getMutationCache().subscribe(event => {
 });
 
 const trpcClient = trpc.createClient({
-  links: [
-    httpBatchLink({
-      url: "/api/trpc",
-      transformer: superjson,
-      headers() {
-        return getSessionAuthHeader();
-      },
-      fetch(input, init) {
-        return globalThis.fetch(input, {
-          ...(init ?? {}),
-          credentials: "include",
-        });
-      },
-    }),
-  ],
+  links: [httpBatchLink({
+    url: "/api/trpc",
+    transformer: superjson,
+    headers() { return getSessionAuthHeader(); },
+    fetch(input, init) {
+      return globalThis.fetch(input, { ...(init ?? {}), credentials: "include" });
+    },
+  })],
 });
 
 createRoot(document.getElementById("root")!).render(
