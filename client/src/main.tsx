@@ -12,7 +12,10 @@ import { installSafeGlobalDiagnostics, recordSafeUiDiagnostic } from "./lib/safe
 
 installSafeGlobalDiagnostics();
 
-if ("serviceWorker" in navigator && window.isSecureContext) {
+// The Cloudflare preview is an isolated static preview. Do not let a service
+// worker from another MEDORA deployment serve stale assets into this preview.
+const isCloudflarePreview = window.location.hostname === "medora-preview.hossam-naeim2002.workers.dev";
+if ("serviceWorker" in navigator && window.isSecureContext && !isCloudflarePreview) {
   window.addEventListener("load", () => {
     navigator.serviceWorker.register("/sw.js").catch(() => undefined);
   }, { once: true });
@@ -38,9 +41,7 @@ const redirectToLoginIfUnauthorized = (error: unknown) => {
   if (typeof window === "undefined") return;
 
   const isUnauthorized = error.message === UNAUTHED_ERR_MSG;
-
   if (!isUnauthorized) return;
-
   startLogin();
 };
 
@@ -77,10 +78,6 @@ const trpcClient = trpc.createClient({
       url: "/api/trpc",
       transformer: superjson,
       headers() {
-        // Preview auto-login fallback: when the browser blocks iframe cookies
-        // (Safari ITP / private browsing / WebView), forward the mirrored token.
-        // The short-lived module cache avoids repeated sessionStorage reads while
-        // preserving the regular OAuth cookie flow and server-side precedence.
         return getSessionAuthHeader();
       },
       fetch(input, init) {
