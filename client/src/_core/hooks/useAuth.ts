@@ -7,40 +7,42 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 
 export const AUTH_CHECK_TIMEOUT_MS = 1_500;
 
+const isCloudflarePreview = () =>
+  typeof window !== "undefined" &&
+  window.location.hostname === "medora-preview.hossam-naeim2002.workers.dev";
+
 type UseAuthOptions = {
   redirectOnUnauthenticated?: boolean;
   redirectPath?: string;
 };
 
 export function useAuth(options?: UseAuthOptions) {
-  // Login is started via startLogin() in the effect below, only when we actually
-  // navigate — never during render. startLogin() mints a one-time nonce + writes
-  // the state cookie, so calling it per render would overwrite the cookie and
-  // desync it from an in-flight login's `state`.
   const { redirectOnUnauthenticated = false, redirectPath } = options ?? {};
+  const isPreview = isCloudflarePreview();
   const utils = trpc.useUtils();
   const queryClient = useQueryClient();
 
+  // Cloudflare preview is intentionally a static frontend preview. It has no
+  // backend Worker/API binding, so never let an auth request block rendering.
   const meQuery = trpc.auth.me.useQuery(undefined, {
+    enabled: !isPreview,
     retry: false,
     refetchOnWindowFocus: false,
   });
   const [authCheckTimedOut, setAuthCheckTimedOut] = useState(false);
 
   useEffect(() => {
-    if (!meQuery.isLoading) {
+    if (isPreview || !meQuery.isLoading) {
       setAuthCheckTimedOut(false);
       return;
     }
 
     const timeoutId = window.setTimeout(() => {
-      // A missing session must never leave the public login route blocked forever.
-      // The server remains fail-closed; this only releases the UI from its spinner.
       setAuthCheckTimedOut(true);
     }, AUTH_CHECK_TIMEOUT_MS);
 
     return () => window.clearTimeout(timeoutId);
-  }, [meQuery.isLoading]);
+  }, [isPreview, meQuery.isLoading]);
 
   const internalLogoutMutation = trpc.auth.internalLogout.useMutation({
     onSuccess: () => {
@@ -54,6 +56,7 @@ export function useAuth(options?: UseAuthOptions) {
   });
 
   const logout = useCallback(async () => {
+    if (isPreview) return;
     try {
       await internalLogoutMutation.mutateAsync();
     } catch (error: unknown) {
@@ -64,37 +67,32 @@ export function useAuth(options?: UseAuthOptions) {
     try {
       await logoutMutation.mutateAsync();
     } catch (error: unknown) {
-      if (
-        error instanceof TRPCClientError &&
-        error.data?.code === "UNAUTHORIZED"
-      ) {
-        return;
-      }
+      if (error instanceof TRPCClientError && error.data?.code === "UNAUTHORIZED") return;
       throw error;
     } finally {
-      // Clear the Preview auto-login token mirrored into sessionStorage, so
-      // header-based sessions (Safari ITP / WebView) are logged out too. The
-      // backend cookie is cleared by the logout mutation.
       try {
         sessionStorage.removeItem("manus-cookie");
       } catch {}
       resetIdentityBoundClientState(queryClient);
       utils.auth.me.setData(undefined, null);
     }
-  }, [internalLogoutMutation, logoutMutation, queryClient, utils]);
+  }, [isPreview, internalLogoutMutation, logoutMutation, queryClient, utils]);
 
   const state = useMemo(() => {
-    localStorage.setItem(
-      "manus-runtime-user-info",
-      JSON.stringify(meQuery.data)
-    );
+    const user = isPreview ? null : meQuery.data ?? null;
+    if (typeof window !== "undefined") {
+      localStorage.setItem("manus-runtime-user-info", JSON.stringify(user));
+    }
     return {
-      user: meQuery.data ?? null,
-      loading: (meQuery.isLoading && !authCheckTimedOut) || internalLogoutMutation.isPending || logoutMutation.isPending,
-      error: meQuery.error ?? logoutMutation.error ?? null,
-      isAuthenticated: Boolean(meQuery.data),
+      user,
+      loading: isPreview
+        ? false
+        : (meQuery.isLoading && !authCheckTimedOut) || internalLogoutMutation.isPending || logoutMutation.isPending,
+      error: isPreview ? null : meQuery.error ?? logoutMutation.error ?? null,
+      isAuthenticated: Boolean(user),
     };
   }, [
+    isPreview,
     meQuery.data,
     meQuery.error,
     meQuery.isLoading,
@@ -105,19 +103,19 @@ export function useAuth(options?: UseAuthOptions) {
   ]);
 
   useEffect(() => {
-    if (!redirectOnUnauthenticated) return;
+    if (isPreview || !redirectOnUnauthenticated) return;
     if ((meQuery.isLoading && !authCheckTimedOut) || logoutMutation.isPending) return;
     if (state.user) return;
     if (typeof window === "undefined") return;
     if (redirectPath && window.location.pathname === redirectPath) return;
 
-    // Navigate at this moment only. startLogin() mints the nonce + cookie itself.
     if (redirectPath) {
       window.location.href = redirectPath;
     } else {
       startLogin();
     }
   }, [
+    isPreview,
     redirectOnUnauthenticated,
     redirectPath,
     logoutMutation.isPending,
