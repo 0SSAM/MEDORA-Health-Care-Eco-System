@@ -16,11 +16,7 @@ export function useAuth(options?: UseAuthOptions) {
   const utils = trpc.useUtils();
   const queryClient = useQueryClient();
 
-  const meQuery = trpc.auth.me.useQuery(undefined, {
-    enabled: !isPreview,
-    retry: false,
-    refetchOnWindowFocus: false,
-  });
+  const meQuery = trpc.auth.me.useQuery(undefined, { enabled: !isPreview, retry: false, refetchOnWindowFocus: false });
   const [authCheckTimedOut, setAuthCheckTimedOut] = useState(false);
 
   useEffect(() => {
@@ -32,12 +28,8 @@ export function useAuth(options?: UseAuthOptions) {
     return () => window.clearTimeout(timeoutId);
   }, [isPreview, meQuery.isLoading]);
 
-  const internalLogoutMutation = trpc.auth.internalLogout.useMutation({
-    onSuccess: () => utils.auth.me.setData(undefined, null),
-  });
-  const logoutMutation = trpc.auth.logout.useMutation({
-    onSuccess: () => utils.auth.me.setData(undefined, null),
-  });
+  const internalLogoutMutation = trpc.auth.internalLogout.useMutation({ onSuccess: () => utils.auth.me.setData(undefined, null) });
+  const logoutMutation = trpc.auth.logout.useMutation({ onSuccess: () => utils.auth.me.setData(undefined, null) });
 
   const logout = useCallback(async () => {
     if (isPreview) return;
@@ -74,7 +66,8 @@ export function useAuth(options?: UseAuthOptions) {
     if ((meQuery.isLoading && !authCheckTimedOut) || logoutMutation.isPending) return;
     if (state.user || typeof window === "undefined") return;
     if (redirectPath && window.location.pathname === redirectPath) return;
-    window.location.href = redirectPath ?? startLogin();
+    if (redirectPath) window.location.href = redirectPath;
+    else startLogin();
   }, [isPreview, redirectOnUnauthenticated, redirectPath, logoutMutation.isPending, meQuery.isLoading, authCheckTimedOut, state.user]);
 
   return { ...state, refresh: () => meQuery.refetch(), logout };
