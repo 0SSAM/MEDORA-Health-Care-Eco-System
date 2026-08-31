@@ -12,9 +12,9 @@ import { installSafeGlobalDiagnostics, recordSafeUiDiagnostic } from "./lib/safe
 
 installSafeGlobalDiagnostics();
 
-// Cloudflare Preview is a static preview surface, not the production PWA.
-// Remove any previously installed preview service worker/cache so an older
-// cached shell cannot mask a newly deployed build with a blank screen.
+// Cloudflare preview is a static asset surface, not the production PWA.
+// Clear stale service workers/caches from older preview builds so a cached
+// shell can never mask a newly deployed application bundle.
 if (window.location.hostname.endsWith(".workers.dev")) {
   void navigator.serviceWorker?.getRegistrations().then(registrations => {
     for (const registration of registrations) void registration.unregister();
@@ -51,6 +51,7 @@ const redirectToLoginIfUnauthorized = (error: unknown) => {
 };
 
 const logClientApiError = (label: string, error: unknown) => {
+  // Never emit API response bodies or user-provided messages in production logs.
   if (!import.meta.env.DEV) return;
   const trpcError = error instanceof TRPCClientError ? error : undefined;
   recordSafeUiDiagnostic("unhandled_ui_error", error, label);
@@ -82,6 +83,10 @@ const trpcClient = trpc.createClient({
       url: "/api/trpc",
       transformer: superjson,
       headers() {
+        // Preview auto-login fallback: when the browser blocks iframe cookies
+        // (Safari ITP / private browsing / WebView), forward the mirrored token.
+        // The short-lived module cache avoids repeated sessionStorage reads while
+        // preserving the regular OAuth cookie flow and server-side precedence.
         return getSessionAuthHeader();
       },
       fetch(input, init) {
