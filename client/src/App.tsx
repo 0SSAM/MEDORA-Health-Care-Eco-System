@@ -55,9 +55,11 @@ function RouteLoadingState() {
 }
 
 function App() {
-  // /demo is a public, read-only showcase. It must not touch production auth,
-  // NDA state, session cookies, or the API, including when opened as /demo/.
-  const isPublicDemo = typeof window !== "undefined" && /^\/demo\/?$/.test(window.location.pathname);
+  // Public preview surfaces must never depend on the production auth/NDA API.
+  // The static Cloudflare worker intentionally has no tRPC backend, so gating
+  // the landing page here would leave visitors on an infinite auth spinner.
+  const pathname = typeof window !== "undefined" ? window.location.pathname : "/";
+  const isPublicSurface = /^\/(?:demo)?\/?$/.test(pathname);
 
   const app = (
     <TooltipProvider>
@@ -71,7 +73,7 @@ function App() {
     <ErrorBoundary>
       <ThemeProvider defaultTheme="light">
         <LocalizationProvider>
-          {isPublicDemo ? app : <NdaAccessGate>{app}</NdaAccessGate>}
+          {isPublicSurface ? app : <NdaAccessGate>{app}</NdaAccessGate>}
         </LocalizationProvider>
       </ThemeProvider>
     </ErrorBoundary>
