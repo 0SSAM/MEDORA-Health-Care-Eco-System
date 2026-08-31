@@ -50,8 +50,8 @@ export default function Welcome() {
 
   return (
     <main dir={direction} className="relative min-h-screen overflow-hidden bg-[#f4f7fb] text-[#0d1b2a]">
-      <div className="pointer-events-none absolute -left-24 top-16 h-72 w-72 rounded-full bg-cyan-200/40 blur-3xl" aria-hidden="true" />
-      <div className="pointer-events-none absolute -right-24 bottom-0 h-96 w-96 rounded-full bg-violet-200/30 blur-3xl" aria-hidden="true" />
+      <div className="medora-hero-glow pointer-events-none absolute -left-24 top-16 h-72 w-72 rounded-full bg-cyan-200/40 blur-3xl" aria-hidden="true" />
+      <div className="medora-hero-glow pointer-events-none absolute -right-24 bottom-0 h-96 w-96 rounded-full bg-violet-200/30 blur-3xl" aria-hidden="true" />
       <div className="relative mx-auto flex min-h-screen w-full max-w-7xl flex-col px-5 py-5 sm:px-8 lg:px-12">
         <header className="flex items-center justify-between gap-2 sm:gap-4">
           <a href="/" className="flex min-w-0 flex-1 items-center gap-2.5 sm:gap-3" aria-label={copy.brandTitle}>
@@ -82,8 +82,8 @@ export default function Welcome() {
           </div>
 
           <div className="relative">
-            <div className="absolute -inset-5 rounded-[2.5rem] bg-gradient-to-br from-cyan-200/50 via-white/20 to-violet-200/40 blur-2xl" aria-hidden="true" />
-            <div className="relative overflow-hidden rounded-[2rem] border border-white/80 bg-white/80 p-5 shadow-[0_24px_80px_rgba(13,27,42,0.14)] backdrop-blur-xl sm:p-7">
+            <div className="medora-hero-glow absolute -inset-5 rounded-[2.5rem] bg-gradient-to-br from-cyan-200/50 via-white/20 to-violet-200/40 blur-2xl" aria-hidden="true" />
+            <div className="medora-glass relative overflow-hidden rounded-[2rem] border border-white/80 bg-white/80 p-5 shadow-[0_24px_80px_rgba(13,27,42,0.14)] backdrop-blur-xl sm:p-7">
               <div className="flex items-center justify-between border-b border-slate-100 pb-5"><div><p className="text-xs font-semibold uppercase tracking-[0.18em] text-cyan-700">MEDORA / WORKSPACE</p><p className="mt-1 text-lg font-bold">{english ? "A clear view of the operation" : "رؤية واضحة لسير العمل"}</p></div><div className="grid h-10 w-10 place-items-center rounded-xl bg-cyan-50 text-cyan-700"><CheckCircle2 className="h-5 w-5" /></div></div>
               <div className="mt-6 grid gap-3 sm:grid-cols-2"><div className="rounded-2xl bg-[#0d1b2a] p-4 text-white sm:col-span-2"><p className="text-xs text-cyan-200">{english ? "One governed workspace" : "مساحة عمل منضبطة"}</p><p className="mt-2 text-2xl font-bold">{english ? "Care, operations, control" : "رعاية · تشغيل · رقابة"}</p><div className="mt-4 h-2 overflow-hidden rounded-full bg-white/10"><div className="h-full w-4/5 rounded-full bg-gradient-to-l from-cyan-300 to-teal-200" /></div></div><div className="rounded-2xl border border-slate-100 bg-slate-50 p-4"><p className="text-xs text-slate-500">{english ? "Access" : "الوصول"}</p><p className="mt-2 font-bold text-emerald-700">{english ? "Scoped & audited" : "منضبط ومدقق"}</p></div><div className="rounded-2xl border border-slate-100 bg-slate-50 p-4"><p className="text-xs text-slate-500">{english ? "Governance" : "الحوكمة"}</p><p className="mt-2 font-bold text-cyan-700">{english ? "Scoped & controlled" : "منضبطة ومتحكم بها"}</p></div></div>
               <div className="mt-6 rounded-2xl border border-cyan-100 bg-cyan-50/70 p-4"><div className="flex items-start gap-3"><ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-cyan-700" /><p className="text-sm leading-6 text-cyan-950">{copy.trust} — {copy.trustBody}</p></div></div>
