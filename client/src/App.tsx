@@ -55,10 +55,9 @@ function RouteLoadingState() {
 }
 
 function App() {
-  // The public demo must be completely independent of production auth, NDA,
-  // cookies, and API availability. This is intentional: a visitor should be
-  // able to open /demo on the static Cloudflare preview with zero credentials.
-  const isPublicDemo = typeof window !== "undefined" && window.location.pathname === "/demo";
+  // /demo is a public, read-only showcase. It must not touch production auth,
+  // NDA state, session cookies, or the API, including when opened as /demo/.
+  const isPublicDemo = typeof window !== "undefined" && /^\/demo\/?$/.test(window.location.pathname);
 
   const app = (
     <TooltipProvider>
