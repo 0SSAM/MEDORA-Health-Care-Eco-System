@@ -1,4 +1,3 @@
-import { useAuth } from "@/_core/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
@@ -13,7 +12,8 @@ function BrandMark() {
 }
 
 export default function Welcome() {
-  const { user } = useAuth();
+  // This is a public landing surface. Do not call useAuth()/tRPC here: the
+  // Cloudflare static preview deliberately has no production API dependency.
   const { language, direction } = useLocalization();
   const english = language === "en";
   const Arrow = direction === "rtl" ? ArrowLeft : ArrowRight;
@@ -24,7 +24,7 @@ export default function Welcome() {
         title: "One secure operating space for the healthcare journey.",
         subtitle: "A calm, intelligent foundation for pharmacies, hospitals, insurers, distributors, laboratories, and care teams across the Arab world.",
         login: "Sign in securely",
-        continue: "Continue to your workspace",
+        continue: "Enter your workspace",
         demoNote: "Secure access is available only through authorized employee or administrator accounts.",
         trust: "Security-first by design",
         trustBody: "Tenant isolation, scoped permissions, audit trails, and fail-closed regulated workflows.",
@@ -38,7 +38,7 @@ export default function Welcome() {
         title: "مساحة تشغيل آمنة وموحّدة لدورة الرعاية الصحية.",
         subtitle: "أساس هادئ وذكي للصيدليات والمستشفيات وشركات التأمين والتوزيع والمعامل وفرق الرعاية في العالم العربي.",
         login: "تسجيل الدخول بأمان",
-        continue: "متابعة إلى مساحة العمل",
+        continue: "دخول إلى مساحة العمل",
         demoNote: "الوصول متاح فقط من خلال حساب موظف أو مسؤول مصرح به.",
         trust: "الأمان أولاً",
         trustBody: "عزل المؤسسات، صلاحيات محددة، سجل تدقيق، وفشل آمن في العمليات المنظمة.",
@@ -75,7 +75,7 @@ export default function Welcome() {
             <p className="mt-6 max-w-xl text-base leading-8 text-slate-600 sm:text-lg">{copy.subtitle}</p>
             <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
               <Button asChild size="lg" className="h-12 rounded-xl bg-[#0d1b2a] px-6 text-white shadow-lg shadow-slate-900/15 hover:bg-[#18314a]"><a href={welcomeRoutes.login}>{copy.login}<Arrow className="mr-2 h-4 w-4" /></a></Button>
-              {user && <Button asChild size="lg" variant="ghost" className="h-12 rounded-xl px-4 text-slate-700 hover:bg-white"><a href={welcomeRoutes.workspace}>{copy.continue}<ChevronLeft className="mr-2 h-4 w-4" /></a></Button>}
+              <Button asChild size="lg" variant="ghost" className="h-12 rounded-xl px-4 text-slate-700 hover:bg-white"><a href={welcomeRoutes.workspace}>{copy.continue}<ChevronLeft className="mr-2 h-4 w-4" /></a></Button>
             </div>
             <p className="mt-4 max-w-xl text-xs leading-6 text-slate-500"><LockKeyhole className="mr-1 inline h-3.5 w-3.5 text-cyan-700" />{copy.demoNote}</p>
             <div className="mt-10 flex flex-wrap gap-2">{copy.features.map(feature => <span key={feature} className="rounded-full border border-slate-200 bg-white/80 px-3 py-2 text-xs font-medium text-slate-600">{feature}</span>)}</div>
