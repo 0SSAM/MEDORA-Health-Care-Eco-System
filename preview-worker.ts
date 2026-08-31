@@ -12,8 +12,6 @@ export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     const url = new URL(request.url);
 
-    // Lightweight deployment/readiness probe that never depends on the app
-    // bundle. This makes the Workers deployment itself observable.
     if (url.pathname === "/healthz") {
       return new Response(JSON.stringify({ ok: true, service: "medora", mode: "static-preview" }), {
         status: 200,
@@ -27,13 +25,15 @@ export default {
 
     const response = await env.ASSETS.fetch(request);
     const headers = new Headers(response.headers);
+    const contentType = headers.get("Content-Type") ?? "";
 
     for (const [name, value] of Object.entries(securityHeaders)) headers.set(name, value);
 
-    // HTML must always revalidate; immutable hashed assets can be cached by
-    // browsers/CDNs without risking a stale application shell.
-    if (headers.get("Content-Type")?.includes("text/html")) {
+    if (contentType.includes("text/html")) {
       headers.set("Cache-Control", "no-store, max-age=0");
+    } else if (url.pathname.startsWith("/assets/")) {
+      // Vite asset filenames are content-hashed: cache them aggressively.
+      headers.set("Cache-Control", "public, max-age=31536000, immutable");
     }
 
     return new Response(response.body, {
