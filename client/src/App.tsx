@@ -26,25 +26,25 @@ function Router() {
   return (
     <Suspense fallback={<RouteLoadingState />}>
       <Switch>
-      <Route path={"/login"} component={Login} />
-      <Route path={"/demo"} component={DemoWorkspace} />
-      <Route path={"/sales"} component={Home} />
-      <Route path={"/workspace"} component={Home} />
-      <Route path={"/pos"} component={Home} />
-      <Route path={"/operations"} component={Home} />
-      <Route path={"/delivery"} component={DeliveryPage} />
-      <Route path={"/gp-max"} component={GpMaxPage} />
-      <Route path={"/icd11"} component={Icd11Page} />
-      <Route path={"/attendance"} component={AttendanceMobilePage} />
-      <Route path={"/kpi"} component={KpiDashboardPage} />
-      <Route path={"/compliance"} component={ComplianceCenterPage} />
-      <Route path={"/finance-hub"} component={FinanceHubPage} />
-      <Route path={"/supply"} component={SupplyHubPage} />
-      <Route path={"/finance"} component={Home} />
-      <Route path={"/admin"} component={AdminConsole} />
-      <Route path={"/"} component={Welcome} />
-      <Route path={"/404"}><NotFound /></Route>
-      <Route><NotFound /></Route>
+        <Route path={"/login"} component={Login} />
+        <Route path={"/demo"} component={DemoWorkspace} />
+        <Route path={"/sales"} component={Home} />
+        <Route path={"/workspace"} component={Home} />
+        <Route path={"/pos"} component={Home} />
+        <Route path={"/operations"} component={Home} />
+        <Route path={"/delivery"} component={DeliveryPage} />
+        <Route path={"/gp-max"} component={GpMaxPage} />
+        <Route path={"/icd11"} component={Icd11Page} />
+        <Route path={"/attendance"} component={AttendanceMobilePage} />
+        <Route path={"/kpi"} component={KpiDashboardPage} />
+        <Route path={"/compliance"} component={ComplianceCenterPage} />
+        <Route path={"/finance-hub"} component={FinanceHubPage} />
+        <Route path={"/supply"} component={SupplyHubPage} />
+        <Route path={"/finance"} component={Home} />
+        <Route path={"/admin"} component={AdminConsole} />
+        <Route path={"/"} component={Welcome} />
+        <Route path={"/404"}><NotFound /></Route>
+        <Route><NotFound /></Route>
       </Switch>
     </Suspense>
   );
@@ -55,15 +55,24 @@ function RouteLoadingState() {
 }
 
 function App() {
+  // The public demo must be completely independent of production auth, NDA,
+  // cookies, and API availability. This is intentional: a visitor should be
+  // able to open /demo on the static Cloudflare preview with zero credentials.
+  const isPublicDemo = typeof window !== "undefined" && window.location.pathname === "/demo";
+
+  const app = (
+    <TooltipProvider>
+      <Toaster />
+      <Router />
+      <InstallShortcutBanner />
+    </TooltipProvider>
+  );
+
   return (
     <ErrorBoundary>
       <ThemeProvider defaultTheme="light">
         <LocalizationProvider>
-          <TooltipProvider>
-            <Toaster />
-            <NdaAccessGate><Router /></NdaAccessGate>
-            <InstallShortcutBanner />
-          </TooltipProvider>
+          {isPublicDemo ? app : <NdaAccessGate>{app}</NdaAccessGate>}
         </LocalizationProvider>
       </ThemeProvider>
     </ErrorBoundary>
