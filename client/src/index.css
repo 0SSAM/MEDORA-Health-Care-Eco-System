@@ -94,7 +94,7 @@
   --muted: oklch(0.274 0.006 286.033);
   --muted-foreground: oklch(0.705 0.015 286.067);
   --accent: oklch(0.274 0.006 286.033);
-  --accent-foreground:  oklch(0.92 0.005 65);
+  --accent-foreground: oklch(0.92 0.005 65);
   --destructive: oklch(0.704 0.191 22.216);
   --destructive-foreground: oklch(0.985 0 0);
   --border: oklch(1 0 0 / 10%);
@@ -108,7 +108,7 @@
   --sidebar: oklch(0.21 0.006 285.885);
   --sidebar-foreground: oklch(0.85 0.005 65);
   --sidebar-accent: oklch(0.274 0.006 286.033);
-  --sidebar-accent-foreground:  oklch(0.985 0 0);
+  --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.488 0.243 264.376);
 }
@@ -134,24 +134,11 @@
 }
 
 @layer components {
-  /**
-   * Custom container utility that centers content and adds responsive padding.
-   *
-   * This overrides Tailwind's default container behavior to:
-   * - Auto-center content (mx-auto)
-   * - Add responsive horizontal padding
-   * - Set max-width for large screens
-   *
-   * Usage: <div className="container">...</div>
-   *
-   * For custom widths, use max-w-* utilities directly:
-   * <div className="max-w-6xl mx-auto px-4">...</div>
-   */
   .container {
     width: 100%;
     margin-left: auto;
     margin-right: auto;
-    padding-left: 1rem; /* 16px - mobile padding */
+    padding-left: 1rem;
     padding-right: 1rem;
   }
 
@@ -162,20 +149,19 @@
 
   @media (min-width: 640px) {
     .container {
-      padding-left: 1.5rem; /* 24px - tablet padding */
+      padding-left: 1.5rem;
       padding-right: 1.5rem;
     }
   }
 
   @media (min-width: 1024px) {
     .container {
-      padding-left: 2rem; /* 32px - desktop padding */
+      padding-left: 2rem;
       padding-right: 2rem;
-      max-width: 1280px; /* Standard content width */
+      max-width: 1280px;
     }
   }
 }
-
 
 @layer components {
   .aldo-app-shell {
@@ -212,7 +198,6 @@
     50% { transform: translateY(-2px); box-shadow: 0 14px 30px rgba(25, 197, 209, 0.28); }
   }
 }
-
 
 @layer components {
   .cashier-touch-ui button:not(:disabled),
@@ -259,4 +244,32 @@
   .aldo-loading-bar { animation: aldo-loading-slide 1.35s cubic-bezier(.23, 1, .32, 1) infinite; transform-origin: right center; }
   @keyframes aldo-loading-slide { 0% { transform: translateX(120%); opacity: .45; } 45%, 70% { transform: translateX(0); opacity: 1; } 100% { transform: translateX(-120%); opacity: .45; } }
   @media (prefers-reduced-motion: reduce) { .aldo-loading-bar { animation: none; transform: translateX(0); } }
+}
+
+/* Keep the polished visual treatment on desktop while avoiding expensive
+   blur/backdrop-filter/animation work on mobile GPUs. */
+@media (max-width: 767px) {
+  .medora-hero-glow {
+    filter: none !important;
+    opacity: .16;
+  }
+
+  .medora-glass {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    box-shadow: 0 12px 36px rgba(13, 27, 42, 0.10) !important;
+  }
+
+  .aldo-app-shell::before {
+    display: none;
+  }
+
+  .aldo-brand-mark {
+    animation: none !important;
+    box-shadow: 0 6px 14px rgba(25, 197, 209, 0.16);
+  }
+
+  .aldo-loading-orb {
+    display: none;
+  }
 }
