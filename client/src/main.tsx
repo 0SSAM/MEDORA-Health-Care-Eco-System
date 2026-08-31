@@ -12,7 +12,17 @@ import { installSafeGlobalDiagnostics, recordSafeUiDiagnostic } from "./lib/safe
 
 installSafeGlobalDiagnostics();
 
-if ("serviceWorker" in navigator && window.isSecureContext) {
+// Cloudflare Preview is a static preview surface, not the production PWA.
+// Remove any previously installed preview service worker/cache so an older
+// cached shell cannot mask a newly deployed build with a blank screen.
+if (window.location.hostname.endsWith(".workers.dev")) {
+  void navigator.serviceWorker?.getRegistrations().then(registrations => {
+    for (const registration of registrations) void registration.unregister();
+  });
+  void caches?.keys().then(keys => {
+    for (const key of keys) void caches.delete(key);
+  });
+} else if ("serviceWorker" in navigator && window.isSecureContext) {
   window.addEventListener("load", () => {
     navigator.serviceWorker.register("/sw.js").catch(() => undefined);
   }, { once: true });
@@ -36,16 +46,11 @@ const queryClient = new QueryClient({
 const redirectToLoginIfUnauthorized = (error: unknown) => {
   if (!(error instanceof TRPCClientError)) return;
   if (typeof window === "undefined") return;
-
-  const isUnauthorized = error.message === UNAUTHED_ERR_MSG;
-
-  if (!isUnauthorized) return;
-
+  if (error.message !== UNAUTHED_ERR_MSG) return;
   startLogin();
 };
 
 const logClientApiError = (label: string, error: unknown) => {
-  // Never emit API response bodies or user-provided messages in production logs.
   if (!import.meta.env.DEV) return;
   const trpcError = error instanceof TRPCClientError ? error : undefined;
   recordSafeUiDiagnostic("unhandled_ui_error", error, label);
@@ -77,10 +82,6 @@ const trpcClient = trpc.createClient({
       url: "/api/trpc",
       transformer: superjson,
       headers() {
-        // Preview auto-login fallback: when the browser blocks iframe cookies
-        // (Safari ITP / private browsing / WebView), forward the mirrored token.
-        // The short-lived module cache avoids repeated sessionStorage reads while
-        // preserving the regular OAuth cookie flow and server-side precedence.
         return getSessionAuthHeader();
       },
       fetch(input, init) {
