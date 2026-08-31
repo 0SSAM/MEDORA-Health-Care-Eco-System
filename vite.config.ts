@@ -6,11 +6,6 @@ import path from "node:path";
 import { defineConfig, type Plugin, type ViteDevServer } from "vite";
 import { vitePluginManusRuntime } from "vite-plugin-manus-runtime";
 
-// =============================================================================
-// Manus Debug Collector - Vite Plugin
-// Writes browser logs directly to files, trimmed when exceeding size limit
-// =============================================================================
-
 const PROJECT_ROOT = import.meta.dirname;
 const LOG_DIR = path.join(PROJECT_ROOT, ".manus-logs");
 const MAX_LOG_SIZE_BYTES = 1 * 1024 * 1024;
@@ -62,7 +57,6 @@ function vitePluginManusDebugCollector(): Plugin {
     configureServer(server: ViteDevServer) {
       server.middlewares.use("/__manus__/logs", (req, res, next) => {
         if (req.method !== "POST") return next();
-
         const handlePayload = (payload: any) => {
           if (payload.consoleLogs?.length > 0) writeToLogFile("browserConsole", payload.consoleLogs);
           if (payload.networkRequests?.length > 0) writeToLogFile("networkRequests", payload.networkRequests);
@@ -70,24 +64,18 @@ function vitePluginManusDebugCollector(): Plugin {
           res.writeHead(200, { "Content-Type": "application/json" });
           res.end(JSON.stringify({ success: true }));
         };
-
         const reqBody = (req as { body?: unknown }).body;
         if (reqBody && typeof reqBody === "object") {
-          try {
-            handlePayload(reqBody);
-          } catch (e) {
+          try { handlePayload(reqBody); } catch (e) {
             res.writeHead(400, { "Content-Type": "application/json" });
             res.end(JSON.stringify({ success: false, error: String(e) }));
           }
           return;
         }
-
         let body = "";
         req.on("data", (chunk) => { body += chunk.toString(); });
         req.on("end", () => {
-          try {
-            handlePayload(JSON.parse(body));
-          } catch (e) {
+          try { handlePayload(JSON.parse(body)); } catch (e) {
             res.writeHead(400, { "Content-Type": "application/json" });
             res.end(JSON.stringify({ success: false, error: String(e) }));
           }
@@ -97,10 +85,16 @@ function vitePluginManusDebugCollector(): Plugin {
   };
 }
 
-export default defineConfig({
-  // Keep the plugins array inline: Wrangler's Vite integration statically
-  // inspects this property during non-interactive deployment setup.
-  plugins: [react(), tailwindcss(), jsxLocPlugin(), vitePluginManusRuntime(), vitePluginManusDebugCollector()],
+export default defineConfig(({ command }) => ({
+  // JSX source-location metadata is useful during development, but should
+  // never be shipped in the production bundle.
+  plugins: [
+    react(),
+    tailwindcss(),
+    ...(command === "serve" ? [jsxLocPlugin()] : []),
+    vitePluginManusRuntime(),
+    vitePluginManusDebugCollector(),
+  ],
   resolve: {
     alias: {
       "@": path.resolve(import.meta.dirname, "client", "src"),
@@ -128,4 +122,4 @@ export default defineConfig({
     ],
     fs: { strict: true, deny: ["**/.*"] },
   },
-});
+}));
