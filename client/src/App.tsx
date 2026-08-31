@@ -11,6 +11,7 @@ const ComplianceCenterPage = lazy(() => import("./pages/ComplianceCenter"));
 const FinanceHubPage = lazy(() => import("./pages/FinanceHub"));
 const SupplyHubPage = lazy(() => import("./pages/SupplyHub"));
 const Welcome = lazy(() => import("@/pages/Welcome"));
+const DemoWorkspace = lazy(() => import("@/pages/DemoWorkspace"));
 const Login = lazy(() => import("@/pages/Login"));
 const AdminConsole = lazy(() => import("@/pages/AdminConsole"));
 const NotFound = lazy(() => import("@/pages/NotFound"));
@@ -22,11 +23,11 @@ import { LocalizationProvider } from "./contexts/LocalizationContext";
 import { NdaAccessGate } from "./components/NdaAccessGate";
 
 function Router() {
-  // make sure to consider if you need authentication for certain routes
   return (
     <Suspense fallback={<RouteLoadingState />}>
       <Switch>
       <Route path={"/login"} component={Login} />
+      <Route path={"/demo"} component={DemoWorkspace} />
       <Route path={"/sales"} component={Home} />
       <Route path={"/workspace"} component={Home} />
       <Route path={"/pos"} component={Home} />
@@ -42,42 +43,21 @@ function Router() {
       <Route path={"/finance"} component={Home} />
       <Route path={"/admin"} component={AdminConsole} />
       <Route path={"/"} component={Welcome} />
-      <Route path={"/404"}>
-        <Suspense fallback={<RouteLoadingState />}>
-          <NotFound />
-        </Suspense>
-      </Route>
-      {/* Final fallback route */}
-      <Route>
-        <Suspense fallback={<RouteLoadingState />}>
-          <NotFound />
-        </Suspense>
-      </Route>
+      <Route path={"/404"}><NotFound /></Route>
+      <Route><NotFound /></Route>
       </Switch>
     </Suspense>
   );
 }
 
-// NOTE: About Theme
-// - First choose a default theme according to your design style (dark or light bg), than change color palette in index.css
-//   to keep consistent foreground/background color across components
-// - If you want to make theme switchable, pass `switchable` ThemeProvider and use `useTheme` hook
-
 function RouteLoadingState() {
-  return (
-    <main className="flex min-h-screen items-center justify-center bg-background px-6 text-sm text-muted-foreground">
-      جاري تحميل الصفحة…
-    </main>
-  );
+  return <main className="flex min-h-screen items-center justify-center bg-background px-6 text-sm text-muted-foreground">جاري تحميل الصفحة…</main>;
 }
 
 function App() {
   return (
     <ErrorBoundary>
-      <ThemeProvider
-        defaultTheme="light"
-        // switchable
-      >
+      <ThemeProvider defaultTheme="light">
         <LocalizationProvider>
           <TooltipProvider>
             <Toaster />
