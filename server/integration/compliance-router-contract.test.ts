@@ -111,11 +111,15 @@ describe("regional compliance protected router contracts", () => {
     const audit = [{ id: 1, packId: 44, action: "approved", actorUserId: 82 }];
     let selectCall = 0;
 
-    const queryResult = (rows: unknown[]) => {
-      const promise = Promise.resolve(rows) as Promise<unknown[]> & {
-        limit: () => Promise<unknown[]>;
-      };
+    type QueryResult = Promise<unknown[]> & {
+      limit: () => Promise<unknown[]>;
+      orderBy: () => Promise<unknown[]>;
+    };
+
+    const queryResult = (rows: unknown[]): QueryResult => {
+      const promise = Promise.resolve(rows) as QueryResult;
       promise.limit = async () => rows;
+      promise.orderBy = async () => rows;
       return promise;
     };
 
