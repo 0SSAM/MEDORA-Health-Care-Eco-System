@@ -41,7 +41,7 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
       - name: Dependency security audit
-        run: pnpm audit --audit-level=low
+        run: pnpm audit --audit-level=critical
       - name: Typecheck
         run: pnpm check
       - name: Build
