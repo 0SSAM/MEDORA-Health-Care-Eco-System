@@ -46,7 +46,7 @@ jobs:
           OWNER_NAME="MEDORA CI" \
           BUILT_IN_FORGE_API_URL="https://ci.invalid" \
           BUILT_IN_FORGE_API_KEY="ci-only-disabled" \
-          setsid pnpm dev > /tmp/medora-verification-server.log 2>&1 &
+          setsid pnpm exec tsx server/_core/index.ts > /tmp/medora-verification-server.log 2>&1 &
           echo $! > /tmp/medora-verification-server.pid
           for attempt in $(seq 1 30); do
             if curl --fail --silent http://127.0.0.1:4173/ >/dev/null; then exit 0; fi
