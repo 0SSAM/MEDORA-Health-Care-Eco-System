@@ -1,0 +1,42 @@
+name: One-shot Autoprefixer update
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    if: ${{ startsWith(github.event.head_commit.message, 'Fix audit + update build for Workers') }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.34.4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - name: Update Autoprefixer
+        run: pnpm update autoprefixer --latest
+      - name: Commit generated lockfile
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add package.json pnpm-lock.yaml
+          git rm .github/workflows/one-shot-autoprefixer-update.yml
+          if git diff --cached --quiet; then
+            echo "No dependency changes were generated."
+            exit 0
+          fi
+          git commit -m "chore(deps): update autoprefixer lockfile"
+          git push origin HEAD:main
