@@ -20,7 +20,8 @@ export default defineConfig({
   webServer: process.env.PLAYWRIGHT_BASE_URL
     ? undefined
     : {
-        command: "pnpm build && NODE_ENV=production PORT=4173 node dist/index.js",
+        command:
+          "VITE_APP_TITLE='ميدورا | منظومة الرعاية الصحية المتكاملة' pnpm build && pnpm exec vite preview --host 127.0.0.1 --port 4173",
         url: "http://127.0.0.1:4173/",
         reuseExistingServer: !process.env.CI,
         timeout: 120_000,
