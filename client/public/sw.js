@@ -1,12 +1,12 @@
 /* MEDORA Health Care Eco System — application-owned service worker.
- * Cache policy: medora-health-care-shell-v4
+ * Cache policy: medora-health-care-shell-v5
  * - API (tRPC) requests are NEVER intercepted (API isolation).
  * - Navigation: network-first with app-shell fallback.
  * - Same-origin GET elsewhere: stale-while-revalidate.
- * - Legacy caches from prior platforms are deleted.
+ * - Every release bumps the shell cache so stale application assets are discarded.
  */
-const CACHE = "medora-health-care-shell-v4";
-const LEGACY_CACHE_NAMES = ["aldo-health-care-shell-v3", "bdf-pharma-shell-v2"];
+const CACHE = "medora-health-care-shell-v5";
+const LEGACY_CACHE_NAMES = ["medora-health-care-shell-v4", "aldo-health-care-shell-v3", "bdf-pharma-shell-v2"];
 const API_PREFIX = "/api/";
 
 self.addEventListener("install", (event) => {
@@ -40,7 +40,6 @@ self.addEventListener("fetch", (event) => {
   const appOrigin = (typeof self !== "undefined" && self.location && self.location.origin) || url.origin;
   if (url.origin !== appOrigin) return;
   const requestUrl = url;
-  // API isolation: never replace a tRPC request with the cached application shell.
   if (requestUrl.pathname.startsWith(API_PREFIX)) return;
 
   if (request.mode === "navigate") {
