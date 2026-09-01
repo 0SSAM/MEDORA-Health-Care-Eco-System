@@ -8,37 +8,51 @@ on:
 permissions:
   contents: read
 
+env:
+  CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+  CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+
 jobs:
   deploy:
-    # Do not turn a repository push red merely because Cloudflare credentials
-    # are not configured in this GitHub repository. When both secrets exist,
-    # every main-branch push deploys the canonical wrangler.jsonc worker.
-    if: ${{ secrets.CLOUDFLARE_API_TOKEN != '' && secrets.CLOUDFLARE_ACCOUNT_ID != '' }}
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
+      - name: Check Cloudflare credentials
+        id: credentials
+        shell: bash
+        run: |
+          if [[ -z "$CLOUDFLARE_API_TOKEN" || -z "$CLOUDFLARE_ACCOUNT_ID" ]]; then
+            echo "Cloudflare deployment skipped: required credentials are not configured."
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "configured=true" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Checkout
+        if: steps.credentials.outputs.configured == 'true'
         uses: actions/checkout@v4
 
       - name: Setup pnpm
+        if: steps.credentials.outputs.configured == 'true'
         uses: pnpm/action-setup@v4
         with:
           version: 10.34.4
 
       - name: Setup Node
+        if: steps.credentials.outputs.configured == 'true'
         uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: pnpm
 
       - name: Install dependencies
+        if: steps.credentials.outputs.configured == 'true'
         run: pnpm install --frozen-lockfile
 
       - name: Build static preview
+        if: steps.credentials.outputs.configured == 'true'
         run: pnpm build
 
       - name: Deploy Worker
+        if: steps.credentials.outputs.configured == 'true'
         run: npx --yes wrangler@latest deploy
-        env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
