@@ -9,7 +9,7 @@ permissions:
 
 jobs:
   update:
-    if: ${{ startsWith(github.event.head_commit.message, 'Fix audit + update build for Workers') }}
+    if: ${{ startsWith(github.event.head_commit.message, 'Fix audit + update build for Workers') || startsWith(github.event.head_commit.message, 'chore(ci): run requested autoprefixer update') }}
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
