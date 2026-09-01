@@ -10,6 +10,7 @@ type TestUser = NonNullable<TrpcContext["user"]>;
 
 const completeRules = Object.fromEntries(REQUIRED_COUNTRY_PACK_DOMAINS.map(domain => [domain, true]));
 const completeEvidence = REQUIRED_COUNTRY_PACK_DOMAINS.map((ruleKey, index) => ({ id: 10 + index, packId: 44, ruleKey, verificationStatus: "verified" }));
+const FUTURE_REVIEW_DUE_AT = new Date("2099-01-01T00:00:00.000Z");
 
 const staffUser: TestUser = {
   id: 81,
@@ -42,14 +43,7 @@ describe("regional compliance protected router contracts", () => {
 
   it("denies non-admin pack creation before opening the database", async () => {
     const caller = appRouter.createCaller(contextFor(staffUser));
-    await expect(caller.regional.createPack({
-      jurisdictionId: 7,
-      packVersion: "2026.1",
-      authorityName: "Authority",
-      sourceUrl: "https://authority.example/rules",
-      effectiveFrom: new Date("2026-01-01T00:00:00.000Z"),
-      rules: { catalog: true },
-    })).rejects.toMatchObject({ code: "FORBIDDEN" });
+    await expect(caller.regional.createPack({ jurisdictionId: 7, packVersion: "2026.1", authorityName: "Authority", sourceUrl: "https://authority.example/rules", effectiveFrom: new Date("2026-01-01T00:00:00.000Z"), rules: { catalog: true } })).rejects.toMatchObject({ code: "FORBIDDEN" });
     expect(getDbMock).not.toHaveBeenCalled();
   });
 
@@ -65,10 +59,10 @@ describe("regional compliance protected router contracts", () => {
       [{ id: 3, countryCode: "EG", active: 1 }],
       [{ id: 44 }],
       [{ id: 9, packId: 44, verificationStatus: "review", ruleKey: "tax" }],
-      [{ id: 9, packId: 44, jurisdictionId: 3, status: "review", rulesJson: JSON.stringify(completeRules), effectiveFrom: new Date("2026-01-01"), reviewDueAt: new Date("2026-09-01") }],
+      [{ id: 9, packId: 44, jurisdictionId: 3, status: "review", rulesJson: JSON.stringify(completeRules), effectiveFrom: new Date("2026-01-01"), reviewDueAt: FUTURE_REVIEW_DUE_AT }],
       completeEvidence,
-      [{ id: 9, packId: 44, jurisdictionId: 3, status: "approved", rulesJson: JSON.stringify(completeRules), effectiveFrom: new Date("2026-01-01"), reviewDueAt: new Date("2026-09-01") }],
-      [{ id: 9, packId: 44, jurisdictionId: 3, status: "rolled_back", rulesJson: JSON.stringify(completeRules), effectiveFrom: new Date("2026-01-01"), reviewDueAt: new Date("2026-09-01") }],
+      [{ id: 9, packId: 44, jurisdictionId: 3, status: "approved", rulesJson: JSON.stringify(completeRules), effectiveFrom: new Date("2026-01-01"), reviewDueAt: FUTURE_REVIEW_DUE_AT }],
+      [{ id: 9, packId: 44, jurisdictionId: 3, status: "rolled_back", rulesJson: JSON.stringify(completeRules), effectiveFrom: new Date("2026-01-01"), reviewDueAt: FUTURE_REVIEW_DUE_AT }],
       [{ id: 1, packId: 44, action: "approved", actorUserId: 82 }],
     ];
     const next = () => queue.shift() ?? [];
@@ -89,7 +83,7 @@ describe("regional compliance protected router contracts", () => {
   it("rejects approval for a pack missing timezone or audit coverage before mutation or audit writes", async () => {
     const admin = { ...staffUser, id: 82, role: "admin" as const };
     const rows = [
-      [{ id: 7, status: "review", jurisdictionId: 3, rulesJson: JSON.stringify({ ...completeRules, timezone: false }), effectiveFrom: new Date("2026-01-01"), reviewDueAt: new Date("2026-09-01") }],
+      [{ id: 7, status: "review", jurisdictionId: 3, rulesJson: JSON.stringify({ ...completeRules, timezone: false }), effectiveFrom: new Date("2026-01-01"), reviewDueAt: FUTURE_REVIEW_DUE_AT }],
       completeEvidence.map(item => ({ ...item, packId: 7 })),
     ];
     const next = () => rows.shift() ?? [];
