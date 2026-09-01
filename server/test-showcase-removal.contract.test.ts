@@ -38,10 +38,11 @@ describe("retired Test account and isolated-workspace removal contract", () => {
     for (const route of ["/login", "/workspace", "/sales", "/pos", "/operations", "/finance", "/admin"]) {
       expect(appSource).toContain(`path={"${route}"}`);
     }
-    // Public landing/demo routes intentionally sit outside the NDA gate; protected routes remain guarded by the router.
+    // Public landing/demo surfaces intentionally bypass the NDA gate; every other surface remains inside it.
     expect(appSource).toContain("NdaAccessGate");
     expect(appSource).toContain("isPublicSurface");
-    expect(appSource).toContain("Router");
+    expect(appSource).toContain("<NdaAccessGate>{app}</NdaAccessGate>");
+    expect(appSource).toContain("<Router />");
     expect(trpcSource).toContain('throw new TRPCError({ code: "UNAUTHORIZED", message: UNAUTHED_ERR_MSG })');
     expect(trpcSource).toContain("hasCurrentNdaAcceptance");
     expect(trpcSource).toContain("export const protectedProcedure");
