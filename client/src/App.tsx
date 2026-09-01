@@ -1,6 +1,8 @@
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { lazy, Suspense } from "react";
+import Welcome from "@/pages/Welcome";
+import DemoWorkspace from "@/pages/DemoWorkspace";
 const Home = lazy(() => import("@/pages/Home"));
 const DeliveryPage = lazy(() => import("./pages/Delivery"));
 const GpMaxPage = lazy(() => import("./pages/GpMax"));
@@ -10,8 +12,6 @@ const KpiDashboardPage = lazy(() => import("./pages/KpiDashboard"));
 const ComplianceCenterPage = lazy(() => import("./pages/ComplianceCenter"));
 const FinanceHubPage = lazy(() => import("./pages/FinanceHub"));
 const SupplyHubPage = lazy(() => import("./pages/SupplyHub"));
-const Welcome = lazy(() => import("@/pages/Welcome"));
-const DemoWorkspace = lazy(() => import("@/pages/DemoWorkspace"));
 const Login = lazy(() => import("@/pages/Login"));
 const AdminConsole = lazy(() => import("@/pages/AdminConsole"));
 const NotFound = lazy(() => import("@/pages/NotFound"));
@@ -56,8 +56,8 @@ function RouteLoadingState() {
 
 function App() {
   // Public preview surfaces must never depend on the production auth/NDA API.
-  // The static Cloudflare worker intentionally has no tRPC backend, so gating
-  // the landing page here would leave visitors on an infinite auth spinner.
+  // Welcome and DemoWorkspace are intentionally eager imports so a missing
+  // Vite dynamic chunk can never strand the public preview on a spinner.
   const pathname = typeof window !== "undefined" ? window.location.pathname : "/";
   const isPublicSurface = /^\/(?:demo)?\/?$/.test(pathname);
 
