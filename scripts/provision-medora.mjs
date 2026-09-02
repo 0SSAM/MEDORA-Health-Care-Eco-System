@@ -2,7 +2,7 @@
  *  - أسماء الجداول snake_case الفعلية، قيم enum تُقرأ ديناميكيًا،
  *  - اقتطاع تلقائي حسب varchar(l) الفعلي لكل عمود،
  *  - تجزئة scrypt بنفس صيغة التطبيق.
- *  الاستخدام: node provision-medora.mjs --admin admin:admin --drugs <csv>
+ *  الاستخدام: MEDORA_ADMIN_USERNAME=<username> MEDORA_ADMIN_PASSWORD=<password> DATABASE_URL=<url> node provision-medora.mjs --drugs <csv>
  */
 import mysql from "mysql2/promise";
 import { scryptSync, randomBytes } from "node:crypto";
@@ -82,18 +82,23 @@ async function importDrugs(csvPath){
   const [[r2]]=await db.query("SELECT COUNT(*) c FROM catalog_items WHERE sourceAuthority='EGYPTIAN_DRUG_DATABASE_CC0'");
   console.log(`[drugs] مستورد ${n} دواءً | إجمالي القاعدة: ${r2.c}`);
 }
+
 const argv = process.argv.slice(2);
 const get = (k, d) => { const i = argv.indexOf("--" + k); return i >= 0 && argv[i + 1] ? argv[i + 1] : d; };
 const adminArg = get("admin", "");
-if (!adminArg || !adminArg.includes(":")) {
-  console.error("PROVISION_ERROR: --admin username:password is required");
-  process.exit(2);
+const envUser = process.env.MEDORA_ADMIN_USERNAME || "";
+const envPass = process.env.MEDORA_ADMIN_PASSWORD;
+let credUser = envUser;
+let credPass = envPass;
+if (!credUser && !credPass && adminArg) {
+  const separator = adminArg.indexOf(":");
+  if (separator > 0) {
+    credUser = adminArg.slice(0, separator);
+    credPass = adminArg.slice(separator + 1);
+  }
 }
-const separator = adminArg.indexOf(":");
-const credUser = adminArg.slice(0, separator);
-const credPass = adminArg.slice(separator + 1);
 if (!credUser || !credPass) {
-  console.error("PROVISION_ERROR: --admin username:password is required");
+  console.error("PROVISION_ERROR: MEDORA_ADMIN_USERNAME and MEDORA_ADMIN_PASSWORD are required");
   process.exit(2);
 }
 try {
