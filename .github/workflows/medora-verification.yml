@@ -10,7 +10,7 @@ permissions:
   contents: read
 
 env:
-  PNPM_VERSION: 10.34.5
+  PNPM_VERSION: 10.34.4
 
 jobs:
   verify:
@@ -39,7 +39,7 @@ jobs:
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
         with:
-          version: 10.34.5
+          version: 10.34.4
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
@@ -97,7 +97,7 @@ jobs:
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
         with:
-          version: 10.34.5
+          version: 10.34.4
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
