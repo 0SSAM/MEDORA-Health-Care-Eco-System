@@ -1,3 +1,4 @@
+import "./wasmer-db-env";
 import "dotenv/config";
 import express from "express";
 import { createServer } from "http";
@@ -40,7 +41,7 @@ async function findAvailablePort(startPort: number = 3000): Promise<number> {
 
 async function startServer() {
   const app = express();
-app.use("/api/channels", webhookRouter());
+  app.use("/api/channels", webhookRouter());
   const server = createServer(app);
   const scheduledCallbackRateLimit = rateLimit(scheduledCallbackRateLimitOptions);
   app.disable("x-powered-by");
