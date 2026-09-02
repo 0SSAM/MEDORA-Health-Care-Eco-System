@@ -7,7 +7,14 @@
 import mysql from "mysql2/promise";
 import { scryptSync, randomBytes } from "node:crypto";
 import { readFileSync, existsSync } from "node:fs";
-const db = await mysql.createConnection(process.env.DATABASE_URL || "mysql://medora:medora@127.0.0.1:3306/medora");
+
+const databaseUrl = process.env.DATABASE_URL;
+if (!databaseUrl) {
+  console.error("PROVISION_ERROR: DATABASE_URL is required");
+  process.exit(2);
+}
+const db = await mysql.createConnection(databaseUrl);
+
 async function allCols(table){ const [r] = await db.query("SHOW COLUMNS FROM `"+table+"`"); return r; }
 async function enumOf(table, col){ const rows = await allCols(table); const c = rows.find(x=>x.Field===col); if(!c) return null; const m=String(c.Type).match(/^enum\((.*)\)$/); return m? [...m[1].matchAll(/'([^']+)'/g)].map(x=>x[1]) : null; }
 async function insert(table, data){
@@ -24,11 +31,11 @@ function scryptHash(pwd){ const salt=randomBytes(16); const dk=scryptSync(pwd,sa
 async function provisionAdmin(user,pass){
   if(await one("SELECT id FROM internal_credentials WHERE username=?",[user])){ console.log("[admin] موجود مسبقًا"); return; }
   const orgTypes=(await enumOf("organizations","organizationType"))||[];
-const cCodes=(await enumOf("organizations","countryCode"))||[];
-const orgId=(await one("SELECT id FROM organizations WHERE legalName='MEDORA Admin Organization'"))?.id || await insert("organizations",{organizationType:(orgTypes.includes("pharmacy")?"pharmacy":orgTypes[0]||"pharmacy"),legalName:"MEDORA Admin Organization",displayName:"MEDORA Admin",countryCode:(cCodes.includes("EG")?"EG":cCodes[0]||"EG"),status:"active"});
+  const cCodes=(await enumOf("organizations","countryCode"))||[];
+  const orgId=(await one("SELECT id FROM organizations WHERE legalName='MEDORA Admin Organization'"))?.id || await insert("organizations",{organizationType:(orgTypes.includes("pharmacy")?"pharmacy":orgTypes[0]||"pharmacy"),legalName:"MEDORA Admin Organization",displayName:"MEDORA Admin",countryCode:(cCodes.includes("EG")?"EG":cCodes[0]||"EG"),status:"active"});
   const jC=(await enumOf("jurisdiction_profiles","countryCode"))||[];
-const jCur=(await enumOf("jurisdiction_profiles","currencyCode"))||[];
-await one("SELECT id FROM jurisdiction_profiles WHERE countryCode='EG' LIMIT 1") || await insert("jurisdiction_profiles",{countryCode:(jC.includes("EG")?"EG":jC[0]||"EG"),countryNameAr:"مصر",defaultLocale:"ar",currencyCode:(jCur.includes("EGP")?"EGP":jCur[0]||"EGP"),timezone:"Africa/Cairo",taxProfile:"STANDARD",dateFormat:"YYYY-MM-DD",numberSystem:"latn",active:1});
+  const jCur=(await enumOf("jurisdiction_profiles","currencyCode"))||[];
+  await one("SELECT id FROM jurisdiction_profiles WHERE countryCode='EG' LIMIT 1") || await insert("jurisdiction_profiles",{countryCode:(jC.includes("EG")?"EG":jC[0]||"EG"),countryNameAr:"مصر",defaultLocale:"ar",currencyCode:(jCur.includes("EGP")?"EGP":jCur[0]||"EGP"),timezone:"Africa/Cairo",taxProfile:"STANDARD",dateFormat:"YYYY-MM-DD",numberSystem:"latn",active:1});
   const brId=(await one("SELECT id FROM branches WHERE organizationId=? LIMIT 1",[orgId]))?.id || await insert("branches",{organizationId:orgId,code:"MAIN",nameAr:"الفرع الرئيسي",active:1});
   const userId=(await one("SELECT id FROM users WHERE openId='seed-admin'"))?.id || await insert("users",{openId:"seed-admin",name:"Admin",email:"admin@medora.local",role:"admin",loginMethod:"internal"});
   const roles=(await enumOf("organization_memberships","organizationRole"))||["owner"];
@@ -36,7 +43,7 @@ await one("SELECT id FROM jurisdiction_profiles WHERE countryCode='EG' LIMIT 1")
   if(!(await one("SELECT id FROM organization_memberships WHERE organizationId=? AND userId=?",[orgId,userId]))) await insert("organization_memberships",{organizationId:orgId,userId,organizationRole:role,active:1});
   if(!(await one("SELECT id FROM branch_users WHERE branchId=? AND userId=?",[brId,userId]))) await insert("branch_users",{branchId:brId,userId,active:1});
   await insert("internal_credentials",{userId,username:user,passwordHash:scryptHash(pass),active:1});
-  console.log(`[admin] تم الإنشاء: ${user} / ${pass} | role=${role} org=${orgId} branch=${brId} user=${userId}`);
+  console.log(`[admin] created account username=${user} role=${role} org=${orgId} branch=${brId} user=${userId}`);
 }
 
 // 2) الأدوية
@@ -77,11 +84,25 @@ async function importDrugs(csvPath){
 }
 const argv = process.argv.slice(2);
 const get = (k, d) => { const i = argv.indexOf("--" + k); return i >= 0 && argv[i + 1] ? argv[i + 1] : d; };
-const cred = String(get("admin", "admin:admin")).split(":");
+const adminArg = get("admin", "");
+if (!adminArg || !adminArg.includes(":")) {
+  console.error("PROVISION_ERROR: --admin username:password is required");
+  process.exit(2);
+}
+const separator = adminArg.indexOf(":");
+const credUser = adminArg.slice(0, separator);
+const credPass = adminArg.slice(separator + 1);
+if (!credUser || !credPass) {
+  console.error("PROVISION_ERROR: --admin username:password is required");
+  process.exit(2);
+}
 try {
-  await provisionAdmin(cred[0],cred[1]);
+  await provisionAdmin(credUser,credPass);
   const drugsPath = get("drugs", "");
   if(drugsPath) await importDrugs(drugsPath);
   console.log("[done]");
-} catch (e) { console.log("PROVISION_ERROR:", e.constructor?.name, "|", e.message?.slice(0,300)); console.log((e.stack||"").split("\n").slice(0,3).join("\n")); process.exit(3); }
+} catch (e) {
+  console.error("PROVISION_ERROR:", e instanceof Error ? e.name : "UnknownError");
+  process.exit(3);
+}
 await db.end();
