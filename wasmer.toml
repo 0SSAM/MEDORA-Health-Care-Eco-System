@@ -11,7 +11,7 @@ license = "MIT"
 
 [[command]]
 name = "node"
-module = "wasmer/edgejs-quickjs:edgejs"
+module = "wasmer/edgejs-quickjs:edge"
 runner = "https://webc.org/runner/wasi"
 
 [command.annotations.wasi]
