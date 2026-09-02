@@ -1,37 +1,34 @@
 import { describe, expect, it } from "vitest";
+import { configureWasmerDatabaseUrl } from "./wasmer-db-env";
 
 describe("Wasmer managed MySQL environment", () => {
-  it("maps Wasmer DB variables to DATABASE_URL", async () => {
-    const original = {
-      DATABASE_URL: process.env.DATABASE_URL,
-      DB_HOST: process.env.DB_HOST,
-      DB_PORT: process.env.DB_PORT,
-      DB_NAME: process.env.DB_NAME,
-      DB_USERNAME: process.env.DB_USERNAME,
-      DB_PASSWORD: process.env.DB_PASSWORD,
+  it("maps Wasmer DB variables to DATABASE_URL", () => {
+    const env = {
+      DB_HOST: "mysql.example.test",
+      DB_PORT: "3307",
+      DB_NAME: "medora_ci",
+      DB_USERNAME: "ci user",
+      DB_PASSWORD: "p@ss:word",
     };
 
-    try {
-      delete process.env.DATABASE_URL;
-      process.env.DB_HOST = "mysql.example.test";
-      process.env.DB_PORT = "3307";
-      process.env.DB_NAME = "medora_ci";
-      process.env.DB_USERNAME = "ci user";
-      process.env.DB_PASSWORD = "p@ss:word";
+    configureWasmerDatabaseUrl(env);
 
-      await import(`./wasmer-db-env.ts?wasmer-test=${Date.now()}`);
+    expect(env.DATABASE_URL).toBe(
+      "mysql://ci%20user:p%40ss%3Aword@mysql.example.test:3307/medora_ci"
+    );
+  });
 
-      expect(process.env.DATABASE_URL).toBe(
-        "mysql://ci%20user:p%40ss%3Aword@mysql.example.test:3307/medora_ci"
-      );
-    } finally {
-      if (original.DATABASE_URL === undefined) delete process.env.DATABASE_URL;
-      else process.env.DATABASE_URL = original.DATABASE_URL;
+  it("preserves an existing DATABASE_URL", () => {
+    const env = {
+      DATABASE_URL: "mysql://existing.example.test/medora",
+      DB_HOST: "mysql.example.test",
+      DB_NAME: "ignored",
+      DB_USERNAME: "ignored",
+      DB_PASSWORD: "ignored",
+    };
 
-      for (const [key, value] of Object.entries(original).slice(1)) {
-        if (value === undefined) delete process.env[key];
-        else process.env[key] = value;
-      }
-    }
+    configureWasmerDatabaseUrl(env);
+
+    expect(env.DATABASE_URL).toBe("mysql://existing.example.test/medora");
   });
 });
