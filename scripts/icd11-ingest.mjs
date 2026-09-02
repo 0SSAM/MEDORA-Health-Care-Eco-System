@@ -162,7 +162,7 @@ async function main() {
     await db.query(
       `INSERT INTO icd11_codes (code,title_en,title_ar,chapter,version,is_starter,uri,parent_code)
        VALUES (?,?,?,?,?,?,?,?)
-       ON DUPLICATE KEY UPDATE title_en=VALUES(title_en), title_ar=VALUES(title_title_ar), uri=VALUES(uri)`,
+       ON DUPLICATE KEY UPDATE title_en=VALUES(title_en), title_ar=VALUES(title_ar), uri=VALUES(uri)`,
       [
         code,
         titleValue(e, CFG.lang),
