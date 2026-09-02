@@ -1,0 +1,20 @@
+kind: wasmer.io/App.v0
+owner: 0ssam
+name: medora
+package: .
+description: MEDORA healthcare platform - full-stack React, Express, tRPC and MySQL application on Wasmer Edge.
+env:
+  NODE_ENV: production
+capabilities:
+  database:
+    engine: mysql
+health_checks:
+  - http:
+      method: get
+      path: /healthz
+      interval: 30s
+      timeout: 10s
+      unhealthy_threshold: 2
+      healthy_threshold: 1
+      expected_status_codes:
+        - 200
