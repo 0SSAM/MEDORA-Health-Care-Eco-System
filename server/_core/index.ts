@@ -44,6 +44,13 @@ async function startServer() {
   app.use("/api/channels", webhookRouter());
   const server = createServer(app);
   const scheduledCallbackRateLimit = rateLimit(scheduledCallbackRateLimitOptions);
+  const apiRateLimit = rateLimit({
+    windowMs: 60_000,
+    limit: 600,
+    standardHeaders: "draft-8",
+    legacyHeaders: false,
+    message: { error: "Too many API requests" },
+  });
   app.disable("x-powered-by");
   // The managed edge terminates TLS before forwarding one hop to this process.
   // Trust exactly that hop so Express resolves the browser-visible HTTPS origin
@@ -64,9 +71,10 @@ async function startServer() {
   registerPublicReadinessRoute(app);
   registerStorageProxy(app);
   registerOAuthRoutes(app);
-  // tRPC API
+  // tRPC API: all procedures are bounded by the API-wide per-IP limiter.
   app.use(
     "/api/trpc",
+    apiRateLimit,
     createExpressMiddleware({
       router: appRouter,
       createContext,
