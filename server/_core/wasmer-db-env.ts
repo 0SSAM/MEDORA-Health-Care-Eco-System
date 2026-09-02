@@ -4,7 +4,9 @@
  * before database-backed modules are evaluated.
  */
 
-export function configureWasmerDatabaseUrl(env: NodeJS.ProcessEnv = process.env): void {
+export function configureWasmerDatabaseUrl(
+  env: NodeJS.ProcessEnv = process.env
+): void {
   if (env.DATABASE_URL) return;
 
   const host = env.DB_HOST;
@@ -14,7 +16,9 @@ export function configureWasmerDatabaseUrl(env: NodeJS.ProcessEnv = process.env)
   const password = env.DB_PASSWORD;
 
   if (host && name && username) {
-    env.DATABASE_URL = `mysql://${encodeURIComponent(username)}:${encodeURIComponent(password ?? "")}@${host}:${port}/${encodeURIComponent(name)}`;
+    env.DATABASE_URL =
+      `mysql://${encodeURIComponent(username)}:${encodeURIComponent(password ?? "")}` +
+      `@${host}:${port}/${encodeURIComponent(name)}`;
   }
 }
 
