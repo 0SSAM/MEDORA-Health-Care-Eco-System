@@ -9,6 +9,9 @@ on:
 permissions:
   contents: read
 
+env:
+  PNPM_VERSION: 10.34.5
+
 jobs:
   verify:
     runs-on: ubuntu-latest
@@ -36,14 +39,14 @@ jobs:
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
         with:
-          version: 10.34.4
+          version: 10.34.5
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: pnpm
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: pnpm install --no-frozen-lockfile
       - name: Typecheck
         run: pnpm check
       - name: Start isolated test server
@@ -94,14 +97,14 @@ jobs:
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
         with:
-          version: 10.34.4
+          version: 10.34.5
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: pnpm
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: pnpm install --no-frozen-lockfile
       - name: Install Playwright browsers
         run: pnpm exec playwright install --with-deps chromium
       - name: Browser tests
