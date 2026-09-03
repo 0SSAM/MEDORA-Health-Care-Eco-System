@@ -16,7 +16,7 @@ if (!databaseUrl) {
 const db = await mysql.createConnection(databaseUrl);
 
 async function allCols(table){ const [r] = await db.query("SHOW COLUMNS FROM `"+table+"`"); return r; }
-async function enumOf(table, col){ const rows = await allCols(table); const c = rows.find(x=>x.Field===col); if(!c) return null; const m=String(c.Type).match(/^enum\((.*)\)$/); return m? [...m[1].matchAll(/'([^']+)'/g)].map(x=>x[1]) : null; }
+async function enumOf(table, col){ const rows = await allCols(table); const c = rows.find(x=>x.Field===col); if(!c) return null; const m=String(c.Type).match(/^enum\\((.*)\\)$/); return m? [...m[1].matchAll(/'([^']+)'/g)].map(x=>x[1]) : null; }
 async function insert(table, data){
   const cols = await allCols(table); const set = new Set(cols.map(c=>c.Field));
   const ins={}; for (const [k,v] of Object.entries(data)) if(set.has(k)) ins[k]=v;
@@ -42,8 +42,15 @@ async function provisionAdmin(user,pass){
   const role=roles.includes("admin")?"admin":roles.includes("owner")?"owner":roles[0];
   if(!(await one("SELECT id FROM organization_memberships WHERE organizationId=? AND userId=?",[orgId,userId]))) await insert("organization_memberships",{organizationId:orgId,userId,organizationRole:role,active:1});
   if(!(await one("SELECT id FROM branch_users WHERE branchId=? AND userId=?",[brId,userId]))) await insert("branch_users",{branchId:brId,userId,active:1});
-  await insert("internal_credentials",{userId,username:user,passwordHash:scryptHash(pass),active:1});
-  console.log(`[admin] created account role=${role} org=${orgId} branch=${brId} user=${userId}`);
+
+  const existingCredential = await one("SELECT id FROM internal_credentials WHERE userId=? ORDER BY id LIMIT 1",[userId]);
+  if (existingCredential) {
+    await db.query("UPDATE internal_credentials SET username=?, passwordHash=?, active=1 WHERE id=?",[user,scryptHash(pass),existingCredential.id]);
+  } else {
+    await insert("internal_credentials",{userId,username:user,passwordHash:scryptHash(pass),active:1});
+  }
+
+  console.log(`[admin] provisioned account role=${role} org=${orgId} branch=${brId} user=${userId}`);
 }
 
 // 2) الأدوية
@@ -55,7 +62,7 @@ async function importDrugs(csvPath){
   const orgId=(await one("SELECT id FROM organizations WHERE legalName='MEDORA Admin Organization'"))?.id;
   if(!userId||!orgId) throw new Error("أنشئ admin أولاً");
   const cols=await allCols("catalog_items");
-  const lim={}; for(const col of cols){ const m=String(col.Type).match(/varchar\((\d+)\)/); if(m) lim[col.Field]=+m[1]; }
+  const lim={}; for(const col of cols){ const m=String(col.Type).match(/varchar\\((\\d+)\\)/); if(m) lim[col.Field]=+m[1]; }
   const cap=(k,n)=>v=>{ const s=v==null?null:String(v).trim(); if(!s) return null; const L=Math.min(lim[k]??n??240, n??240); return s.slice(0,L)||null; };
   const cats=await enumOf("catalog_items","category");
   const cat = cats && !cats.includes("medicine") ? cats[0] : "medicine";
