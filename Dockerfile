@@ -18,7 +18,6 @@ ENV NODE_ENV=production
 RUN corepack enable
 COPY --from=build /app/node_modules ./node_modules
 COPY --from=build /app/dist ./dist
-COPY --from=build /app/server ./server
 COPY --from=build /app/drizzle ./drizzle
 COPY --from=build /app/package.json ./package.json
 COPY --from=build /app/shared ./shared
@@ -29,6 +28,6 @@ EXPOSE 3000
 HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
   CMD node -e "fetch('http://127.0.0.1:3000/healthz').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
 
-# The Vite build produces dist/public; it does not produce dist/index.js.
-# Run the canonical Express/tRPC server entrypoint directly with tsx.
-CMD ["pnpm", "exec", "tsx", "server/_core/index.ts"]
+# The canonical production build emits dist/index.js from server/_core/index.ts.
+# Run the compiled server so the runtime does not depend on tsx or source files.
+CMD ["node", "dist/index.js"]
