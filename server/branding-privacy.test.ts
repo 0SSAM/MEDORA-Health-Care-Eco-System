@@ -9,9 +9,10 @@ describe("MEDORA visible branding privacy", () => {
     expect(source).toContain("تسجيل الدخول");
   });
 
-  it("keeps the shipped application title driven by MEDORA branding", async () => {
+  it("keeps the shipped application title explicitly owned by MEDORA", async () => {
     const source = await readFile(new URL("../client/index.html", import.meta.url), "utf8");
-    expect(source).toContain("%VITE_APP_TITLE%");
+    expect(source).toContain("<title>MEDORA — Health Care Eco System</title>");
+    expect(source).not.toContain("%VITE_APP_TITLE%");
     expect(source).not.toMatch(/<title>[^<]*manus[^<]*<\/title>/i);
   });
 
