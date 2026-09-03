@@ -3,13 +3,15 @@ name: Repair pnpm lockfile
 on:
   push:
     branches: [main]
+    paths:
+      - package.json
+      - .github/workflows/repair-lockfile.yml
 
 permissions:
   contents: write
 
 jobs:
   sync:
-    if: ${{ !startsWith(github.event.head_commit.message, 'chore(ci): sync pnpm lockfile') }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
