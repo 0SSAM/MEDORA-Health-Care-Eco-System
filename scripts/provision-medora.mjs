@@ -43,8 +43,7 @@ async function provisionAdmin(user,pass){
   if(!(await one("SELECT id FROM organization_memberships WHERE organizationId=? AND userId=?",[orgId,userId]))) await insert("organization_memberships",{organizationId:orgId,userId,organizationRole:role,active:1});
   if(!(await one("SELECT id FROM branch_users WHERE branchId=? AND userId=?",[brId,userId]))) await insert("branch_users",{branchId:brId,userId,active:1});
   await insert("internal_credentials",{userId,username:user,passwordHash:scryptHash(pass),active:1});
-  const maskedUser = user ? `${String(user).slice(0, 1)}***${String(user).slice(-1)}` : "redacted";
-  console.log(`[admin] created account username=${maskedUser} role=${role} org=${orgId} branch=${brId} user=${userId}`);
+  console.log(`[admin] created account role=${role} org=${orgId} branch=${brId} user=${userId}`);
 }
 
 // 2) الأدوية
