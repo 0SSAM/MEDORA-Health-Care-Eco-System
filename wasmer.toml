@@ -1,10 +1,14 @@
 [package]
+name = "0ssam/medora"
+version = "1.0.0"
 entrypoint = "node"
 description = "MEDORA full-stack React + Express + tRPC + MySQL application for Wasmer Edge"
 license = "MIT"
+repository = "https://github.com/0SSAM/MEDORA-Health-Care-Eco-System"
+homepage = "https://github.com/0SSAM/MEDORA-Health-Care-Eco-System"
 
 [dependencies]
-"wasmer/edgejs-quickjs" = "0.2.0"
+"wasmer/edgejs-quickjs" = "0.1.4"
 
 [fs]
 "/app" = "."
