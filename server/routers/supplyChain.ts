@@ -2,6 +2,7 @@ import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import { router, protectedProcedure } from "../_core/trpc";
 import { getRawPool } from "../channels/db";
+import { qualityRouter } from "./quality";
 
 const scope = z.object({ organizationId: z.number().int().positive(), branchId: z.number().int().positive(), jurisdictionId: z.number().int().nonnegative() });
 function assertScope(ctx: { internalSession: { session: { organizationId: number; branchId: number; jurisdictionId: number } } | null }, input: z.infer<typeof scope>) {
@@ -12,6 +13,8 @@ function assertScope(ctx: { internalSession: { session: { organizationId: number
 }
 
 export const supplyChainRouter = router({
+  quality: qualityRouter,
+
   warehouses: protectedProcedure.input(scope).query(async ({ ctx, input }) => {
     assertScope(ctx, input);
     const pool = getRawPool();
@@ -73,10 +76,6 @@ export const supplyChainRouter = router({
           params,
         );
         const onHand = Number((balanceRows as Array<{ onHand: string | number }>)[0]?.onHand ?? 0);
-
-        // Quality holds are inventory reservations, not informational flags.
-        // Lock the matching hold rows in the same transaction so a concurrent
-        // outbound movement cannot consume quarantined/rejected stock.
         const holdParams = input.batchNo
           ? [input.organizationId, input.branchId, input.warehouseId, input.itemCode, input.batchNo]
           : [input.organizationId, input.branchId, input.warehouseId, input.itemCode];
