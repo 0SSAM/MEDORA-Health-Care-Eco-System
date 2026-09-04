@@ -34,17 +34,15 @@ async function requireAdminSession(ctx: { user: { id: number; role: string } }, 
   return db;
 }
 
-/** إبطال كل جلسات المستخدم عدا الجلسة الحالية إن أمكن (المعرف يمرر كـ keepSessionUserId) */
 async function revokeAllSessions(db: any, userId: number) {
   try {
     await db.execute(sql`UPDATE internal_sessions SET revokedAt=CURRENT_TIMESTAMP WHERE userId=${userId} AND revokedAt IS NULL`);
   } catch {
-    // بعض النسخ لا تحتوي عمود revoked_at — تجاهل الاستثناء
+    // Some legacy deployments do not have the optional session-revocation column.
   }
 }
 
 export const adminAccountRouter = router({
-  /** تغيير اسم المستخدم للأدمن (يتطلب كلمة المرور الحالية) */
   changeUsername: protectedProcedure
     .input(z.object({ organizationId: z.number().int().positive(), currentPassword: z.string().min(1), newUsername: z.string().min(3).max(64) }))
     .mutation(async ({ ctx, input }) => {
@@ -54,8 +52,9 @@ export const adminAccountRouter = router({
       )) as any;
       const c = cred?.[0]?.[0];
       if (!c) throw new TRPCError({ code: "NOT_FOUND", message: "لا توجد اعتمادات داخلية لهذا الحساب." });
-      const ok = verifyInternalPassword(input.currentPassword, c.passwordHash);
-      if (!ok) throw new TRPCError({ code: "UNAUTHORIZED", message: "كلمة المرور الحالية غير صحيحة." });
+      if (!verifyInternalPassword(input.currentPassword, c.passwordHash)) {
+        throw new TRPCError({ code: "UNAUTHORIZED", message: "كلمة المرور الحالية غير صحيحة." });
+      }
       const normalized = normalizeInternalUsername(input.newUsername);
       const dup = (await db.execute(
         sql`SELECT id FROM internal_credentials WHERE username=${normalized} AND userId<>${c.userId} LIMIT 1`
@@ -66,7 +65,6 @@ export const adminAccountRouter = router({
       return { ok: true, newUsername: normalized, note: "سجّل الدخول من جديد باسم المستخدم الجديد." };
     }),
 
-  /** تغيير كلمة مرور الأدمن (يتطلب كلمة المرور الحالية + سياسة القوة) */
   changePassword: protectedProcedure
     .input(z.object({ organizationId: z.number().int().positive(), currentPassword: z.string().min(1), newPassword: z.string().min(8) }))
     .mutation(async ({ ctx, input }) => {
@@ -79,20 +77,20 @@ export const adminAccountRouter = router({
       if (!verifyInternalPassword(input.currentPassword, c.passwordHash)) {
         throw new TRPCError({ code: "UNAUTHORIZED", message: "كلمة المرور الحالية غير صحيحة." });
       }
-      assertPasswordPolicy(input.newPassword); // افتراضي 12 حرفًا — يرمي رسالة سياسة التطبيق
+      assertPasswordPolicy(input.newPassword);
       const hashed = hashInternalPassword(input.newPassword);
       await db.execute(
-        sql`UPDATE internal_credentials SET password_hash=${hashed},
-            failed_attempts=0, locked_until=NULL WHERE id=${c.id}`
+        sql`UPDATE internal_credentials SET passwordHash=${hashed}, failedAttempts=0, lockedUntil=NULL WHERE id=${c.id}`
       );
       try {
         await db.execute(sql`UPDATE internal_credentials SET passwordChangedAt=CURRENT_TIMESTAMP WHERE id=${c.id}`);
-      } catch { /* عمود اختياري */ }
+      } catch {
+        // Optional column on older deployments.
+      }
       await revokeAllSessions(db, c.userId);
       return { ok: true, note: "تم تغيير كلمة المرور. سجّل الدخول من جديد بكلمة المرور الجديدة — وأُلغيت كل الجلسات الأخرى." };
     }),
 
-  /** التحقق من استجابة سياسة كلمة المرور قبل الحفظ (مساعدة للواجهة) */
   passwordPolicyCheck: protectedProcedure
     .input(z.object({ password: z.string().min(1) }))
     .query(({ input }) => {
