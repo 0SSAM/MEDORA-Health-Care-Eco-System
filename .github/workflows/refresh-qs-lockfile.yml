@@ -20,9 +20,14 @@ jobs:
         with:
           node-version: 22
           cache: pnpm
-      - name: Regenerate lockfile
-        run: pnpm install --lockfile-only --no-frozen-lockfile
-      - name: Verify lockfile and dependency tree
+      - name: Regenerate lockfile with patched qs
+        run: pnpm update qs@6.16.0 --lockfile-only --no-frozen-lockfile
+      - name: Verify patched qs is locked
+        run: |
+          grep -qE '^  qs: 6\.16\.0$' pnpm-lock.yaml
+          grep -qE '^  qs@6\.16\.0:' pnpm-lock.yaml
+          grep -qE 'h6fhOIaRrID2CbEY2fqs\+7t\+UXZo\+MLAnU5gRIq85uFtd' pnpm-lock.yaml
+      - name: Verify frozen install
         run: pnpm install --frozen-lockfile --ignore-scripts
       - name: Commit lockfile
         run: |
