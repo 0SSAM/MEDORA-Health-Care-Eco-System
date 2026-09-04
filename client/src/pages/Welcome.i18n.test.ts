@@ -26,7 +26,7 @@ describe("Welcome bilingual header and public landing contract", () => {
     expect(source).toContain("Human review");
     expect(source).toContain("المراجعة البشرية");
     expect(source).toContain("integration-gated");
-    expect(source).toContain("مرتبطة بمتطلبات");
+    expect(source).toContain("متطلبات التكامل");
   });
 
   it("keeps the header mark and brand copy in a shrinkable layout", () => {
