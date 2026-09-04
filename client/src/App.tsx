@@ -12,6 +12,7 @@ const KpiDashboardPage = lazy(() => import("./pages/KpiDashboard"));
 const ComplianceCenterPage = lazy(() => import("./pages/ComplianceCenter"));
 const FinanceHubPage = lazy(() => import("./pages/FinanceHub"));
 const SupplyHubPage = lazy(() => import("./pages/SupplyHub"));
+const QualityCenterPage = lazy(() => import("./pages/QualityCenter"));
 const Login = lazy(() => import("@/pages/Login"));
 const AdminConsole = lazy(() => import("@/pages/AdminConsole"));
 const NotFound = lazy(() => import("@/pages/NotFound"));
@@ -40,6 +41,7 @@ function Router() {
         <Route path={"/compliance"} component={ComplianceCenterPage} />
         <Route path={"/finance-hub"} component={FinanceHubPage} />
         <Route path={"/supply"} component={SupplyHubPage} />
+        <Route path={"/quality"} component={QualityCenterPage} />
         <Route path={"/finance"} component={Home} />
         <Route path={"/admin"} component={AdminConsole} />
         <Route path={"/"} component={Welcome} />
