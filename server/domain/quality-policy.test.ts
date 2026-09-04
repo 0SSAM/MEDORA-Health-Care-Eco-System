@@ -44,8 +44,10 @@ describe("quality policy", () => {
     expect(qualityAvailabilityDelta({ ...inspection, status: "accepted" })).toBe(10);
   });
 
-  it("requires the same organization/branch/jurisdiction to release a hold", () => {
+  it("requires a different checker and the same scope to release a hold", () => {
     const held = { ...inspection, status: "held" as const, disposition: "hold" as const };
+    expect(() => releaseQualityHold(held, 11, held.scope))
+      .toThrow("QUALITY_MAKER_CHECKER_REQUIRED");
     expect(() => releaseQualityHold(held, 12, { organizationId: 2, branchId: 2, jurisdictionId: 3 }))
       .toThrow("QUALITY_SCOPE_REJECTED");
     expect(releaseQualityHold(held, 12, held.scope).status).toBe("released");
