@@ -32,6 +32,11 @@ function assertCounts(inspection: QualityInspection) {
   if (inspection.acceptedUnits + inspection.rejectedUnits > inspection.sampleSize) throw new Error("QUALITY_COUNTS_EXCEED_SAMPLE");
 }
 
+function assertChecker(inspection: QualityInspection, actorUserId: number) {
+  if (inspection.inspectorUserId === actorUserId) throw new Error("QUALITY_MAKER_CHECKER_REQUIRED");
+  if (!Number.isInteger(actorUserId) || actorUserId <= 0) throw new Error("QUALITY_ACTOR_REQUIRED");
+}
+
 export function startQualityReview(inspection: QualityInspection, actorUserId: number) {
   if (inspection.inspectorUserId !== actorUserId) throw new Error("QUALITY_ACTOR_SCOPE_REJECTED");
   if (inspection.status !== "draft") throw new Error("QUALITY_REVIEW_ALREADY_STARTED");
@@ -46,7 +51,7 @@ export function decideQualityDisposition(
   actorRole: "admin" | "manager" | "pharmacist" | "cashier",
 ) {
   if (actorRole !== "admin" && actorRole !== "manager" && actorRole !== "pharmacist") throw new Error("QUALITY_DECISION_PERMISSION_REQUIRED");
-  if (inspection.inspectorUserId === actorUserId) throw new Error("QUALITY_MAKER_CHECKER_REQUIRED");
+  assertChecker(inspection, actorUserId);
   if (inspection.status !== "in_review") throw new Error("QUALITY_REVIEW_NOT_DECIDABLE");
   assertCounts(inspection);
 
@@ -71,7 +76,7 @@ export function releaseQualityHold(
 ) {
   if (!sameScope(inspection.scope, scope)) throw new Error("QUALITY_SCOPE_REJECTED");
   if (inspection.status !== "held") throw new Error("QUALITY_HOLD_NOT_RELEASABLE");
-  if (!Number.isInteger(actorUserId) || actorUserId <= 0) throw new Error("QUALITY_ACTOR_REQUIRED");
+  assertChecker(inspection, actorUserId);
   return { ...inspection, status: "released" as const, disposition: "release" as const, approvedByUserId: actorUserId };
 }
 
@@ -81,4 +86,4 @@ export function qualityAvailabilityDelta(inspection: QualityInspection) {
   return 0;
 }
 
-export const qualityPolicyInternals = { sameScope, assertCounts };
+export const qualityPolicyInternals = { sameScope, assertCounts, assertChecker };
