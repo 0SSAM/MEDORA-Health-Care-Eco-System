@@ -7,6 +7,7 @@ import superjson from "superjson";
 import App from "./App";
 import { startLogin } from "./const";
 import "./index.css";
+import "./medora-enterprise.css";
 import { getSessionAuthHeader } from "./lib/sessionAuth";
 import { installSafeGlobalDiagnostics, recordSafeUiDiagnostic } from "./lib/safeDiagnostics";
 
