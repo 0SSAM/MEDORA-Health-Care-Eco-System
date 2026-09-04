@@ -2,13 +2,14 @@ name: Refresh qs lockfile
 
 on:
   push:
-    branches: ["security/qs-6.16.0"]
+    branches: ["main"]
 
 permissions:
   contents: write
 
 jobs:
   refresh:
+    if: github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -21,6 +22,8 @@ jobs:
           cache: pnpm
       - name: Regenerate lockfile
         run: pnpm install --lockfile-only --no-frozen-lockfile
+      - name: Verify lockfile and dependency tree
+        run: pnpm install --frozen-lockfile --ignore-scripts
       - name: Commit lockfile
         run: |
           git config user.name "github-actions[bot]"
