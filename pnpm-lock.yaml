@@ -20,7 +20,7 @@ overrides:
   rollup: 4.59.0
   react-is: 19.2.1
 
-pnpmfileChecksum: sha256-SYN+DfYyaCS33DZ5mKbO3EzzudbduhZjUd3vcVVeqN8=
+pnpmfileChecksum: sha256-O5fnwnXdmUJur9h4V73s08zlX2Fp5HtyQ8HfUQCn77s=
 
 patchedDependencies:
   wouter@3.7.1:
