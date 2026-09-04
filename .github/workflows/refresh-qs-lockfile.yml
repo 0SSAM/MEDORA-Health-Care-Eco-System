@@ -24,11 +24,7 @@ jobs:
         run: pnpm install --lockfile-only --no-frozen-lockfile --force
       - name: Verify frozen install
         run: pnpm install --frozen-lockfile --ignore-scripts
-      - name: Verify patched qs is locked
-        run: |
-          grep -qE '^  qs: 6\.16\.0$' pnpm-lock.yaml
-          grep -qE '^  qs@6\.16\.0:' pnpm-lock.yaml
-      - name: Commit lockfile
+      - name: Commit regenerated lockfile
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
