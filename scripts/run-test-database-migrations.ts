@@ -31,41 +31,50 @@ if (result.status !== 0) process.exit(result.status ?? 1);
 // Keep the disposable CI schema fail-closed and self-healing for this known
 // historical drift. This path is reachable only after the strict isolation
 // gate above; production migrations never execute this repair.
+const requiredJurisdictionTables = [
+  "branches",
+  "customer_profiles",
+  "call_tickets",
+] as const;
+
+const hasJurisdictionColumn = async (
+  connection: Awaited<ReturnType<typeof createConnection>>,
+  tableName: (typeof requiredJurisdictionTables)[number]
+) => {
+  const [rows] = await connection.query(
+    `SELECT COUNT(*) AS count
+     FROM INFORMATION_SCHEMA.COLUMNS
+     WHERE TABLE_SCHEMA = DATABASE()
+       AND TABLE_NAME = ?
+       AND COLUMN_NAME = 'jurisdictionId'`,
+    [tableName]
+  );
+  return Number((rows as Array<{ count: number }>)[0]?.count ?? 0) === 1;
+};
+
 const connection = await createConnection(testDatabaseUrl);
 try {
-  const requiredJurisdictionTables = [
-    "branches",
-    "customer_profiles",
-    "call_tickets",
-  ] as const;
-  for (const tableName of requiredJurisdictionTables) {
-    const [rows] = await connection.query(
-      `SELECT COUNT(*) AS count
-       FROM INFORMATION_SCHEMA.COLUMNS
-       WHERE TABLE_SCHEMA = DATABASE()
-         AND TABLE_NAME = ?
-         AND COLUMN_NAME = 'jurisdictionId'`,
-      [tableName]
+  // Keep table identifiers as literal SQL statements. The values originate
+  // from a fixed allowlist, and avoiding interpolated identifiers also keeps
+  // static security analysis from treating this repair path as SQL injection.
+  if (!(await hasJurisdictionColumn(connection, "branches"))) {
+    await connection.query(
+      "ALTER TABLE `branches` ADD `jurisdictionId` int"
     );
-    const count = Number((rows as Array<{ count: number }>)[0]?.count ?? 0);
-    if (count === 0) {
-      await connection.query(
-        `ALTER TABLE \`${tableName}\` ADD \`jurisdictionId\` int`
-      );
-    }
+  }
+  if (!(await hasJurisdictionColumn(connection, "customer_profiles"))) {
+    await connection.query(
+      "ALTER TABLE `customer_profiles` ADD `jurisdictionId` int"
+    );
+  }
+  if (!(await hasJurisdictionColumn(connection, "call_tickets"))) {
+    await connection.query(
+      "ALTER TABLE `call_tickets` ADD `jurisdictionId` int"
+    );
+  }
 
-    const [verifiedRows] = await connection.query(
-      `SELECT COUNT(*) AS count
-       FROM INFORMATION_SCHEMA.COLUMNS
-       WHERE TABLE_SCHEMA = DATABASE()
-         AND TABLE_NAME = ?
-         AND COLUMN_NAME = 'jurisdictionId'`,
-      [tableName]
-    );
-    const verifiedCount = Number(
-      (verifiedRows as Array<{ count: number }>)[0]?.count ?? 0
-    );
-    if (verifiedCount !== 1) {
+  for (const tableName of requiredJurisdictionTables) {
+    if (!(await hasJurisdictionColumn(connection, tableName))) {
       throw new Error(
         `Isolated schema verification failed: ${tableName}.jurisdictionId is missing after migrations.`
       );
