@@ -4,14 +4,14 @@ function readPackage(pkg) {
       ...pkg.dependencies,
       "body-parser": "1.20.6",
       "path-to-regexp": "0.1.13",
-      qs: "6.15.2",
+      qs: "6.16.0",
     };
   }
 
   if (pkg.name === "body-parser" && pkg.version === "1.20.3") {
     pkg.dependencies = {
       ...pkg.dependencies,
-      qs: "~6.15.1",
+      qs: "~6.16.0",
     };
   }
 
