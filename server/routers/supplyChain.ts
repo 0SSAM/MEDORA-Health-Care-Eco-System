@@ -73,8 +73,38 @@ export const supplyChainRouter = router({
           params,
         );
         const onHand = Number((balanceRows as Array<{ onHand: string | number }>)[0]?.onHand ?? 0);
-        if (input.qty > onHand) {
-          throw new TRPCError({ code: "PRECONDITION_FAILED", message: `الرصيد المتاح غير كافٍ. المتاح ${onHand}، المطلوب ${input.qty}.` });
+
+        // Quality holds are inventory reservations, not informational flags.
+        // Lock the matching hold rows in the same transaction so a concurrent
+        // outbound movement cannot consume quarantined/rejected stock.
+        const holdParams = input.batchNo
+          ? [input.organizationId, input.branchId, input.warehouseId, input.itemCode, input.batchNo]
+          : [input.organizationId, input.branchId, input.warehouseId, input.itemCode];
+        const [holdRows] = await connection.query(
+          `SELECT COALESCE(SUM(quantity),0) AS heldQty
+             FROM quality_holds
+            WHERE organizationId=? AND branchId=? AND warehouseId=? AND itemCode=?
+              AND status='active'${input.batchNo ? " AND batchNo=?" : ""}
+            FOR UPDATE`,
+          holdParams,
+        );
+        const heldQty = Number((holdRows as Array<{ heldQty: string | number }>)[0]?.heldQty ?? 0);
+        const available = Math.max(0, onHand - heldQty);
+        if (input.qty > available) {
+          throw new TRPCError({ code: "PRECONDITION_FAILED", message: `الرصيد المتاح غير كافٍ أو محجوز للجودة. المتاح ${available}، المطلوب ${input.qty}.` });
+        }
+      }
+
+      if ((input.direction === "out" || input.direction === "transfer_out") && input.batchNo) {
+        const [expiryRows] = await connection.query(
+          `SELECT MIN(expiryDate) AS expiryDate FROM stock_movements
+             WHERE organizationId=? AND branchId=? AND warehouseId=? AND itemCode=? AND batchNo=?
+               AND expiryDate IS NOT NULL`,
+          [input.organizationId, input.branchId, input.warehouseId, input.itemCode, input.batchNo],
+        );
+        const expiryDate = (expiryRows as Array<{ expiryDate: string | null }>)[0]?.expiryDate;
+        if (expiryDate && new Date(expiryDate).getTime() < Date.now()) {
+          throw new TRPCError({ code: "PRECONDITION_FAILED", message: "لا يمكن صرف دفعة منتهية الصلاحية." });
         }
       }
 
