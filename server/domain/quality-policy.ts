@@ -6,6 +6,7 @@ export type QualityScope = {
 
 export type QualityDisposition = "release" | "hold" | "reject" | "rework";
 export type QualityStatus = "draft" | "in_review" | "accepted" | "held" | "rejected" | "rework" | "released";
+export type QualityDecisionRole = "admin" | "manager" | "pharmacist" | "cashier";
 
 export type QualityInspection = {
   id: number;
@@ -25,16 +26,18 @@ function sameScope(a: QualityScope, b: QualityScope) {
     && a.jurisdictionId === b.jurisdictionId;
 }
 
-function assertCounts(inspection: QualityInspection) {
+function assertCounts(inspection: QualityInspection, requireCompleteSample = false) {
   if (!Number.isInteger(inspection.sampleSize) || inspection.sampleSize <= 0) throw new Error("QUALITY_INVALID_SAMPLE_SIZE");
   if (!Number.isInteger(inspection.acceptedUnits) || inspection.acceptedUnits < 0) throw new Error("QUALITY_INVALID_ACCEPTED_COUNT");
   if (!Number.isInteger(inspection.rejectedUnits) || inspection.rejectedUnits < 0) throw new Error("QUALITY_INVALID_REJECTED_COUNT");
-  if (inspection.acceptedUnits + inspection.rejectedUnits > inspection.sampleSize) throw new Error("QUALITY_COUNTS_EXCEED_SAMPLE");
+  const testedUnits = inspection.acceptedUnits + inspection.rejectedUnits;
+  if (testedUnits > inspection.sampleSize) throw new Error("QUALITY_COUNTS_EXCEED_SAMPLE");
+  if (requireCompleteSample && testedUnits !== inspection.sampleSize) throw new Error("QUALITY_SAMPLE_INCOMPLETE");
 }
 
 function assertChecker(inspection: QualityInspection, actorUserId: number) {
-  if (inspection.inspectorUserId === actorUserId) throw new Error("QUALITY_MAKER_CHECKER_REQUIRED");
   if (!Number.isInteger(actorUserId) || actorUserId <= 0) throw new Error("QUALITY_ACTOR_REQUIRED");
+  if (inspection.inspectorUserId === actorUserId) throw new Error("QUALITY_MAKER_CHECKER_REQUIRED");
 }
 
 export function startQualityReview(inspection: QualityInspection, actorUserId: number) {
@@ -48,12 +51,12 @@ export function decideQualityDisposition(
   inspection: QualityInspection,
   actorUserId: number,
   disposition: QualityDisposition,
-  actorRole: "admin" | "manager" | "pharmacist" | "cashier",
+  actorRole: QualityDecisionRole,
 ) {
   if (actorRole !== "admin" && actorRole !== "manager" && actorRole !== "pharmacist") throw new Error("QUALITY_DECISION_PERMISSION_REQUIRED");
   assertChecker(inspection, actorUserId);
   if (inspection.status !== "in_review") throw new Error("QUALITY_REVIEW_NOT_DECIDABLE");
-  assertCounts(inspection);
+  assertCounts(inspection, true);
 
   if (disposition === "release" && inspection.rejectedUnits > 0) throw new Error("QUALITY_RELEASE_BLOCKED_BY_REJECTS");
   if (disposition === "reject" && inspection.rejectedUnits === 0) throw new Error("QUALITY_REJECT_REQUIRES_REJECTED_UNITS");
