@@ -1,0 +1,59 @@
+name: Cloudflare Worker Gate
+
+on:
+  pull_request:
+    paths:
+      - "client/**"
+      - "shared/**"
+      - "server/**"
+      - "preview-worker.ts"
+      - "wrangler.jsonc"
+      - "vite.config.ts"
+      - "package.json"
+      - "pnpm-lock.yaml"
+      - ".github/workflows/cloudflare-worker-gate.yml"
+  push:
+    branches:
+      - "main"
+      - "fix/complete-hardening-2026-09-06"
+    paths:
+      - "client/**"
+      - "shared/**"
+      - "server/**"
+      - "preview-worker.ts"
+      - "wrangler.jsonc"
+      - "vite.config.ts"
+      - "package.json"
+      - "pnpm-lock.yaml"
+      - ".github/workflows/cloudflare-worker-gate.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  cloudflare-worker:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@f40ffcd9367d9f12939873eb1018b921a783ffaa # v4
+        with:
+          version: 10.34.5
+
+      - name: Setup Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build Cloudflare assets
+        run: pnpm run build:cloudflare
+
+      - name: Validate Wrangler configuration and asset upload
+        run: npx --yes wrangler@4.129.0 deploy --dry-run
