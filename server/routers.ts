@@ -7,6 +7,7 @@ import { adminProcedure, protectedProcedure, publicProcedure, router } from "./_
 import { ndaRouter } from "./routers/nda";
 import { allowNlmManualRefresh, clearNlmIcd10Cache, getNlmIcd10CacheStats, searchNlmIcd10Cm } from "./domain/nlm-icd10";
 import { erpRouter } from "./routers/erp";
+import { enterpriseErpRouter } from "./routers/enterprise-erp";
 import { regionalRouter } from "./routers/regional";
 import { organizationsRouter } from "./routers/organizations";
 import { notificationsRouter } from "./routers/notifications";
@@ -286,6 +287,7 @@ export const appRouter = router({
     }),
   }),
   erp: erpRouter,
+  enterpriseErp: enterpriseErpRouter,
   rbac: rbacRouter,
   delivery: deliveryRouter,
   adminAccount: adminAccountRouter,
