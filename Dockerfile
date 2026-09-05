@@ -1,5 +1,5 @@
 # MEDORA — production container (canonical main only)
-FROM node:22-alpine AS build
+FROM node:22-alpine@sha256:76789712cd1ae89a1225eac9077010d68987a423588042dac30446f502f1858c AS build
 WORKDIR /app
 
 # Use the repository's canonical package manager and lockfile.
@@ -11,7 +11,7 @@ RUN pnpm install --frozen-lockfile --prod=false
 COPY . .
 RUN pnpm build
 
-FROM node:22-alpine AS runtime
+FROM node:22-alpine@sha256:76789712cd1ae89a1225eac9077010d68987a423588042dac30446f502f1858c AS runtime
 WORKDIR /app
 ENV NODE_ENV=production
 
