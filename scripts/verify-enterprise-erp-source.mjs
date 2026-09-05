@@ -33,13 +33,14 @@ for (const token of ["enterpriseErpRouter", "enterpriseErp: enterpriseErpRouter"
   if (!centralRouter.includes(token)) throw new Error(`Canonical appRouter registration missing: ${token}`);
 }
 
+const visualLower = visual.toLowerCase();
 const visualChecks = {
   bilingualCopy: visual.includes("language === \"en\"") && visual.includes("منظومة الرعاية الصحية المتكاملة"),
   rtl: visual.includes("dir={direction}"),
   accessibleBrand: visual.includes('role="img"') && visual.includes('aria-label='),
   responsiveLayout: /sm:|md:|lg:/.test(visual),
   touchFriendly: /min-h-|h-\d+|p-\d+/.test(visual),
-  reducedExternalDependency: visual.includes("public preview must stay independent of production auth/tRPC APIs"),
+  reducedExternalDependency: visualLower.includes("public preview must stay independent of production auth/trpc apis"),
 };
 
 const visualFailures = Object.entries(visualChecks).filter(([, ok]) => !ok).map(([name]) => name);
