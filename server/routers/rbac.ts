@@ -20,7 +20,7 @@ import { getDb } from "../db";
 
 /** getDb مع ضمان عدم القيمة الفارغة (قاعدة MEDORA مطلوبة) */
 async function getDbOrThrow(): Promise<any> {
-  const db = await getDbOrThrow();
+  const db = await getDb();
   if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "قاعدة البيانات غير متاحة." });
   return db;
 }
@@ -99,16 +99,22 @@ export const rbacRouter = router({
     .mutation(async ({ ctx, input }) => {
       const db = await dbWithOrgScope(ctx as any, input.organizationId);
       await assertPermission(db, input.organizationId, (ctx as any).user.id, "admin.roles.create");
+      const permRows = (await db.execute(
+        sql`SELECT id, code FROM rbac_permissions WHERE code IN (${input.role.permissionCodes})`
+      )) as any;
+      const permissions = permRows?.[0] ?? [];
+      const requested = new Set(input.role.permissionCodes);
+      const found = new Set(permissions.map((p: any) => p.code as string));
+      if (found.size !== requested.size || [...requested].some((code) => !found.has(code))) {
+        throw new TRPCError({ code: "BAD_REQUEST", message: "يوجد رمز صلاحية غير معروف." });
+      }
       const res = (await db.execute(
         sql`INSERT INTO rbac_roles (organization_id, code, name_ar, name_en, description, is_system)
             VALUES (${input.organizationId}, ${input.role.code}, ${input.role.nameAr}, ${input.role.nameEn}, ${input.role.description ?? null}, 0)`
       )) as any;
       const roleId = Number(res?.[0]?.insertId ?? 0);
       if (!roleId) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "فشل إنشاء الدور" });
-      const permRows = (await db.execute(
-        sql`SELECT id, code FROM rbac_permissions WHERE code IN (${input.role.permissionCodes})`
-      )) as any;
-      for (const p of permRows?.[0] ?? []) {
+      for (const p of permissions) {
         await db.execute(sql`INSERT IGNORE INTO rbac_role_permissions (role_id, permission_id) VALUES (${roleId}, ${p.id})`);
       }
       return { roleId };
@@ -125,6 +131,15 @@ export const rbacRouter = router({
       await assertPermission(db, orgId, (ctx as any).user.id, "admin.roles.update");
       const role = orgRows[0][0];
       if (role.is_system) throw new TRPCError({ code: "FORBIDDEN", message: "لا يمكن تعديل دور نظام" });
+      if (input.patch.permissionCodes) {
+        const permRows = (await db.execute(sql`SELECT id, code FROM rbac_permissions WHERE code IN (${input.patch.permissionCodes})`)) as any;
+        const permissions = permRows?.[0] ?? [];
+        const requested = new Set(input.patch.permissionCodes);
+        const found = new Set(permissions.map((p: any) => p.code as string));
+        if (found.size !== requested.size || [...requested].some((code) => !found.has(code))) {
+          throw new TRPCError({ code: "BAD_REQUEST", message: "يوجد رمز صلاحية غير معروف." });
+        }
+      }
       await db.execute(
         sql`UPDATE rbac_roles SET code=${input.patch.code ?? role.code}, name_ar=${input.patch.nameAr ?? role.name_ar},
             name_en=${input.patch.nameEn ?? role.name_en}, description=${input.patch.description ?? role.description} WHERE id=${input.roleId}`
@@ -161,6 +176,10 @@ export const rbacRouter = router({
     .mutation(async ({ ctx, input }) => {
       const db = await dbWithOrgScope(ctx as any, input.organizationId);
       await assertPermission(db, input.organizationId, (ctx as any).user.id, "admin.users.assign");
+      const roleRows = (await db.execute(
+        sql`SELECT id FROM rbac_roles WHERE id=${input.roleId} AND organization_id=${input.organizationId} LIMIT 1`
+      )) as any;
+      if (!roleRows?.[0]?.[0]) throw new TRPCError({ code: "BAD_REQUEST", message: "الدور لا ينتمي إلى المنظمة المحددة." });
       await db.execute(
         sql`INSERT IGNORE INTO rbac_user_roles (organization_id, user_id, role_id, granted_by_user_id)
             VALUES (${input.organizationId}, ${input.userId}, ${input.roleId}, ${(ctx as any).user.id})`
