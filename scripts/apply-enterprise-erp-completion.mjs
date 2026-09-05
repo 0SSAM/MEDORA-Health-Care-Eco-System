@@ -12,9 +12,10 @@ if (!databaseUrl) {
 const migrationPath = resolve(process.cwd(), "drizzle/0047_enterprise_erp_completion.sql");
 const sql = await readFile(migrationPath, "utf8");
 const statements = sql
+  .replace(/^\s*--.*$/gm, "")
   .split(/;\s*(?:\r?\n|$)/)
   .map(statement => statement.trim())
-  .filter(statement => statement && !statement.startsWith("--"));
+  .filter(Boolean);
 
 const connection = await mysql.createConnection(databaseUrl);
 try {
