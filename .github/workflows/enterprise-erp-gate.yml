@@ -60,6 +60,8 @@ jobs:
           else
             git add server/routers.ts
             git commit -m "Register enterprise ERP router in canonical appRouter"
+            git fetch origin main
+            git rebase origin/main
             git push origin HEAD:main
           fi
 
