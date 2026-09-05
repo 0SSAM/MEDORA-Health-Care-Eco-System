@@ -70,7 +70,7 @@ jobs:
         run: node scripts/verify-enterprise-erp-source.mjs
 
       - name: Unit tests
-        run: pnpm test -- --runInBand
+        run: pnpm test
 
       - name: Production build
         run: pnpm build
