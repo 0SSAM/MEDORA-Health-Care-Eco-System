@@ -3,39 +3,35 @@ name: Enterprise ERP Gate
 on:
   push:
     branches: [main]
-  workflow_dispatch:
+  pull_request:
+    branches: [main]
 
 permissions:
   contents: read
 
 jobs:
-  verify:
+  verify-enterprise-erp:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Setup pnpm
+        uses: pnpm/action-setup@f40ffcd9367d9f12939873eb1018b921a783ffaa # v4
         with:
-          fetch-depth: 1
-
+          version: 10.34.5
       - name: Setup Node
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: 22
-
-      - name: Enable pnpm
-        run: corepack enable && corepack prepare pnpm@10.34.5 --activate
-
+          cache: pnpm
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
-
       - name: Typecheck
         run: pnpm check
-
-      - name: Enterprise ERP source verification
+      - name: Verify ERP source contract
         run: node scripts/verify-enterprise-erp-source.mjs
-
-      - name: Unit tests
+      - name: Test
         run: pnpm test
-
-      - name: Production build
+      - name: Build
         run: pnpm build
