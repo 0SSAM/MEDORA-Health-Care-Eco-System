@@ -6,14 +6,16 @@ const requiredTables = [
 
 const migrationPath = "drizzle/0047_enterprise_erp_completion.sql";
 const routerPath = "server/routers/enterprise-erp.ts";
+const centralRouterPath = "server/routers.ts";
 const visualPath = "client/src/pages/Welcome.tsx";
 
-for (const path of [migrationPath, routerPath, visualPath]) {
+for (const path of [migrationPath, routerPath, centralRouterPath, visualPath]) {
   if (!existsSync(path)) throw new Error(`Missing required audit target: ${path}`);
 }
 
 const migration = readFileSync(migrationPath, "utf8");
 const router = readFileSync(routerPath, "utf8");
+const centralRouter = readFileSync(centralRouterPath, "utf8");
 const visual = readFileSync(visualPath, "utf8");
 
 const missingTables = requiredTables.filter(table => !migration.includes(`CREATE TABLE IF NOT EXISTS ${table}`));
@@ -23,8 +25,12 @@ for (const token of ["organization_id", "operation_key", "operation_type", "requ
   if (!migration.includes(token)) throw new Error(`ERP migration missing workflow/idempotency field: ${token}`);
 }
 
-for (const token of ["scopedDb", "organization_memberships", "erp_workflow_state_transitions", "erp_transaction_idempotency", "fiscalPeriod", "transition", "health"]) {
+for (const token of ["assertOrg", "organization_memberships", "erp_workflow_state_transitions", "erp_transaction_idempotency", "fiscalPeriod", "transition", "health"]) {
   if (!router.includes(token)) throw new Error(`ERP router contract missing: ${token}`);
+}
+
+for (const token of ["enterpriseErpRouter", "enterpriseErp: enterpriseErpRouter"]) {
+  if (!centralRouter.includes(token)) throw new Error(`Canonical appRouter registration missing: ${token}`);
 }
 
 const visualChecks = {
@@ -42,6 +48,6 @@ if (visualFailures.length) throw new Error(`Visual contract failures: ${visualFa
 console.log(JSON.stringify({
   ok: true,
   enterpriseTables: requiredTables.length,
-  sourceContracts: ["scoped tenant access", "workflow transition audit", "transaction idempotency", "fiscal period governance"],
+  sourceContracts: ["scoped tenant access", "canonical router registration", "workflow transition audit", "transaction idempotency", "fiscal period governance"],
   visualContracts: Object.keys(visualChecks).filter(key => visualChecks[key]),
 }, null, 2));
