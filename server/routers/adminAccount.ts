@@ -34,6 +34,21 @@ async function requireAdminSession(ctx: { user: { id: number; role: string } }, 
   return db;
 }
 
+async function getAdminCredential(db: any, userId: number) {
+  const result = (await db.execute(
+    sql`SELECT id, userId, username, passwordHash FROM internal_credentials WHERE userId=${userId} LIMIT 1`
+  )) as any;
+  const credential = result?.[0]?.[0];
+  if (!credential) throw new TRPCError({ code: "NOT_FOUND", message: "لا توجد اعتمادات داخلية لهذا الحساب." });
+  return credential;
+}
+
+function verifyCurrentPassword(currentPassword: string, passwordHash: string) {
+  if (!verifyInternalPassword(currentPassword, passwordHash)) {
+    throw new TRPCError({ code: "UNAUTHORIZED", message: "كلمة المرور الحالية غير صحيحة." });
+  }
+}
+
 async function revokeAllSessions(db: any, userId: number) {
   try {
     await db.execute(sql`UPDATE internal_sessions SET revokedAt=CURRENT_TIMESTAMP WHERE userId=${userId} AND revokedAt IS NULL`);
@@ -47,14 +62,8 @@ export const adminAccountRouter = router({
     .input(z.object({ organizationId: z.number().int().positive(), currentPassword: z.string().min(1), newUsername: z.string().min(3).max(64) }))
     .mutation(async ({ ctx, input }) => {
       const db = await requireAdminSession(ctx as any, input.organizationId);
-      const cred = (await db.execute(
-        sql`SELECT id, userId, username, passwordHash FROM internal_credentials WHERE userId=${(ctx as any).user.id} LIMIT 1`
-      )) as any;
-      const c = cred?.[0]?.[0];
-      if (!c) throw new TRPCError({ code: "NOT_FOUND", message: "لا توجد اعتمادات داخلية لهذا الحساب." });
-      if (!verifyInternalPassword(input.currentPassword, c.passwordHash)) {
-        throw new TRPCError({ code: "UNAUTHORIZED", message: "كلمة المرور الحالية غير صحيحة." });
-      }
+      const c = await getAdminCredential(db, ctx.user.id);
+      verifyCurrentPassword(input.currentPassword, c.passwordHash);
       const normalized = normalizeInternalUsername(input.newUsername);
       const dup = (await db.execute(
         sql`SELECT id FROM internal_credentials WHERE username=${normalized} AND userId<>${c.userId} LIMIT 1`
@@ -69,14 +78,8 @@ export const adminAccountRouter = router({
     .input(z.object({ organizationId: z.number().int().positive(), currentPassword: z.string().min(1), newPassword: z.string().min(8) }))
     .mutation(async ({ ctx, input }) => {
       const db = await requireAdminSession(ctx as any, input.organizationId);
-      const cred = (await db.execute(
-        sql`SELECT id, userId, passwordHash FROM internal_credentials WHERE userId=${(ctx as any).user.id} LIMIT 1`
-      )) as any;
-      const c = cred?.[0]?.[0];
-      if (!c) throw new TRPCError({ code: "NOT_FOUND", message: "لا توجد اعتمادات داخلية لهذا الحساب." });
-      if (!verifyInternalPassword(input.currentPassword, c.passwordHash)) {
-        throw new TRPCError({ code: "UNAUTHORIZED", message: "كلمة المرور الحالية غير صحيحة." });
-      }
+      const c = await getAdminCredential(db, ctx.user.id);
+      verifyCurrentPassword(input.currentPassword, c.passwordHash);
       assertPasswordPolicy(input.newPassword);
       const hashed = hashInternalPassword(input.newPassword);
       await db.execute(
