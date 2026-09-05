@@ -1,0 +1,77 @@
+name: Enterprise ERP Gate
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  register-verify-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Enable pnpm
+        run: corepack enable && corepack prepare pnpm@10.34.5 --activate
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Register enterprise ERP router in canonical appRouter
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path("server/routers.ts")
+          s = p.read_text()
+          imp = 'import { enterpriseErpRouter } from "./routers/enterprise-erp";'
+          if imp not in s:
+              marker = 'import { erpRouter } from "./routers/erp";'
+              if marker not in s:
+                  raise SystemExit("erpRouter import marker not found")
+              s = s.replace(marker, marker + "\n" + imp, 1)
+          route = '  enterpriseErp: enterpriseErpRouter,\n'
+          if route not in s:
+              marker = '  erp: erpRouter,\n'
+              if marker not in s:
+                  raise SystemExit("erpRouter registration marker not found")
+              s = s.replace(marker, marker + route, 1)
+          p.write_text(s)
+          PY
+
+      - name: Commit canonical router registration
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if git diff --quiet -- server/routers.ts; then
+            echo "Enterprise ERP router already registered."
+          else
+            git add server/routers.ts
+            git commit -m "Register enterprise ERP router in canonical appRouter"
+            git push origin HEAD:main
+          fi
+
+      - name: Typecheck
+        run: pnpm check
+
+      - name: Enterprise ERP source verification
+        run: node scripts/verify-enterprise-erp-source.mjs
+
+      - name: Unit tests
+        run: pnpm test -- --runInBand
+
+      - name: Production build
+        run: pnpm build
