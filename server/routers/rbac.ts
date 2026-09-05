@@ -105,7 +105,7 @@ export const rbacRouter = router({
       const permissions = permRows?.[0] ?? [];
       const requested = new Set(input.role.permissionCodes);
       const found = new Set(permissions.map((p: any) => p.code as string));
-      if (found.size !== requested.size || [...requested].some((code) => !found.has(code))) {
+      if (found.size !== requested.size || Array.from(requested).some((code) => !found.has(code))) {
         throw new TRPCError({ code: "BAD_REQUEST", message: "يوجد رمز صلاحية غير معروف." });
       }
       const res = (await db.execute(
@@ -136,7 +136,7 @@ export const rbacRouter = router({
         const permissions = permRows?.[0] ?? [];
         const requested = new Set(input.patch.permissionCodes);
         const found = new Set(permissions.map((p: any) => p.code as string));
-        if (found.size !== requested.size || [...requested].some((code) => !found.has(code))) {
+        if (found.size !== requested.size || Array.from(requested).some((code) => !found.has(code))) {
           throw new TRPCError({ code: "BAD_REQUEST", message: "يوجد رمز صلاحية غير معروف." });
         }
       }
