@@ -108,11 +108,8 @@ export const enterpriseErpRouter = router({
   }),
 
   list: protectedProcedure.input(z.object({
-    organizationId: z.number().int().positive(),
-    domain: z.enum(DOMAINS),
-    branchId: z.number().int().positive().optional(),
-    status: z.string().max(40).optional(),
-    limit: z.number().int().min(1).max(200).default(50),
+    organizationId: z.number().int().positive(), domain: z.enum(DOMAINS), branchId: z.number().int().positive().optional(),
+    status: z.string().max(40).optional(), limit: z.number().int().min(1).max(200).default(50),
   })).query(async ({ ctx, input }) => {
     const db = await assertOrg(ctx, input.organizationId);
     const m = getMeta(input.domain);
@@ -129,15 +126,20 @@ export const enterpriseErpRouter = router({
   })).mutation(async ({ ctx, input }) => {
     const db = await assertOrg(ctx, input.organizationId);
     const m = getMeta(input.domain);
-    if (!m.status || !TRANSITIONS[input.domain]?.includes(input.toStatus)) throw new TRPCError({ code: "BAD_REQUEST", message: "Unsupported or unsafe workflow transition" });
-    const rows = (await db.execute(sql`SELECT id, ${sql.raw(m.status)} AS current_status FROM ${sql.raw(m.table)} WHERE id=${input.id} AND ${sql.raw(m.org!)}=${input.organizationId} LIMIT 1`)) as any;
-    const current = rows?.[0]?.[0];
-    if (!current) throw new TRPCError({ code: "NOT_FOUND", message: "ERP record not found in organization scope" });
-    const allowedFrom = TRANSITIONS[input.domain]!;
-    if (current.current_status && !allowedFrom.includes(String(current.current_status))) throw new TRPCError({ code: "CONFLICT", message: "Current ERP state is outside the controlled workflow" });
-    await db.execute(sql`UPDATE ${sql.raw(m.table)} SET ${sql.raw(m.status)}=${input.toStatus} WHERE id=${input.id} AND ${sql.raw(m.org!)}=${input.organizationId}`);
-    await db.execute(sql`INSERT INTO erp_workflow_state_transitions (organization_id, entity_type, entity_id, from_state, to_state, actor_user_id, reason) VALUES (${input.organizationId}, ${input.domain}, ${String(input.id)}, ${current.current_status ?? null}, ${input.toStatus}, ${ctx.user.id}, ${input.reason ?? null})`);
-    return { ok: true, id: input.id, domain: input.domain, fromStatus: current.current_status ?? null, status: input.toStatus };
+    const statusColumn = m.status;
+    if (!statusColumn || !TRANSITIONS[input.domain]?.includes(input.toStatus)) throw new TRPCError({ code: "BAD_REQUEST", message: "Unsupported or unsafe workflow transition" });
+    return db.transaction(async (tx: any) => {
+      const rows = (await tx.execute(sql`SELECT id, ${sql.raw(statusColumn)} AS current_status FROM ${sql.raw(m.table)} WHERE id=${input.id} AND ${sql.raw(m.org!)}=${input.organizationId} LIMIT 1 FOR UPDATE`)) as any;
+      const current = rows?.[0]?.[0];
+      if (!current) throw new TRPCError({ code: "NOT_FOUND", message: "ERP record not found in organization scope" });
+      const allowedFrom = TRANSITIONS[input.domain]!;
+      if (current.current_status && !allowedFrom.includes(String(current.current_status))) throw new TRPCError({ code: "CONFLICT", message: "Current ERP state is outside the controlled workflow" });
+      if (String(current.current_status) === input.toStatus) return { ok: true, id: input.id, domain: input.domain, fromStatus: input.toStatus, status: input.toStatus };
+      const updated = (await tx.execute(sql`UPDATE ${sql.raw(m.table)} SET ${sql.raw(statusColumn)}=${input.toStatus} WHERE id=${input.id} AND ${sql.raw(m.org!)}=${input.organizationId} AND ${sql.raw(statusColumn)}=${current.current_status}`)) as any;
+      if (!updated?.[0]?.affectedRows) throw new TRPCError({ code: "CONFLICT", message: "ERP record changed concurrently; transition was not applied" });
+      await tx.execute(sql`INSERT INTO erp_workflow_state_transitions (organization_id, entity_type, entity_id, from_state, to_state, actor_user_id, reason) VALUES (${input.organizationId}, ${input.domain}, ${String(input.id)}, ${current.current_status ?? null}, ${input.toStatus}, ${ctx.user.id}, ${input.reason ?? null})`);
+      return { ok: true, id: input.id, domain: input.domain, fromStatus: current.current_status ?? null, status: input.toStatus };
+    });
   }),
 
   idempotency: protectedProcedure.input(z.object({
@@ -145,14 +147,19 @@ export const enterpriseErpRouter = router({
     operationType: z.string().min(2).max(100), requestHash: z.string().min(16).max(128),
   })).mutation(async ({ ctx, input }) => {
     const db = await assertOrg(ctx, input.organizationId);
-    const existing = (await db.execute(sql`SELECT id, operation_type, request_hash, response_json FROM erp_transaction_idempotency WHERE organization_id=${input.organizationId} AND operation_key=${input.operationKey} LIMIT 1`)) as any;
-    const row = existing?.[0]?.[0];
-    if (row) {
+    try {
+      const inserted = (await db.execute(sql`INSERT INTO erp_transaction_idempotency (organization_id, operation_key, operation_type, request_hash) VALUES (${input.organizationId}, ${input.operationKey}, ${input.operationType}, ${input.requestHash})`)) as any;
+      return { replay: false, recordId: Number(inserted?.[0]?.insertId ?? 0) || undefined };
+    } catch (error: any) {
+      // The unique (organization_id, operation_key) constraint arbitrates concurrent requests.
+      // Re-read after a duplicate-key race and only replay an exactly matching request.
+      if (String(error?.code) !== "ER_DUP_ENTRY" && Number(error?.errno) !== 1062) throw error;
+      const existing = (await db.execute(sql`SELECT id, operation_type, request_hash, response_json FROM erp_transaction_idempotency WHERE organization_id=${input.organizationId} AND operation_key=${input.operationKey} LIMIT 1`)) as any;
+      const row = existing?.[0]?.[0];
+      if (!row) throw new TRPCError({ code: "CONFLICT", message: "Idempotency key collision could not be resolved" });
       if (String(row.request_hash) !== input.requestHash || String(row.operation_type) !== input.operationType) throw new TRPCError({ code: "CONFLICT", message: "Idempotency key reused with a different request" });
       return { replay: true, recordId: Number(row.id), response: row.response_json ?? null };
     }
-    await db.execute(sql`INSERT INTO erp_transaction_idempotency (organization_id, operation_key, operation_type, request_hash) VALUES (${input.organizationId}, ${input.operationKey}, ${input.operationType}, ${input.requestHash})`);
-    return { replay: false };
   }),
 
   fiscalPeriod: router({

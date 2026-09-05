@@ -3,76 +3,35 @@ name: Enterprise ERP Gate
 on:
   push:
     branches: [main]
-  workflow_dispatch:
+  pull_request:
+    branches: [main]
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
-  register-verify-test:
+  verify-enterprise-erp:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Setup pnpm
+        uses: pnpm/action-setup@f40ffcd9367d9f12939873eb1018b921a783ffaa # v4
         with:
-          fetch-depth: 0
-
+          version: 10.34.5
       - name: Setup Node
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: 22
-
-      - name: Enable pnpm
-        run: corepack enable && corepack prepare pnpm@10.34.5 --activate
-
+          cache: pnpm
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
-
-      - name: Register enterprise ERP router in canonical appRouter
-        shell: bash
-        run: |
-          python3 - <<'PY'
-          from pathlib import Path
-          p = Path("server/routers.ts")
-          s = p.read_text()
-          imp = 'import { enterpriseErpRouter } from "./routers/enterprise-erp";'
-          if imp not in s:
-              marker = 'import { erpRouter } from "./routers/erp";'
-              if marker not in s:
-                  raise SystemExit("erpRouter import marker not found")
-              s = s.replace(marker, marker + "\n" + imp, 1)
-          route = '  enterpriseErp: enterpriseErpRouter,\n'
-          if route not in s:
-              marker = '  erp: erpRouter,\n'
-              if marker not in s:
-                  raise SystemExit("erpRouter registration marker not found")
-              s = s.replace(marker, marker + route, 1)
-          p.write_text(s)
-          PY
-
-      - name: Commit canonical router registration
-        shell: bash
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          if git diff --quiet -- server/routers.ts; then
-            echo "Enterprise ERP router already registered."
-          else
-            git add server/routers.ts
-            git commit -m "Register enterprise ERP router in canonical appRouter"
-            git fetch origin main
-            git rebase origin/main
-            git push origin HEAD:main
-          fi
-
       - name: Typecheck
         run: pnpm check
-
-      - name: Enterprise ERP source verification
+      - name: Verify ERP source contract
         run: node scripts/verify-enterprise-erp-source.mjs
-
-      - name: Unit tests
+      - name: Test
         run: pnpm test
-
-      - name: Production build
+      - name: Build
         run: pnpm build

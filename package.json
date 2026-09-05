@@ -9,6 +9,9 @@
   "scripts": {
     "dev": "vite dev",
     "build": "vite build && esbuild server/_core/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist",
+    "build:cloudflare": "pnpm build && node -e \"const fs=require('node:fs'); if (!fs.existsSync('dist/public/index.html')) { console.error('Cloudflare build output missing: dist/public/index.html'); process.exit(1); }\"",
+    "deploy": "pnpm dlx wrangler@4.129.0 deploy",
+    "deploy:preview": "pnpm dlx wrangler@4.129.0 versions upload",
     "start": "NODE_ENV=production node dist/index.js",
     "check": "tsc --noEmit",
     "format": "prettier --write .",
@@ -66,7 +69,7 @@
     "jose": "6.1.0",
     "jspdf": "^4.2.1",
     "lucide-react": "^0.453.0",
-    "mysql2": "^3.23.1",
+    "mysql2": "^3.24.3",
     "nanoid": "5.1.16",
     "next-themes": "^0.4.6",
     "react": "^19.2.1",
@@ -127,7 +130,7 @@
     "rollup": "4.59.0",
     "react-is": "19.2.1"
   },
-  "packageManager": "pnpm@10.34.4",
+  "packageManager": "pnpm@10.34.5",
   "keywords": ["medora","healthcare","erp","crm","hr","pos","pharmacy","egypt","insurance","delivery","open-source","typescript","react","vite","trpc","drizzle","mysql","arabic"],
   "repository": {"type":"git","url":"https://github.com/0SSAM/MEDORA-Health-Care-Eco-System.git"},
   "homepage": "https://github.com/0SSAM/MEDORA-Health-Care-Eco-System",
