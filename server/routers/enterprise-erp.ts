@@ -126,15 +126,16 @@ export const enterpriseErpRouter = router({
   })).mutation(async ({ ctx, input }) => {
     const db = await assertOrg(ctx, input.organizationId);
     const m = getMeta(input.domain);
-    if (!m.status || !TRANSITIONS[input.domain]?.includes(input.toStatus)) throw new TRPCError({ code: "BAD_REQUEST", message: "Unsupported or unsafe workflow transition" });
+    const statusColumn = m.status;
+    if (!statusColumn || !TRANSITIONS[input.domain]?.includes(input.toStatus)) throw new TRPCError({ code: "BAD_REQUEST", message: "Unsupported or unsafe workflow transition" });
     return db.transaction(async (tx: any) => {
-      const rows = (await tx.execute(sql`SELECT id, ${sql.raw(m.status)} AS current_status FROM ${sql.raw(m.table)} WHERE id=${input.id} AND ${sql.raw(m.org!)}=${input.organizationId} LIMIT 1 FOR UPDATE`)) as any;
+      const rows = (await tx.execute(sql`SELECT id, ${sql.raw(statusColumn)} AS current_status FROM ${sql.raw(m.table)} WHERE id=${input.id} AND ${sql.raw(m.org!)}=${input.organizationId} LIMIT 1 FOR UPDATE`)) as any;
       const current = rows?.[0]?.[0];
       if (!current) throw new TRPCError({ code: "NOT_FOUND", message: "ERP record not found in organization scope" });
       const allowedFrom = TRANSITIONS[input.domain]!;
       if (current.current_status && !allowedFrom.includes(String(current.current_status))) throw new TRPCError({ code: "CONFLICT", message: "Current ERP state is outside the controlled workflow" });
       if (String(current.current_status) === input.toStatus) return { ok: true, id: input.id, domain: input.domain, fromStatus: input.toStatus, status: input.toStatus };
-      const updated = (await tx.execute(sql`UPDATE ${sql.raw(m.table)} SET ${sql.raw(m.status)}=${input.toStatus} WHERE id=${input.id} AND ${sql.raw(m.org!)}=${input.organizationId} AND ${sql.raw(m.status)}=${current.current_status}`)) as any;
+      const updated = (await tx.execute(sql`UPDATE ${sql.raw(m.table)} SET ${sql.raw(statusColumn)}=${input.toStatus} WHERE id=${input.id} AND ${sql.raw(m.org!)}=${input.organizationId} AND ${sql.raw(statusColumn)}=${current.current_status}`)) as any;
       if (!updated?.[0]?.affectedRows) throw new TRPCError({ code: "CONFLICT", message: "ERP record changed concurrently; transition was not applied" });
       await tx.execute(sql`INSERT INTO erp_workflow_state_transitions (organization_id, entity_type, entity_id, from_state, to_state, actor_user_id, reason) VALUES (${input.organizationId}, ${input.domain}, ${String(input.id)}, ${current.current_status ?? null}, ${input.toStatus}, ${ctx.user.id}, ${input.reason ?? null})`);
       return { ok: true, id: input.id, domain: input.domain, fromStatus: current.current_status ?? null, status: input.toStatus };
