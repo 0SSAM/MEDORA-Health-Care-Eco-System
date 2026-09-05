@@ -56,4 +56,4 @@ jobs:
         run: pnpm run build:cloudflare
 
       - name: Validate Wrangler configuration and asset upload
-        run: npx --yes wrangler@4.129.0 deploy --dry-run
+        run: pnpm dlx wrangler@4.129.0 deploy --dry-run
