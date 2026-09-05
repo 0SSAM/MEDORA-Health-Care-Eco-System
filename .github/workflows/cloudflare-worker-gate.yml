@@ -15,7 +15,6 @@ on:
   push:
     branches:
       - "main"
-      - "fix/complete-hardening-2026-09-06"
     paths:
       - "client/**"
       - "shared/**"
