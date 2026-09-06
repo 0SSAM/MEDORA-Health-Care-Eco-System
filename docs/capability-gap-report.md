@@ -1,42 +1,62 @@
 # ميدورا | منظومة الرعاية الصحية المتكاملة — Capability and Gap Report
 
-**Audit basis.** This report is based on the current repository routes, schema, client pages, domain policies, tests, scheduled handlers, and deployment checks. It is not a claim of feature parity with Odoo, Microsoft Dynamics, SAP, Oracle, or any other enterprise suite.
+**Audit basis.** This report reflects the executable repository surface on `main`, including the insurance schema/migrations, domain policies, tRPC routers, integration contract tests, and the newly added insurance execution surface. It distinguishes persisted internal capability from externally activated payer connectivity.
 
 ## Executive assessment
 
-MEDORA is currently a **secure healthcare pharmacy/branch ERP foundation with multi-organization and jurisdiction controls**, not a complete all-industry ERP suite. The implemented core is strongest in organization and branch access, pharmacy POS, inventory, catalog compliance evidence, prescription intake workflow, customer care/call centre, notifications, demo mode, offline drafts, and scheduled inventory alerts. Several requested domains exist only as permissions, policy vocabulary, UI placeholders, or future extension points and must not be represented as production modules until they have database models, server procedures, user interfaces, integration contracts, and tests.
+MEDORA remains a healthcare/pharmacy ERP foundation rather than a complete all-industry ERP suite. Within insurance, however, the gap between documentation and executable capability has been materially reduced: the repository now has persisted payer connector profiles, structured benefit/coverage rules, claim lifecycle event history, claim attachment references, and provider/payer message records, while external network submission remains fail-closed.
 
-| Capability area | Current evidence | Status | Safe conclusion |
+| Insurance capability | Executable evidence | Status | Remaining boundary |
 |---|---|---|---|
-| ERP pharmacy/POS | `erp` router, products, inventory batches, sales, sale items, FEFO planning, sale preparation/commit, offline drafts | **Implemented and tested for current scope** | Operational pharmacy/branch ERP foundation exists; accounting, procurement, manufacturing, and full finance are not present. |
-| CRM / customer care | Customer profiles, care interactions, call tickets, branch and organization checks | **Partially implemented** | Customer-care and call-centre workflows exist; leads, opportunities, pipeline, campaigns, SLA analytics, and full CRM automation are absent. |
-| HR / payroll | Permission vocabulary and regional rule vocabulary mention staff/payroll | **Policy-only / missing module** | No HR master data, attendance, leave, payroll ledger, payslips, benefits, or statutory payroll integration is evidenced. |
-| Promotion / pricing | Discount validation and catalog/pricing policy functions | **Partially implemented** | Discount validation exists; promotion campaigns, coupons, segmentation, approval workflow, and campaign analytics are not established. |
-| Development / project management | No dedicated project, issue, release, or engineering router/page was found in the audited surface | **Missing** | Must be designed as a separate module if required. |
-| AI | AI chat component and built-in LLM/voice infrastructure references | **Partially implemented** | AI interaction infrastructure exists; a governed clinical decision-support, agentic operations, evaluation, audit, and human-approval layer is not complete. |
-| Smart notifications | Notification tables/router/policies, read state, organization scope, scheduled inventory-alert handler | **Partially implemented** | In-app notifications and inventory alerts exist; generalized event rules, delivery channels, retries, templates, escalation, and delivery audit are not complete. |
-| Periodic intelligent reports | Heartbeat scheduling, inventory-alert callback, server-owned report-definition policy, persisted `report_definitions` and `report_runs` tables, scoped tRPC catalog/definition/run procedures, recipient checks, and deterministic idempotency support | **Persisted foundation implemented / execution and delivery gated** | Definitions and run history now have scoped persistence and server-owned query keys; no scheduled report executor, delivery worker, sender, retry/dead-letter queue, or LLM narrative pipeline is active. |
-| Multi-organization and country isolation | Organizations, memberships, branches, composite scope policy, organizationId columns, jurisdiction policies, protected current ERP paths | **Implemented for audited current paths; broader coverage pending** | Strong current boundary foundation; future tables and database-backed router lifecycle still require integration coverage. |
-| Sensitive clinical data controls | Sensitive-data policy, demo/export denial, role and scope tests | **Policy and current-path controls implemented** | Reusable controls exist; full diagnostics/imaging/clinical persistence modules do not. |
-| Government integration | Regulatory prerequisite documents and country source notes | **Documentation only** | No certified government API, certificate, national identifier, tax/e-invoicing, pharmacovigilance, or regulator credential integration is active. |
-| Insurer integration | Insurance aging/classification helpers, scoped eligibility/preauthorization policy, persisted `insurance_requests`, scoped tRPC list/create/transition procedures, hashed member references, lifecycle transitions, and readiness gate | **Persisted policy-first foundation implemented / live connector gated** | Eligibility and preauthorization requests now persist without raw member references and remain organization/jurisdiction scoped. No payer transport, claims, adjudication, remittance, or live API workflow is active. |
-| Offline operation | Offline drafts, branch binding, replay checks | **Partially implemented** | Protected offline draft/replay foundation exists; complete conflict resolution, durable sync queue, attachment handling, and offline coverage of every module are not proven. |
-| Enterprise-suite parity | No evidence of complete cross-domain equivalents | **Not established** | MEDORA should not be marketed as functionally equivalent to Odoo, Dynamics, SAP, Oracle, or Omip without a separate requirements and acceptance program. |
+| Insurance member / policy reference | `insurance_members`, hashed member references | **Implemented foundation** | Full payer-specific policy-card fields remain configurable rather than universal. |
+| Payer contracts | `insurance_payer_contracts`, `egyptHealthcare.createPayerContract` | **Implemented foundation** | Contract execution depends on real payer terms and credentials. |
+| Eligibility / coverage requests | `insurance_requests`, `insurance.list/create/transition` | **Implemented internal workflow** | Live eligibility transport is blocked until payer contract/mapping/sandbox/credentials exist. |
+| Benefits / limits / co-pay / deductible / exclusions | `insurance_coverage_rules`, `insuranceExecution.coverageRules/upsertCoverageRule` | **Implemented internal rules surface** | Adjudication against a live payer is not performed automatically. |
+| Referral requirements | `insurance_coverage_rules.requiresReferral` | **Persisted rule** | Payer-specific referral validation must be supplied by the payer contract/rules. |
+| Preauthorization | `insurance_preauthorizations`, `egyptHealthcare.createPreauthorization` | **Implemented internal workflow** | Live submission remains gated. |
+| Claims lifecycle | `insurance_claims`, `claims/createClaim/transitionClaim` | **Implemented internal workflow** | Live submission/adjudication remains gated. |
+| Immutable claim event history | `insurance_claim_events` + DB triggers | **Implemented** | External payer event signatures remain payer-contract dependent. |
+| Supporting clinical documents | `insurance_claim_attachments` + `attachClaimDocument` | **Implemented as secure references** | Binary storage/scanning/virus controls remain infrastructure-dependent. |
+| Rejection / resubmission | Claim status model includes `rejected` and `appealed`; payer connector stores rejection mapping readiness | **Implemented foundation** | A payer-specific resubmission transport still requires its contract. |
+| Remittance / reconciliation | `insurance_remittances`, `createRemittance` | **Implemented internal foundation** | Automated inbound remittance transport/adjudication is not activated. |
+| Appeals | `insurance_appeals`, `createAppeal` | **Implemented internal foundation** | External appeal submission remains gated. |
+| Provider ↔ payer communication | `insurance_payer_messages`, `queuePayerMessage/payerMessages` | **Implemented queue/audit surface** | Outbound network delivery is deliberately blocked. |
+| API payer connector boundary | `insurance_payer_connectors.connectorType=api` | **Implemented configuration boundary** | No payer endpoint is claimed active without evidence. |
+| Portal / website connector boundary | `insurance_payer_connectors.connectorType=portal` | **Implemented configuration boundary** | MEDORA does not bypass CAPTCHA, MFA, anti-bot or access controls; portal automation requires authorization and technical acceptance. |
+| Arabic / English | Existing bilingual product surface and insurance domain vocabulary | **Partially implemented** | Full bilingual insurance UI coverage must be verified page-by-page. |
+| Egypt readiness | Egypt-scoped authorization and compliance gates | **Implemented gating** | UHIA/EHA or insurer production certification is not claimed. |
 
-## Automated reporting and notifications
+## What was actually missing
 
-The current code supports a scheduled inventory-alert path authenticated by the Heartbeat/cron identity and restricted schedule creation. Report definitions and run history are now persisted with organization/jurisdiction scope, server-owned query keys, recipient checks, and idempotency fields; they remain draft/in-app-disabled by default. Automatic execution still requires a Heartbeat callback, timezone policy, delivery channel, retry/dead-letter behavior, and a user-visible audit trail. Clinical and financial reports should additionally require explicit role and export policy checks.
+The audit found that the previous documentation was too conservative in one direction and too broad in another. The repository already contained executable claims, preauthorization, remittance, appeal, and payer-contract procedures in `egypt-healthcare.ts`, so describing the insurance area as if claims/remittance were entirely absent understated the implementation. Conversely, the earlier documentation described a payer interoperability surface that did not yet have persisted connector profiles, structured coverage rules, attachment references, message records, or an immutable claim-event table. Those are now present.
 
-## Government and insurer integration prerequisites
+The new execution surface closes these concrete gaps:
 
-The new insurance policy layer is deliberately non-networked. It validates request identity, composite jurisdiction/organization scope, explicit lifecycle transitions, and credential readiness; it does not call a payer or infer approval. The reporting policy layer accepts only server-owned query keys and requires recipient authorization, scope, idempotency, and sensitive-data role checks. These are safe foundations, not a substitute for persisted workflows or external certification.
+1. **Payer adapter registry** — stores API vs portal connector type, endpoint reference, authentication reference, mapping verification, sandbox verification, and human acceptance state.
+2. **Coverage/benefit rules** — persists coverage percentage, co-pay, deductible, annual/visit limits, exclusions, preauthorization and referral requirements, with effective dates.
+3. **Claim event history** — records claim creation and subsequent database-level claim updates/status changes in an append-oriented event table with payload and record hashes.
+4. **Claim attachments** — stores only controlled document references and SHA-256 fingerprints; it does not expose arbitrary file bytes through the insurance router.
+5. **Payer communication queue** — records outbound/inbound message metadata and payload hashes while keeping network submission blocked.
+6. **Production-readiness enforcement** — payer connectors cannot be marked production-ready unless mappings, sandbox validation, rejection handling, and acceptance criteria are all verified.
 
-Government and payer integration cannot be confirmed from UI or policy names. Each country and organization type requires an official API or approved channel, current documentation, credentials, certificates or signing keys, identity and facility registration, test and production endpoints, data-processing permissions, incident contacts, and a local compliance owner. The existing regulatory documents are activation checklists and source notes, not proof that any integration is licensed or operational.
+## What is still deliberately not implemented
 
-## Recommended implementation order
+These are not defects to hide; they are external dependencies or infrastructure boundaries:
 
-The safest next product increments are: first, connect the persisted report definitions to a deployed Heartbeat callback and audited delivery worker; second, create an insurer integration boundary with eligibility and preauthorization interfaces but no live connector until credentials are supplied; third, add HR master data and payroll only after country-specific statutory requirements are verified; fourth, add promotion campaigns on top of the existing catalog and discount policies; and fifth, create government connector adapters behind explicit country and credential feature gates.
+- Live insurer API calls for eligibility, preauthorization, claims, status, remittance, or appeals.
+- Automated login to arbitrary insurer websites.
+- CAPTCHA/MFA/anti-bot bypass.
+- Payer adjudication logic that invents benefits or coverage when the payer has not supplied authoritative rules.
+- Production credentials, certificates, facility registrations, payer contracts, or regulatory approvals.
+- Universal Egyptian insurer mappings without insurer-specific technical contracts.
+- Automatic binary document ingestion/scanning unless a governed document-storage service is configured.
 
-## Explicit limitations
+## Truth boundary
 
-The current project does not contain every feature requested in the comparison-suite list. It contains a tested and security-focused healthcare ERP foundation with several adjacent modules and reusable policies. A claim that it is a complete ERP/CRM/HR/government/insurance replacement would be inaccurate until the missing database schemas, procedures, screens, integrations, acceptance tests, and credentials are implemented.
+The system may now persist and operate the **internal insurance workflow** end-to-end across eligibility, coverage rules, preauthorization, claims, attachments, remittance, appeals, communication records, and audit events. It must still report external connectivity as **blocked** until the payer supplies an approved endpoint/channel, authentication and certificate requirements, message schemas, mapping/validation evidence, sandbox acceptance, operational ownership, and production authorization.
+
+No UI label, seeded payer name, or configuration record is itself proof of live insurer connectivity or governmental certification.
+
+## Verification requirement
+
+After applying migration `0059_insurance_execution_surface.sql`, the repository's normal verification commands remain authoritative: `pnpm check`, `pnpm test`, and `pnpm build`. The GitHub connector used for this change can verify committed source state but cannot execute the project's local Node/PNPM test suite in this session; therefore no test pass is claimed here without a workflow result.
