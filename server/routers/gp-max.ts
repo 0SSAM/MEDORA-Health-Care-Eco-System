@@ -152,12 +152,19 @@ export const gpMaxRouter = router({
       return { plan, note: "الخطة مولّدة من التوصيات المفتوحة — لم تُحفظ في قاعدة البيانات بعد." };
     }),
 
-  /** إغلاق توصية */
+  /** إغلاق توصية — يجب أن تكون التوصية ضمن منظمة المستخدم */
   resolveRecommendation: protectedProcedure
-    .input(z.object({ id: z.number().int().positive() }))
-    .mutation(async ({ input }) => {
-      const db = await dbOrThrow();
-      await db.execute(sql`UPDATE gp_max_recommendations SET resolved=1 WHERE id=${input.id}`);
+    .input(z.object({ organizationId: z.number().int().positive(), id: z.number().int().positive() }))
+    .mutation(async ({ ctx, input }) => {
+      const db = await dbWithOrgScope(ctx as any, input.organizationId);
+      const result = (await db.execute(
+        sql`UPDATE gp_max_recommendations r
+            INNER JOIN gp_max_assessments a ON a.id = r.assessmentId
+            SET r.resolved=1
+            WHERE r.id=${input.id} AND a.organizationId=${input.organizationId}`
+      )) as any;
+      const affected = Number(result?.[0]?.affectedRows ?? result?.affectedRows ?? 0);
+      if (!affected) throw new TRPCError({ code: "NOT_FOUND", message: "التوصية غير موجودة ضمن نطاق المنظمة." });
       return { success: true };
     }),
 });
