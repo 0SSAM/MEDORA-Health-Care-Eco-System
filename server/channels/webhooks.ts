@@ -33,7 +33,7 @@ export function webhookRouter(): Router {
     // Meta's challenge is an opaque token that must be returned verbatim for
     // verification. Constrain it to a short, printable token and force the
     // response to remain non-HTML so it cannot become executable markup.
-    if (!/^[A-Za-z0-9._~:/?#[\]@!$'()*+,;=% -]{1,256}$/.test(challenge)) {
+    if (!/^[A-Za-z0-9._~:/?[\]@!$'()*+,;=% -]{1,256}$/.test(challenge)) {
       res.status(400).send("Invalid verification challenge");
       return;
     }
@@ -48,7 +48,13 @@ export function webhookRouter(): Router {
       const { messages, statuses } = parseWebhookPayload(req.body);
       const pool = getRawPool();
       for (const status of statuses) {
-        await pool.query("UPDATE channel_messages SET status=? WHERE platformMessageId=?", [status.status, status.id]);
+        // Never update a message outside the organization receiving this
+        // webhook. platformMessageId is provider-controlled input and is not
+        // itself a tenant boundary.
+        await pool.query(
+          "UPDATE channel_messages SET status=? WHERE organizationId=? AND platformMessageId=?",
+          [status.status, DEFAULT_ORG, status.id],
+        );
       }
       for (const m of messages) {
         const to = m.displayPhoneNumber || m.phoneNumberId;
@@ -58,8 +64,8 @@ export function webhookRouter(): Router {
         );
         const messageId = Number((rows as { insertId: number }).insertId);
         const [cust] = await pool.query(
-          "SELECT id, organizationId, branchId, jurisdictionId FROM customer_profiles WHERE phone=? LIMIT 1",
-          [m.from],
+          "SELECT id, organizationId, branchId, jurisdictionId FROM customer_profiles WHERE organizationId=? AND phone=? LIMIT 1",
+          [DEFAULT_ORG, m.from],
         );
         const customer = (cust as Array<{ id: number; organizationId: number; branchId: number | null; jurisdictionId: number | null }>)[0];
         const subject = m.body.length > 160 ? `${m.body.slice(0, 157)}...` : m.body || "WhatsApp message";
@@ -70,7 +76,7 @@ export function webhookRouter(): Router {
           [customer?.organizationId ?? DEFAULT_ORG, customer?.branchId ?? null, customer?.id ?? null, "whatsapp", "inbound", subject, "normal", "open", disposition, createdByUserId],
         );
         const ticketId = Number((ticket as { insertId: number }).insertId);
-        await pool.query("UPDATE channel_messages SET ticketId=? WHERE id=?", [ticketId, messageId]);
+        await pool.query("UPDATE channel_messages SET ticketId=? WHERE organizationId=? AND id=?", [ticketId, DEFAULT_ORG, messageId]);
       }
       res.sendStatus(200);
     } catch (err) {
@@ -92,11 +98,14 @@ export function webhookRouter(): Router {
         "INSERT INTO channel_calls (organizationId, platformCallSid, direction, fromNumber, toNumber, status, durationSeconds, recordingUrl) VALUES (?,?,?,?,?,?,?,?) ON DUPLICATE KEY UPDATE status=VALUES(status), durationSeconds=VALUES(durationSeconds), recordingUrl=VALUES(recordingUrl)",
         [DEFAULT_ORG, cb.callSid, cb.direction.startsWith("in") ? "inbound" : "outbound", cb.from, cb.to, cb.callStatus, cb.callDuration ? Number(cb.callDuration) : null, cb.recordingUrl || null],
       );
-      const [tickets] = await pool.query("SELECT id FROM call_tickets WHERE subject LIKE ? ORDER BY id DESC LIMIT 1", [`%${cb.to}%`]);
+      const [tickets] = await pool.query(
+        "SELECT id FROM call_tickets WHERE organizationId=? AND subject LIKE ? ORDER BY id DESC LIMIT 1",
+        [DEFAULT_ORG, `%${cb.to}%`],
+      );
       if ((tickets as Array<{ id: number }>).length && cb.callStatus) {
         const statusMap: Record<string, string> = { completed: "resolved", busy: "pending", "no-answer": "pending", failed: "pending", canceled: "pending" };
         const next = statusMap[cb.callStatus] ?? "pending";
-        await pool.query("UPDATE call_tickets SET status=? WHERE id=?", [next, (tickets as Array<{ id: number }>)[0].id]);
+        await pool.query("UPDATE call_tickets SET status=? WHERE organizationId=? AND id=?", [next, DEFAULT_ORG, (tickets as Array<{ id: number }>)[0].id]);
       }
       res.sendStatus(200);
     } catch (err) {
