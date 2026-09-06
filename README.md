@@ -46,9 +46,9 @@ Healthcare operations are fragmented across clinics, pharmacies, counters, suppl
 
 ## Product principles | مبادئ المنتج
 
-**Human authority stays in control.** AI is advisory-only; sensitive mutations remain subject to explicit server-side authorization and workflow controls.
+**Human authority stays in control.** The AI assistant is advisory-only; sensitive mutations remain subject to explicit server-side authorization and workflow controls.
 
-**الإنسان صاحب القرار.** الذكاء الاصطناعي استشاري فقط، وتظل التغييرات الحساسة خاضعة للتفويض الصريح من الخادم وضوابط سير العمل.
+**الإنسان صاحب القرار.** The AI assistant is advisory-only, وتظل التغييرات الحساسة خاضعة للتفويض الصريح من الخادم وضوابط سير العمل.
 
 **Scope is enforced at the server boundary.** Organization, branch, and jurisdiction are resolved from authenticated server-side context rather than trusted from arbitrary client input.
 
@@ -157,10 +157,11 @@ The source tree separates browser UI, server routers, database schema, shared co
 
 - Organization, branch, and jurisdiction scope is resolved server-side.
 - Sensitive workflows fail closed when required authorization or scope is unavailable.
-- AI is advisory-only.
+- The AI assistant is advisory-only.
 - Client-side capture protection is defense-in-depth; **browser code is never claimed to prevent OS-level or physical capture absolutely.**
 - No legal or regulatory certification is claimed by this repository.
 - Integration boundaries do not imply live external connectivity.
+- Jurisdiction ID `0` is a valid legal scope value and must not be treated as an invalid/missing identifier.
 
 ## Repository map | خريطة المستودع
 
