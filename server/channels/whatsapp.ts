@@ -26,7 +26,7 @@ export function verifyWebhook(query: Record<string, unknown>, expectedToken: str
   const mode = query["hub.mode"];
   const token = query["hub.verify_token"];
   const challenge = query["hub.challenge"];
-  if (mode === "subscribe" && token === expectedToken && typeof challenge === "string") {
+  if (expectedToken && mode === "subscribe" && token === expectedToken && typeof challenge === "string") {
     return challenge;
   }
   return null;
@@ -34,7 +34,7 @@ export function verifyWebhook(query: Record<string, unknown>, expectedToken: str
 
 /** Verify Meta's X-Hub-Signature-256 over the exact raw request body. */
 export function verifyWebhookSignature(appSecret: string, rawBody: Buffer, signature: string | undefined): boolean {
-  if (!appSecret || !signature || !signature.startsWith("sha256=")) return false;
+  if (!appSecret || !signature || !/^sha256=[0-9a-f]{64}$/i.test(signature)) return false;
   const supplied = Buffer.from(signature.slice("sha256=".length), "hex");
   const expected = createHmac("sha256", appSecret).update(rawBody).digest();
   return supplied.length === expected.length && timingSafeEqual(supplied, expected);
