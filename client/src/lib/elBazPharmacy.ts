@@ -10,11 +10,13 @@ export const EL_BAZ_PHARMACY = {
   logo: "/branding/el-baz-pharmacy-logo.svg",
   background: "/branding/el-baz-pharmacy-background.svg",
   palette: {
-    ink: "#0d1b2a",
-    teal: "#0f766e",
-    mist: "#e8fffb",
-    paper: "#f7fbfc",
-    silver: "#94a3b8",
+    ink: "#111827",
+    navy: "#243447",
+    teal: "#35a89a",
+    mist: "#eef5f3",
+    paper: "#f7f7f3",
+    silver: "#d7dde2",
+    slate: "#536273",
   },
   receipt: {
     title: "El-Baz Pharmacy | صيدلية الباز",
