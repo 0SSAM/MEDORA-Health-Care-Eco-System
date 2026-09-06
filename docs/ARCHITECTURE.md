@@ -49,6 +49,7 @@ Key pages: `Welcome.tsx`, `Login.tsx`, `Delivery.tsx`, `AdminConsole.tsx`, `Comp
 
 - `aiReview` router: daily job (cron `5 0 * * *` in `scheduled_jobs`) evaluates 11 reference tables; produces 0–100 scores per module and Arabic markdown reports with P0–P3 recommendations; `resolveRecommendation` workflow.
 - `assistant` and `aiInsights` routers provide conversational assistance and insights.
+- **AI Fabric:** `docs/MEDORA-AI-FABRIC.md` defines the shared context, authorization, provenance, evidence, tool-contract, evaluation, and MCP boundary that should govern all AI features. AI is advisory by default; executable actions must call the underlying authorized domain procedure rather than bypassing it. The effective boundary is identity → organization → branch/jurisdiction → role → permission → resource → purpose/policy → audit.
 
 ## 8. Backup & sync
 
@@ -62,3 +63,7 @@ Key pages: `Welcome.tsx`, `Login.tsx`, `Delivery.tsx`, `AdminConsole.tsx`, `Comp
 ## 10. GP MAX (growth audit, scaffold)
 
 Layer framework L0–L7 with checkpoints — tables in `drizzle/gp-max-schema.ts`, seed in `scripts/seed-gp-max.mjs`, plan in `docs/GP-MAX-PLAN-2026-08-28.md`. Router/UI wiring and full 140+ checkpoint import are the next step.
+
+## 11. Engineering rule
+
+Architecture documents describe the intended system boundary; they are not proof of implementation. Capability status is governed by `docs/MEDORA-CAPABILITY-TRUTH-MAP.md` and executable verification.
