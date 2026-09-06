@@ -83,7 +83,7 @@ jobs:
       - name: Stop isolated test server
         if: always()
         run: |
-          if [ -f /tmp/medora-verification.pid ]; then kill "$(cat /tmp/medora-verification.pid)" 2>/dev/null || true; fi
+          if [ -f /tmp/medora-verification-server.pid ]; then kill "$(cat /tmp/medora-verification-server.pid)" 2>/dev/null || true; fi
           pkill -f "server/_core/index.ts" 2>/dev/null || true
       - name: Build
         run: pnpm build
