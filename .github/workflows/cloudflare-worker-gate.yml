@@ -26,6 +26,11 @@ on:
       - "pnpm-lock.yaml"
       - ".github/workflows/cloudflare-worker-gate.yml"
 
+# Do not let an older Workers build remain authoritative after a newer push.
+concurrency:
+  group: cloudflare-worker-${{ github.ref }}
+  cancel-in-progress: true
+
 permissions:
   contents: read
 
