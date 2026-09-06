@@ -4,54 +4,40 @@ import { describe, expect, it } from "vitest";
 
 const projectFile = (path: string) => readFileSync(resolve(process.cwd(), path), "utf8");
 const appSource = projectFile("client/src/App.tsx");
-const homeSource = projectFile("client/src/pages/Home.tsx");
-const posSource = projectFile("client/src/components/PointOfSaleWorkspace.tsx");
+const demoSource = projectFile("client/src/pages/DemoWorkspace.tsx");
+const welcomeSource = projectFile("client/src/pages/Welcome.tsx");
 const dbSource = projectFile("server/db.ts");
 const routerSource = projectFile("server/routers.ts");
-const erpSource = projectFile("server/routers/erp.ts");
-const organizationSource = projectFile("server/routers/organizations.ts");
 const trpcSource = projectFile("server/_core/trpc.ts");
-const schemaSource = projectFile("drizzle/schema.ts");
-const testSetupSource = projectFile("server/test.setup.ts");
-const ciSource = projectFile(".github/workflows/ci.yml");
 
-describe("retired Test account and isolated-workspace removal contract", () => {
-  it("does not retain a runnable Test/showcase bootstrap, session-mode, or POS path", () => {
-    const runtimeSources = [dbSource, routerSource, erpSource, homeSource, posSource];
-    for (const source of runtimeSources) {
-      expect(source).not.toMatch(/ensureShowcaseAccount|seedShowcaseDemoData|switchInternalSessionMode|sessionModes|commitShowcaseSale|demoCatalog|demoTrialInvoices|DemoExperienceWorkspace/iu);
-    }
-    expect(routerSource).not.toMatch(/sessionMode|showcase/iu);
-    expect(erpSource).not.toMatch(/sessionMode|showcase/iu);
-    expect(homeSource).not.toMatch(/sessionMode|showcase/iu);
-    expect(posSource).not.toMatch(/sessionMode|showcase/iu);
-  });
-
-  it("removes the retired identity from executable configuration and schema contracts", () => {
-    for (const source of [dbSource, routerSource, schemaSource, testSetupSource, ciSource]) {
-      expect(source).not.toMatch(/SHOWCASE_TEST_PASSWORD|medora-showcase|pharmacist\.demo|cashier\.demo/iu);
-    }
-    expect(schemaSource).not.toMatch(/environment\("environment"\)|accountType\("accountType"\)|sessionMode\("sessionMode"\)|showcase_mutation_simulated/iu);
-  });
-
-  it("keeps the supported MEDORA surface and standard fail-closed guards", () => {
-    for (const route of ["/login", "/workspace", "/sales", "/pos", "/operations", "/finance", "/admin"]) {
-      expect(appSource).toContain(`path={"${route}"}`);
-    }
-    // Public landing/demo surfaces intentionally bypass the NDA gate; every other surface remains inside it.
-    expect(appSource).toContain("NdaAccessGate");
+describe("anonymous visitor sandbox contract", () => {
+  it("provides a public demo route without creating a production identity", () => {
+    expect(appSource).toContain('path={"/demo"} component={DemoWorkspace}');
     expect(appSource).toContain("isPublicSurface");
-    expect(appSource).toContain("<NdaAccessGate>{app}</NdaAccessGate>");
-    expect(appSource).toContain("<Router />");
+    expect(appSource).toContain("NdaAccessGate");
+    expect(demoSource).toContain('const STORAGE_KEY = "medora-demo-sandbox-v1"');
+    expect(demoSource).toContain("sessionStorage.getItem(STORAGE_KEY)");
+    expect(demoSource).toContain("sessionStorage.setItem(STORAGE_KEY, JSON.stringify(state))");
+    expect(demoSource).toContain("sessionStorage.removeItem(STORAGE_KEY)");
+    expect(demoSource).toContain("Anonymous Admin Sandbox");
+    expect(demoSource).toContain("No username");
+    expect(demoSource).toContain("No password");
+  });
+
+  it("keeps the visitor surface explicitly separated from production authentication", () => {
+    expect(welcomeSource).toContain("Public preview must stay independent of production auth/tRPC APIs.");
+    expect(welcomeSource).not.toContain("useAuth");
+    expect(demoSource).not.toContain("SHOWCASE_TEST_PASSWORD");
+    expect(demoSource).not.toContain("DATABASE_URL");
+    expect(dbSource).not.toMatch(/ensureShowcaseAccount|seedShowcaseDemoData|medora-showcase|pharmacist\.demo|cashier\.demo/iu);
+    expect(routerSource).not.toMatch(/ensureShowcaseAccount|seedShowcaseDemoData|medora-showcase|pharmacist\.demo|cashier\.demo/iu);
+  });
+
+  it("preserves fail-closed production authentication and authorization", () => {
     expect(trpcSource).toContain('throw new TRPCError({ code: "UNAUTHORIZED", message: UNAUTHED_ERR_MSG })');
     expect(trpcSource).toContain("hasCurrentNdaAcceptance");
     expect(trpcSource).toContain("export const protectedProcedure");
     expect(routerSource).toContain("internalLogin:");
     expect(routerSource).toContain("getInternalCredentialByUsername");
-    expect(dbSource).toContain("eq(organizationMemberships.active, 1)");
-    expect(dbSource).toContain("eq(branches.active, 1)");
-    expect(dbSource).toContain("eq(branchUsers.active, 1)");
-    expect(dbSource).toContain("eq(branchJurisdictions.jurisdictionId, internalSessions.jurisdictionId)");
-    expect(organizationSource).toMatch(/organizationId:\s*z\.number\(\)\.int\(\)\.positive\(\).*branchId:\s*z\.number\(\)\.int\(\)\.positive\(\).*jurisdictionId:\s*z\.number\(\)\.int\(\)\.positive\(\)/u);
   });
 });
