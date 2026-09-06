@@ -17,7 +17,7 @@ The AI assistant is advisory-only. It may explain information, surface signals, 
 
 ## Security and capture boundary
 
-Browser code is never claimed to prevent OS-level or physical capture absolutely. Client-side capture protections are treated as defense-in-depth rather than an absolute security boundary.
+browser code is never claimed to prevent OS-level or physical capture absolutely. Client-side capture protections are treated as defense-in-depth rather than an absolute security boundary.
 
 ## Compliance statement
 
