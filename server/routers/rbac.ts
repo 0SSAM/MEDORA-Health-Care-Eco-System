@@ -3,6 +3,7 @@
  *
  * Multi-tenant RBAC: every target user and role is explicitly scoped to the
  * requested organization. Platform admins retain the documented super-admin bypass.
+ * The platform-admin identity is immutable through tenant RBAC controls.
  */
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
@@ -31,10 +32,22 @@ async function dbWithOrgScope(ctx: { user: CtxUser }, organizationId: number) {
 /** Never allow RBAC mutations/queries to target a user outside the tenant. */
 async function assertUserInOrg(db: any, organizationId: number, userId: number) {
   const rows = (await db.execute(
-    sql`SELECT id FROM organization_memberships WHERE organizationId=${organizationId} AND userId=${userId} AND active=1 LIMIT 1`
+    sql`SELECT id, user_id FROM organization_memberships WHERE organizationId=${organizationId} AND userId=${userId} AND active=1 LIMIT 1`
   )) as any;
   if (!rows?.[0]?.[0]) {
     throw new TRPCError({ code: "BAD_REQUEST", message: "المستخدم ليس عضوًا فعّالًا في المنظمة المحددة." });
+  }
+}
+
+/** Platform-admin identities cannot be changed through ordinary tenant RBAC. */
+async function assertTargetIsNotPlatformAdmin(db: any, userId: number, actorId: number) {
+  if (userId === actorId) {
+    throw new TRPCError({ code: "FORBIDDEN", message: "Platform administrator privileges cannot be changed through RBAC." });
+  }
+  const rows = (await db.execute(sql`SELECT role FROM users WHERE id=${userId} LIMIT 1`)) as any;
+  const targetRole = rows?.[0]?.[0]?.role;
+  if (targetRole === "admin") {
+    throw new TRPCError({ code: "FORBIDDEN", message: "The platform administrator account is immutable through RBAC." });
   }
 }
 
@@ -128,13 +141,11 @@ export const rbacRouter = router({
         const requested = new Set(input.patch.permissionCodes);
         const found = new Set(permissions.map((p: any) => p.code as string));
         if (found.size !== requested.size || Array.from(requested).some((code) => !found.has(code))) throw new TRPCError({ code: "BAD_REQUEST", message: "يوجد رمز صلاحية غير معروف." });
-        try {
-          await db.transaction(async (tx: any) => {
-            await tx.execute(sql`UPDATE rbac_roles SET code=${input.patch.code ?? role.code}, name_ar=${input.patch.nameAr ?? role.name_ar}, name_en=${input.patch.nameEn ?? role.name_en}, description=${input.patch.description ?? role.description} WHERE id=${input.roleId} AND organization_id=${orgId}`);
-            await tx.execute(sql`DELETE FROM rbac_role_permissions WHERE role_id=${input.roleId}`);
-            for (const p of permissions) await tx.execute(sql`INSERT INTO rbac_role_permissions (role_id, permission_id) VALUES (${input.roleId}, ${p.id})`);
-          });
-        } catch (error) { throw error; }
+        await db.transaction(async (tx: any) => {
+          await tx.execute(sql`UPDATE rbac_roles SET code=${input.patch.code ?? role.code}, name_ar=${input.patch.nameAr ?? role.name_ar}, name_en=${input.patch.nameEn ?? role.name_en}, description=${input.patch.description ?? role.description} WHERE id=${input.roleId} AND organization_id=${orgId}`);
+          await tx.execute(sql`DELETE FROM rbac_role_permissions WHERE role_id=${input.roleId}`);
+          for (const p of permissions) await tx.execute(sql`INSERT INTO rbac_role_permissions (role_id, permission_id) VALUES (${input.roleId}, ${p.id})`);
+        });
       } else {
         await db.execute(sql`UPDATE rbac_roles SET code=${input.patch.code ?? role.code}, name_ar=${input.patch.nameAr ?? role.name_ar}, name_en=${input.patch.nameEn ?? role.name_en}, description=${input.patch.description ?? role.description} WHERE id=${input.roleId} AND organization_id=${orgId}`);
       }
@@ -165,6 +176,7 @@ export const rbacRouter = router({
       const db = await dbWithOrgScope(ctx as any, input.organizationId);
       await assertPermission(db, input.organizationId, (ctx as any).user.id, "admin.users.assign");
       await assertUserInOrg(db, input.organizationId, input.userId);
+      await assertTargetIsNotPlatformAdmin(db, input.userId, (ctx as any).user.id);
       const roleRows = (await db.execute(sql`SELECT id FROM rbac_roles WHERE id=${input.roleId} AND organization_id=${input.organizationId} LIMIT 1`)) as any;
       if (!roleRows?.[0]?.[0]) throw new TRPCError({ code: "BAD_REQUEST", message: "الدور لا ينتمي إلى المنظمة المحددة." });
       await db.execute(sql`INSERT IGNORE INTO rbac_user_roles (organization_id, user_id, role_id, granted_by_user_id) VALUES (${input.organizationId}, ${input.userId}, ${input.roleId}, ${(ctx as any).user.id})`);
@@ -177,6 +189,7 @@ export const rbacRouter = router({
       const db = await dbWithOrgScope(ctx as any, input.organizationId);
       await assertPermission(db, input.organizationId, (ctx as any).user.id, "admin.users.revoke");
       await assertUserInOrg(db, input.organizationId, input.userId);
+      await assertTargetIsNotPlatformAdmin(db, input.userId, (ctx as any).user.id);
       await db.execute(sql`DELETE FROM rbac_user_roles WHERE organization_id=${input.organizationId} AND user_id=${input.userId} AND role_id=${input.roleId}`);
       return { ok: true };
     }),
