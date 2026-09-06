@@ -13,6 +13,7 @@ const ComplianceCenterPage = lazy(() => import("./pages/ComplianceCenter"));
 const FinanceHubPage = lazy(() => import("./pages/FinanceHub"));
 const SupplyHubPage = lazy(() => import("./pages/SupplyHub"));
 const QualityCenterPage = lazy(() => import("./pages/QualityCenter"));
+const ElBazPharmacyPage = lazy(() => import("./pages/ElBazPharmacy"));
 const Login = lazy(() => import("@/pages/Login"));
 const AdminConsole = lazy(() => import("@/pages/AdminConsole"));
 const NotFound = lazy(() => import("@/pages/NotFound"));
@@ -29,6 +30,7 @@ function Router() {
       <Switch>
         <Route path={"/login"} component={Login} />
         <Route path={"/demo"} component={DemoWorkspace} />
+        <Route path={"/pharmacy/el-baz"} component={ElBazPharmacyPage} />
         <Route path={"/sales"} component={Home} />
         <Route path={"/workspace"} component={Home} />
         <Route path={"/pos"} component={Home} />
@@ -58,8 +60,6 @@ function RouteLoadingState() {
 
 function App() {
   // Public preview surfaces must never depend on the production auth/NDA API.
-  // Welcome and DemoWorkspace are intentionally eager imports so a missing
-  // Vite dynamic chunk can never strand the public preview on a spinner.
   const pathname = typeof window !== "undefined" ? window.location.pathname : "/";
   const isPublicSurface = /^\/(?:demo)?\/?$/.test(pathname);
 
