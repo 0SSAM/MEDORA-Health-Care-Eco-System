@@ -85,9 +85,10 @@ export default function GpMax() {
   };
 
   const resolveRec = async (id: number) => {
-    await act(async () => call("gpMax.resolveRecommendation", { id }), "أُغلقت التوصية ✅");
-    await refresh();
     const oid = orgId();
+    const result = await act(async () => call("gpMax.resolveRecommendation", { id, organizationId: oid }), "أُغلقت التوصية ✅");
+    if (!result) return;
+    await refresh();
     const latest = await call("gpMax.latestAssessment", { organizationId: oid });
     if (latest) setAssessment(latest);
   };
@@ -188,17 +189,11 @@ export default function GpMax() {
               <p style={{ fontSize: 12, color: "#64748b", margin: 0 }}>{planNote}</p>
             </div>
             {plan.map((w) => (
-              <div key={w.week} style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 12, padding: 16 }}>
-                <h3 style={{ margin: "0 0 8px", fontSize: 15, color: "#0d1b2a" }}>📅 {w.title}</h3>
-                {w.items.length === 0 ? <span style={{ fontSize: 13, color: "#94a3b8" }}>لا بنود</span> :
-                  w.items.map((it) => (
-                    <div key={it.id} style={{ borderTop: "1px solid #f1f5f9", padding: "7px 0", fontSize: 13, display: "flex", gap: 8 }}>
-                      <b style={{ color: "#0369a1" }}>{it.priority}</b> <span>{it.recommendationAr}</span>
-                    </div>
-                  ))}
+              <div key={w.week} style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 12, padding: 14 }}>
+                <h3 style={{ margin: "0 0 8px", fontSize: 15 }}>{w.title}</h3>
+                {w.items.length ? w.items.map((it) => <div key={it.id} style={{ borderTop: "1px solid #f1f5f9", padding: "7px 0", fontSize: 13 }}><b>{it.priority}</b> {it.recommendationAr}</div>) : <div style={{ color: "#64748b", fontSize: 13 }}>لا توجد توصيات في هذا الأسبوع.</div>}
               </div>
             ))}
-            {plan.length === 0 && !planNote && <div style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 12, padding: 16, fontSize: 13 }}>شغّل تدقيقًا أولًا ثم ولّد الخطة.</div>}
           </section>
         )}
       </div>
