@@ -6,6 +6,11 @@ on:
   pull_request:
     branches: [main]
 
+# Keep only the newest ERP verification run for a branch.
+concurrency:
+  group: enterprise-erp-${{ github.ref }}
+  cancel-in-progress: true
+
 permissions:
   contents: read
 
