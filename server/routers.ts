@@ -13,6 +13,7 @@ import { organizationsRouter } from "./routers/organizations";
 import { notificationsRouter } from "./routers/notifications";
 import { reportsRouter } from "./routers/reports";
 import { insuranceRouter } from "./routers/insurance";
+import { insuranceExecutionRouter } from "./routers/insurance-execution";
 import { promotionsRouter } from "./routers/promotions";
 import { egyptHealthcareRouter } from "./routers/egypt-healthcare";
 import { operationsRouter } from "./routers/operations";
@@ -232,16 +233,10 @@ export const appRouter = router({
         await recordLoginFailure({ username, userId: credential.userId, ...scope, eventType: "login_failure", source: "internal" });
         return invalid();
       }
-      // `scope.role` is deliberately the organization-membership role used for
-      // tenant scope/audit records. Return the app role separately so callers do
-      // not mislabel a cashier as the membership fallback (`staff`).
       const applicationRole = authenticatedUser.role;
       const token = createInternalSessionToken();
       await createInternalSession({ token, userId: credential.userId, ...scope, expiresAt: new Date(now.getTime() + INTERNAL_SESSION_TTL_MS) });
       await recordAuthenticationEvent({ username, userId: credential.userId, ...scope, eventType: "login_success", source: "internal" });
-      // An employee login is an intentional identity boundary. Clear any older
-      // OAuth session before issuing the internal cookie so `createContext`
-      // cannot select a prior account ahead of this role-scoped session.
       ctx.res.clearCookie(COOKIE_NAME, getSessionCookieOptions(ctx.req));
       ctx.res.cookie(INTERNAL_SESSION_COOKIE, token, { httpOnly: true, sameSite: "lax", secure: isSecureRequest(ctx.req), maxAge: INTERNAL_SESSION_TTL_MS, path: "/" });
       return { success: true as const, mode: "internal" as const, scope, role: applicationRole, organizationRole: scope.role };
@@ -262,7 +257,6 @@ export const appRouter = router({
       const token = createInternalSessionToken();
       await createPasswordResetToken({ userId: credential.userId, credentialId: credential.id, token, expiresAt: new Date(Date.now() + 30 * 60 * 1000) });
       await recordAuthenticationEvent({ username, userId: credential.userId, eventType: "password_reset_requested", source: "internal" });
-      // Token delivery is intentionally not returned to the browser. A verified email/OTP adapter must be configured before production delivery.
       return generic;
     }),
     resetPassword: publicProcedure.input(z.object({ token: z.string().min(32).max(200), password: z.string().min(12).max(200), confirmPassword: z.string().min(12).max(200) })).mutation(async ({ input }) => {
@@ -301,6 +295,7 @@ export const appRouter = router({
   notifications: notificationsRouter,
   reports: reportsRouter,
   insurance: insuranceRouter,
+  insuranceExecution: insuranceExecutionRouter,
   promotions: promotionsRouter,
   egyptHealthcare: egyptHealthcareRouter,
   operations: operationsRouter,
