@@ -54,18 +54,17 @@ async function ensureTables(db: any): Promise<void> {
       ts BIGINT NOT NULL,
       created_at DATETIME NOT NULL,
       INDEX idx_sync_org_ts (organization_id, ts),
-      UNIQUE KEY uq_sync_key (entity_type, entity_id, device_id, ts)
+      UNIQUE KEY uq_sync_key (organization_id, entity_type, entity_id, device_id, ts)
     )
   `);
 
-  // Upgrade the legacy table in-place when it already exists. Existing rows
+  // Upgrade the legacy outbox in-place when it already exists. Existing rows
   // remain NULL-scoped and are deliberately excluded by all tenant queries;
   // they can never become visible to an authenticated organization by accident.
   try {
     await db.execute(sql`ALTER TABLE sync_outbox ADD COLUMN IF NOT EXISTS organization_id INT NULL`);
   } catch {
-    // Older MySQL-compatible engines may not support IF NOT EXISTS here. The
-    // initial CREATE TABLE path still provides the column for fresh installs.
+    // Older MySQL-compatible engines may not support IF NOT EXISTS here.
   }
   try {
     await db.execute(sql`ALTER TABLE sync_outbox DROP INDEX uq_sync_key`);
@@ -75,16 +74,19 @@ async function ensureTables(db: any): Promise<void> {
   try {
     await db.execute(sql`ALTER TABLE sync_outbox ADD UNIQUE KEY uq_sync_key (organization_id, entity_type, entity_id, device_id, ts)`);
   } catch {
-    // The index may already exist after a concurrent/previous migration.
+    // The index may already exist after a previous migration.
   }
   try {
     await db.execute(sql`ALTER TABLE sync_outbox ADD INDEX idx_sync_org_ts (organization_id, ts)`);
   } catch {
-    // The index may already exist after a concurrent/previous migration.
+    // The index may already exist after a previous migration.
   }
 
+  // Use a versioned metadata table instead of mutating the legacy single-key
+  // sync_meta table. This avoids cross-tenant primary-key collisions for old
+  // device rows while keeping the old table harmless and unread.
   await db.execute(sql`
-    CREATE TABLE IF NOT EXISTS sync_meta (
+    CREATE TABLE IF NOT EXISTS sync_meta_v2 (
       organization_id INT NOT NULL,
       device_id VARCHAR(128) NOT NULL,
       last_pulled_at BIGINT NOT NULL DEFAULT 0,
@@ -92,12 +94,6 @@ async function ensureTables(db: any): Promise<void> {
       PRIMARY KEY (organization_id, device_id)
     )
   `);
-  try {
-    await db.execute(sql`ALTER TABLE sync_meta ADD COLUMN IF NOT EXISTS organization_id INT NULL`);
-  } catch {
-    // Fresh installs already include organization_id; retain compatibility with
-    // older engines where ALTER ... IF NOT EXISTS is unavailable.
-  }
 }
 
 export const syncRouter = router({
@@ -121,7 +117,7 @@ export const syncRouter = router({
             ORDER BY ts ASC LIMIT 1000`,
       );
       await db.execute(
-        sql`INSERT INTO sync_meta (organization_id, device_id, last_pulled_at, updated_at)
+        sql`INSERT INTO sync_meta_v2 (organization_id, device_id, last_pulled_at, updated_at)
             VALUES (${input.organizationId}, ${input.deviceId}, ${Date.now()}, NOW())
             ON DUPLICATE KEY UPDATE last_pulled_at=VALUES(last_pulled_at), updated_at=NOW()`,
       );
@@ -172,7 +168,7 @@ export const syncRouter = router({
       `);
       const meta: any = await db.execute(sql`
         SELECT device_id, last_pulled_at
-        FROM sync_meta
+        FROM sync_meta_v2
         WHERE organization_id=${input.organizationId}
         ORDER BY updated_at DESC LIMIT 20
       `);
