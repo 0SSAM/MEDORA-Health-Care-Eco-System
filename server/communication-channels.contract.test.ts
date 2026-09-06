@@ -15,10 +15,17 @@ describe("communication channels contract", () => {
     expect(index).toContain("/api/channels");
   });
 
-  it("documents required env vars in .env.example", () => {
+  it("documents required provider secrets in .env.example", () => {
     const env = readFileSync(".env.example", "utf-8");
-    for (const key of ["WHATSAPP_ACCESS_TOKEN", "WHATSAPP_PHONE_NUMBER_ID", "WHATSAPP_WEBHOOK_VERIFY_TOKEN", "TWILIO_ACCOUNT_SID", "TWILIO_AUTH_TOKEN", "TWILIO_FROM_NUMBER"]) {
+    for (const key of ["WHATSAPP_ACCESS_TOKEN", "WHATSAPP_PHONE_NUMBER_ID", "WHATSAPP_WEBHOOK_VERIFY_TOKEN", "WHATSAPP_APP_SECRET", "TWILIO_ACCOUNT_SID", "TWILIO_AUTH_TOKEN", "TWILIO_FROM_NUMBER"]) {
       expect(env, `${key} missing from .env.example`).toContain(key);
     }
+  });
+
+  it("requires signature verification before provider callback mutations", () => {
+    const webhooks = readFileSync("server/channels/webhooks.ts", "utf-8");
+    expect(webhooks).toContain("verifyWebhookSignature");
+    expect(webhooks).toContain("verifyTwilioRequest");
+    expect(webhooks).toContain("Webhook signature verification failed");
   });
 });
