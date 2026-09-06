@@ -117,7 +117,7 @@ export default function DemoWorkspace() {
             </div>
             <h1 className="text-2xl font-bold tracking-tight">{en ? "MEDORA Visitor Workspace" : "مساحة زائر MEDORA"}</h1>
             <p className="mt-1 max-w-3xl text-sm text-muted-foreground">
-              {en ? "Explore admin-like workflows with synthetic data. No username, no password, no employee account, and no production database writes." : "استكشف تدفقات شبيهة بالإدارة باستخدام بيانات اصطناعية. بلا اسم مستخدم أو كلمة مرور أو حساب موظف أو كتابة في قاعدة الإنتاج."}
+              {en ? "Explore admin-like workflows with synthetic data. No username. No password. No employee account. No production database writes." : "استكشف تدفقات شبيهة بالإدارة باستخدام بيانات اصطناعية. بلا اسم مستخدم أو كلمة مرور أو حساب موظف أو كتابة في قاعدة الإنتاج."}
             </p>
           </div>
           <Button variant="outline" onClick={reset}><RefreshCw className="me-2 h-4 w-4" />{en ? "Reset sandbox" : "إعادة البيئة"}</Button>
