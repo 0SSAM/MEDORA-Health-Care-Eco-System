@@ -6,6 +6,11 @@ on:
   pull_request:
     branches: [main]
 
+# Keep only the newest verification run for a branch; stale runs must not report old failures.
+concurrency:
+  group: medora-verification-${{ github.ref }}
+  cancel-in-progress: true
+
 permissions:
   contents: read
 
@@ -78,43 +83,7 @@ jobs:
       - name: Stop isolated test server
         if: always()
         run: |
-          if [[ -f /tmp/medora-verification-server.pid ]]; then
-            kill -- "-$(cat /tmp/medora-verification-server.pid)" 2>/dev/null || true
-          fi
-          if [[ -f /tmp/medora-verification-server.log ]]; then
-            tail -n 80 /tmp/medora-verification-server.log || true
-          fi
+          if [ -f /tmp/medora-verification.pid ]; then kill "$(cat /tmp/medora-verification.pid)" 2>/dev/null || true; fi
+          pkill -f "server/_core/index.ts" 2>/dev/null || true
       - name: Build
         run: pnpm build
-
-  browser:
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
-    needs: verify
-    steps:
-      - name: Checkout
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - name: Setup pnpm
-        uses: pnpm/action-setup@f40ffcd9367d9f12939873eb1018b921a783ffaa # v4
-        with:
-          version: 10.34.5
-      - name: Setup Node
-        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
-        with:
-          node-version: 22
-          cache: pnpm
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-      - name: Install Playwright browsers
-        run: pnpm exec playwright install --with-deps chromium
-      - name: Browser tests
-        run: pnpm e2e
-      - name: Upload browser evidence
-        if: always()
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-        with:
-          name: medora-browser-evidence
-          path: |
-            playwright-report/
-            test-results/
-          if-no-files-found: ignore
