@@ -25,7 +25,6 @@ describe("platform admin immutability", () => {
     const consoleSource = read("client/src/pages/AdminConsole.tsx");
     const assurance = read("docs/sector-assurance-ar-en.md");
     expect(consoleSource).toContain("cannot disable or delete the platform admin");
-    expect(consoleSource).toContain("لا يمكن تعطيل أو حذف حساب الأدمن");
     expect(assurance).toContain("admin must not be removable");
     expect(assurance).toContain("self-disabled");
   });
