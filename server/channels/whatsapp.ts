@@ -3,6 +3,8 @@
  * Webhook verification (GET) + inbound message/status parsing + outbound payload builders.
  * API shape verified against Meta for Developers docs (2026).
  */
+import { createHmac, timingSafeEqual } from "node:crypto";
+
 export interface WaMessage {
   from: string;
   id: string;
@@ -28,6 +30,14 @@ export function verifyWebhook(query: Record<string, unknown>, expectedToken: str
     return challenge;
   }
   return null;
+}
+
+/** Verify Meta's X-Hub-Signature-256 over the exact raw request body. */
+export function verifyWebhookSignature(appSecret: string, rawBody: Buffer, signature: string | undefined): boolean {
+  if (!appSecret || !signature || !signature.startsWith("sha256=")) return false;
+  const supplied = Buffer.from(signature.slice("sha256=".length), "hex");
+  const expected = createHmac("sha256", appSecret).update(rawBody).digest();
+  return supplied.length === expected.length && timingSafeEqual(supplied, expected);
 }
 
 export function parseWebhookPayload(body: unknown): {
