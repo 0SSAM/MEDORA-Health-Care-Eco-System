@@ -1,92 +1,279 @@
-# MEDORA Health Care Eco System
+# MEDORA — Integrated Health Care Ecosystem
 
-> ميدورا — نظام رعاية صحية متكامل، مجاني ومفتوح المصدر (MIT) | Integrated, free & open-source healthcare platform.
+> **One intelligent ecosystem for connected healthcare.**  
+> **منظومة ذكية واحدة لرعاية صحية مترابطة.**
 
-## Safety boundaries — حدود السلامة (دوّنها بلا مبالغة)
+MEDORA is an open-source healthcare platform that brings clinical workflows, enterprise operations, pharmacy, commerce, delivery, workforce, intelligence, governance, and healthcare administration into one scoped system.
 
-- **Organization, branch, and jurisdiction**: every record is scoped to an organization, branch, and jurisdiction.
-- **Jurisdiction ID `0` is a valid legal scope**: النظام يتعامل مع النطاق القانوني `0` كنطاق صالح (لا يُعامل كـ"غير محدد").
-- **The AI assistant is advisory-only**: توصيات الذكاء الاصطناعي استشارية فقط ولا تُتخذ كقرار سريري أو قانوني.
-- **browser code is never claimed to prevent OS-level or physical capture absolutely** — لا تدّعي حماية شاشة المتصفح منع الالتقاط على مستوى النظام أو الفيزيائي بشكل مطلق.
-- **No legal or regulatory certification is claimed**: لا يُدعى أي اعتماد قانوني أو تنظيمي (لا FDA/EMA ولا EDA/UPA إلا عبر الموصلات الرسمية عند التفعيل).
+**ميدورا** منصة رعاية صحية مفتوحة المصدر تجمع المسارات السريرية، والعمليات المؤسسية، والصيدلة، والتجارة، والتوصيل، والموارد البشرية، والذكاء، والحوكمة، والإدارة الصحية في منظومة واحدة ذات نطاقات صلاحيات واضحة.
+
+> **Truth over hype — الحقيقة قبل التسويق:** MEDORA documents implemented capabilities separately from integration-ready and future capabilities. It does **not** claim live governmental or insurer certification unless the external party has supplied and approved the required production integration contract.
 
 ---
 
-## Features & Modules — المكوّنات
+## 🌐 MEDORA at a glance — نظرة شاملة
 
-| الوحدة | الوصف |
-|---|---|
-| CRM / ERP / HR / POS | إدارة العملاء، المحاسبة، الموارد البشرية، نقطة البيع |
-| Egyptian drug catalog | قاعدة الأدوية المصرية (25,094 دواء) في `data/egyptian-drugs.csv` |
-| e-Prescriptions | وصفات إلكترونية مربوطة بـ ICD-11 (`icd11_code`, `icd11_version`) |
-| Delivery | خدمة التوصيل: مناطق (8)، طلبات، سائقون، تتبع |
-| AI Review / GP MAX | مراجعة آلية للنمو (L0–L7, 96 نقطة) + حاسبة KPI وخطة 30 يومًا |
-| RBAC | 73 صلاحية × 10 أدوار عبر حساب الأدمن |
-| Offline sync | مزامنة عدم الاتصال (Outbox + LWW) — `shared/sync-engine.ts`, `server/routers/sync.ts` |
-| PWA | تثبيت كتطبيق (manifest, service worker) على جميع الأجهزة |
+| Domain | English | العربية |
+|---|---|---|
+| Clinical | Patients, appointments, encounters, referrals, e-prescriptions, ICD-11 | المرضى، المواعيد، الزيارات، الإحالات، الوصفات الإلكترونية، ICD-11 |
+| Enterprise | ERP, CRM, HR, POS, inventory, finance, procurement | ERP وCRM والموارد البشرية ونقطة البيع والمخزون والمالية والمشتريات |
+| Pharmacy | Egyptian drug catalog, dispensing controls, stock and fulfillment | قاعدة الأدوية المصرية، ضوابط الصرف، المخزون والتنفيذ |
+| Insurance | Eligibility, coverage, preauthorization, claims, contracts, remittance, appeals foundations | الأهلية والتغطية، الموافقات المسبقة، المطالبات، العقود، التسويات، والاستئنافات |
+| Workforce | Attendance, GPS geofence, biometric/tamper policy, KPI | الحضور، السياج الجغرافي، القياسات الحيوية، مكافحة العبث، مؤشرات الأداء |
+| Delivery | Zones, orders, drivers, tracking | المناطق، الطلبات، السائقون، التتبع |
+| Intelligence | GP MAX, KPI, AI review and governance boundaries | GP MAX ومؤشرات الأداء والمراجعة الذكية وحدود حوكمة الذكاء الاصطناعي |
+| Communications | WhatsApp Cloud API and Twilio voice integration boundaries | تكامل WhatsApp وTwilio وحدود قنوات الاتصال |
+| Platform | PWA, offline outbox/LWW synchronization, scoped RBAC | PWA ومزامنة عدم الاتصال وRBAC متعدد النطاقات |
 
-## Requirements — المتطلبات
+---
 
-- Node.js ≥ 22، npm ≥ 10، MySQL/MariaDB (أو Docker).
+## 🛡️ Security & safety — الأمن والسلامة
 
-## Quick start — التشغيل السريع
+- Organization, branch, and jurisdiction scoping is enforced on audited current paths.
+- **النطاق المؤسسي والفرع والاختصاص القانوني** جزء من حدود الوصول في المسارات المدققة.
+- Jurisdiction ID `0` is a valid legal scope and is never treated as “missing”.
+- The AI assistant is **advisory-only**; it does not replace clinical, legal, or operational accountability.
+- Sensitive workflows use authorization, auditability, idempotency, and explicit external-submission boundaries where applicable.
+- Browser-side controls are never represented as absolute protection against OS-level or physical capture.
+- MEDORA does not claim FDA/EMA, EDA/UPA, UHIA/EHA, or insurer certification without the corresponding external authorization and evidence.
+
+---
+
+# 🏥 Insurance — التأمين الصحي
+
+Insurance is a **first-class MEDORA domain**, designed around payer/provider interoperability rather than a single insurer's proprietary workflow.
+
+التأمين في MEDORA **وحدة أساسية مستقلة** صُممت للتكامل مع جهات الدفع ومقدمي التأمين، وليس للارتباط بشركة واحدة فقط.
+
+### Current foundation — الأساس الحالي
+
+MEDORA currently contains a policy-first internal foundation for:
+
+- Insurance members and scoped coverage data
+- Payer contracts
+- Eligibility / coverage requests
+- Preauthorization requests
+- Claims and claim lifecycle foundations
+- Remittance records
+- Appeals foundations
+- Organization / jurisdiction / branch authorization
+- Hashed or protected member references where required
+- Idempotent operations for applicable workflows
+- Explicit blocked/external-submission states
+- Audit-oriented lifecycle data
+
+توجد بالفعل بنية داخلية للمؤمَّن عليهم، وعقود جهات الدفع، وطلبات الأهلية والتغطية، والموافقات المسبقة، والمطالبات، والتسويات، والاستئنافات، مع عزل الصلاحيات والنطاقات والتدقيق ومنع الإرسال الخارجي غير المصرح به.
+
+### Payer interoperability — التوافق مع مواقع وأنظمة شركات التأمين
+
+MEDORA is designed around a **Payer Adapter / Connector boundary** so that each insurer can be integrated without contaminating the core clinical or ERP domain.
+
+The adapter contract should accommodate, when the payer officially supports it:
+
+1. **Eligibility verification** — التحقق من الأهلية والتغطية
+2. **Benefits / limits / co-pay** — المنافع والحدود ونسبة التحمل
+3. **Preauthorization** — طلب ومتابعة الموافقة المسبقة
+4. **Claim submission** — تجهيز وإرسال المطالبة
+5. **Claim acknowledgement / status** — الاستلام والحالة
+6. **Attachments / supporting documents** — المرفقات والمستندات الداعمة
+7. **Rejection / resubmission** — الرفض وإعادة الإرسال
+8. **Remittance / reconciliation** — التسوية والمطابقة المالية
+9. **Appeals** — الاستئناف
+10. **Audit trail** — سجل تدقيق كامل لكل عملية
+
+Where an insurer exposes a secure API, MEDORA can use an API connector. Where an insurer exposes only an approved web portal, the integration boundary can support a controlled portal connector/automation layer subject to the insurer's terms, authentication, anti-bot requirements, and authorization. MEDORA must never bypass security controls, CAPTCHA, MFA, or access restrictions.
+
+**Important:** website compatibility is an **architecture and connector capability**, not a claim that MEDORA is already authenticated to every Egyptian insurer. Live connectivity requires the payer's endpoint contract, credentials/certificates, message schema, test environment, acknowledgement/error semantics, and production approval.
+
+### Egypt readiness — الجاهزية للسوق المصري
+
+The insurance domain is intentionally compatible with Egyptian healthcare operating realities while keeping external regulatory claims conservative. The repository includes Egypt-specific healthcare, payer-contract, claim, preauthorization, remittance, and regulatory-boundary work.
+
+This allows MEDORA to become compatible with Egyptian payer/provider ecosystems without hard-coding one organization's private protocol.
+
+---
+
+# ✨ Core capabilities — القدرات الأساسية
+
+### Clinical & care — الرعاية السريرية
+
+- Patient-centered records and scoped healthcare workflows
+- Facilities, appointments, encounters and referrals
+- Electronic prescriptions with ICD-11 linkage
+- Pharmacy/dispensing gates and medication data
+- Clinical orders and healthcare administration foundations
+
+### Enterprise ERP — تخطيط موارد المؤسسة
+
+- CRM / customer operations
+- Finance and billing foundations
+- HR and attendance
+- POS and sales
+- Inventory and procurement foundations
+- Delivery and fulfillment
+- KPI/reporting workflows
+- Organization/branch/jurisdiction isolation
+
+### AI & governance — الذكاء الاصطناعي والحوكمة
+
+- GP MAX growth/operational review
+- KPI calculation and dashboards
+- AI-assisted review with explicit advisory boundaries
+- Human accountability and auditable workflow gates
+
+### Communications — الاتصالات
+
+- WhatsApp Cloud API webhook/outbound boundaries
+- Twilio Programmable Voice integration boundaries
+- Arabic/English communication support
+
+### Offline & mobile — العمل دون اتصال والمحمول
+
+- PWA installation
+- Offline outbox synchronization
+- Last-write-wins synchronization model
+- GPS geofencing and biometric attendance controls
+- Server-side anti-tamper policy
+
+---
+
+# 🧩 Architecture — المعمارية
+
+```text
+Patients / Providers / Organizations / Payers
+                    │
+                    ▼
+          MEDORA Experience Layer
+       Web • PWA • Arabic • English
+                    │
+                    ▼
+          Scoped Application Layer
+   Clinical • ERP • Insurance • Pharmacy
+   CRM • HR • POS • Delivery • Intelligence
+                    │
+        ┌───────────┼───────────┐
+        ▼           ▼           ▼
+      tRPC        Domain       Policy
+      API         Services     / RBAC
+        │           │           │
+        └───────────┼───────────┘
+                    ▼
+              Data / Audit Layer
+                    │
+        ┌───────────┴────────────┐
+        ▼                        ▼
+   MySQL / Drizzle       External Connectors
+                              │
+                    ┌─────────┼─────────┐
+                    ▼         ▼         ▼
+                  Payers   Messaging   Future APIs
+```
+
+External integrations are isolated behind connector boundaries so a payer, government service, messaging provider, or future interoperability partner can evolve without rewriting MEDORA's core domains.
+
+---
+
+# 🇪🇬 Egypt-specific foundation — الأساس المصري
+
+- Egyptian drug catalog (`data/egyptian-drugs.csv`)
+- ICD-11 integration boundaries
+- Egypt healthcare domain package
+- Payer/insurance data model and workflow foundation
+- Regulatory-boundary documentation
+- ETA-related invoice workflow boundaries
+- Arabic-first UI/content capability
+
+External regulatory or governmental production access is activated only after the responsible authority provides the required official integration contract and authorization.
+
+---
+
+# 🧪 Quality & verification — الجودة والتحقق
+
+MEDORA is intended to be verified at multiple layers:
+
+- TypeScript/typecheck
+- Unit and integration tests
+- Browser/UI verification
+- Production build
+- Security/dependency verification
+- CodeQL/SonarCloud analysis
+- ERP/RBAC gates
+- Cloudflare Worker build/deployment validation
+- Synthetic/operational checks where configured
+
+A green build is **not** treated as proof that every clinical or insurance workflow is production-certified; external integrations require their own acceptance evidence.
+
+---
+
+# 🚀 Quick start — التشغيل السريع
+
+## Docker
 
 ```bash
-# Docker (الأسهل)
 cp .env.example .env
-docker compose up --build -d        # http://localhost:3000
-
-# يدويًا
-npm ci
-cp .env.example .env                # عدّل DATABASE_URL
-npm run db:push                     # ترحيل المخططات
-node scripts/seed-rbac-and-roles.mjs
-node scripts/seed-delivery-zones.mjs
-node scripts/seed-gp-max.mjs
-node scripts/seed-icd11.mjs         # 31 رمزًا ابتدائيًا (الخطية الكاملة عبر --data)
-node scripts/seed-dispensing.mjs
-node scripts/seed-sync.mjs
-npm run dev                         # http://localhost:3000
+docker compose up --build -d
+# http://localhost:3000
 ```
 
-**أول تسجيل دخول**: `admin / admin` (أنشأه سكربت التزويد: `node scripts/provision-medora.mjs --admin admin:admin`).
+## Manual
 
-## Project structure — البنية
-
-```
-server/routers/   → tRPC endpoints (erp, crm, delivery, gp-max, icd11, sync, …)
-drizzle/          → مخططات قاعدة البيانات
-shared/           → كود مشترك (kpi, sync-engine)
-client/src/pages/ → واجهات (Workspace, POS, Delivery, GpMax, Icd11, …)
-scripts/          → زراعة البيانات والتهيئة
-docs/             → التوثيق (audits, دليل التركيب، الأمان)
+```bash
+corepack enable
+pnpm install --frozen-lockfile
+cp .env.example .env
+pnpm run db:push
+pnpm run dev
 ```
 
-## Contributing — المساهمة
+Additional seed scripts are documented in `scripts/` and the operational documentation.
 
-راجع [CONTRIBUTING.md](CONTRIBUTING.md)، [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md)، و[SECURITY.md](SECURITY.md). افتح Issue/PR عبر القوالب في `.github/`.
+> For production, replace development credentials immediately and provide all required secrets through the deployment secret manager. Never commit credentials to Git.
 
+---
 
-## ICD-11 reference data — بيانات التصنيف الدولي
+# 📁 Project structure — بنية المشروع
 
-- مصدر مُتحقَّق: واجهة NLM العامة `clinicaltables.nlm.nih.gov/api/icd11_codes/v3/search` (مجانية، "as is") — انظر [التوثيق](https://clinicaltables.nlm.nih.gov/apidoc/icd11_codes/v3/doc.html).
-- الاستيراد: `DATABASE_URL="mysql://..." node scripts/icd11-import-nlm.mjs` (أو `--max N` للحد).
-- البديل الرسمي الكامل (متعدد اللغات): حاوية WHO `whoicd/icd-api` محليًا بدون OAuth، ثم `node scripts/icd11-ingest.mjs` مع `ICD11_BASE_URL=http://localhost:8080/icd`.
-- الربط: `e_prescriptions.icd11_code`/`icd11_version` + صفحة `/icd11` (بحث/فصول/إحصاءات).
-- ملاحظة ترخيص: محتوى ICD-11 ملك منظمة الصحة العالمية؛ الواجهتان (WHO/NLM) للاستخدام الرسمي "as is" — لا يوجد مرآة مفتوحة كاملة قانونية.
+```text
+server/routers/      → tRPC/application endpoints
+server/domain/       → security and domain policies
+drizzle/             → database schema and migrations
+shared/               → shared domain/synchronization code
+client/src/pages/    → application workspaces
+client/src/components/ → reusable UI/workspaces
+scripts/              → provisioning, seed and verification tools
+docs/                 → architecture, audits, security and operations
+.github/workflows/    → CI/CD and security verification
+```
 
-## License — الترخيص
+---
 
-MIT — انظر [LICENSE](LICENSE) و[NOTICE](NOTICE). المشروع مجاني بالكامل ومفتوح المصدر.
+# 🔌 Integration philosophy — فلسفة التكامل
 
+MEDORA follows three rules:
 
-## Communication channels (WhatsApp + Twilio)
+**1. Core first — النواة أولاً**  
+External systems must not compromise core authorization, auditability, or data isolation.
 
-- WhatsApp Cloud API webhooks (`/api/channels/whatsapp/webhook`) and outbound text/template messages.
-- Twilio Programmable Voice dial-out, status callbacks, Arabic TwiML.
-- See `docs/COMMS-INTEGRATION-2026-08-28.md`; config via env or tRPC `communicationChannels.config.save`.
+**2. Adapter isolation — عزل الموصلات**  
+Payer/provider-specific protocols belong in connectors, not scattered across clinical and ERP code.
 
-## Mobile attendance (GPS + biometric) & KPI
+**3. Evidence before claims — الدليل قبل الادعاء**  
+A connector is called live only after real authentication, successful test transactions, error handling, reconciliation, and production authorization have been demonstrated.
 
-- `/attendance` — punch in/out with GPS geofence + biometric; all tamper decisions server-side (`server/domain/attendance-tamper-policy.ts`), every punch in `attendance_events`.
-- `/kpi` — live KPI dashboard (HR, care, ICD-11, delivery, GP MAX, comms) + definitions/entries. See `docs/ATTENDANCE-ANTI-TAMPER-2026-08-28.md`.
+---
+
+# 🤝 Contributing — المساهمة
+
+See `CONTRIBUTING.md`, `CODE_OF_CONDUCT.md`, and `SECURITY.md`. Use the repository issue/PR templates for engineering work.
+
+# 📜 License — الترخيص
+
+MIT — see `LICENSE` and `NOTICE`.
+
+---
+
+## MEDORA in one sentence — ميدورا في جملة واحدة
+
+> **MEDORA connects healthcare operations, clinical workflows, enterprise management, insurance, and governed intelligence into one secure, extensible ecosystem.**
+>
+> **ميدورا تربط العمليات الصحية والمسارات السريرية والإدارة المؤسسية والتأمين والذكاء المنضبط داخل منظومة واحدة آمنة وقابلة للتوسع.**
