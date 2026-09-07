@@ -1,0 +1,96 @@
+name: Build MEDORA Windows Portable
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "electron/**"
+      - "electron-builder.yml"
+      - ".github/workflows/windows-portable-medora.yml"
+      - "server/**"
+      - "client/**"
+      - "shared/**"
+      - "drizzle/**"
+      - "package.json"
+      - "pnpm-lock.yaml"
+
+permissions:
+  contents: read
+
+env:
+  NODE_VERSION: "22.20.0"
+  ELECTRON_VERSION: "44.2.0"
+  ELECTRON_BUILDER_VERSION: "26.16.0"
+  MARIADB_VERSION: "11.8.6"
+
+jobs:
+  build:
+    runs-on: windows-latest
+    timeout-minutes: 45
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+
+      - name: Enable Corepack
+        shell: pwsh
+        run: corepack enable
+
+      - name: Install dependencies
+        shell: pwsh
+        run: pnpm install --frozen-lockfile
+
+      - name: Build MEDORA server and web assets
+        shell: pwsh
+        run: pnpm build
+        env:
+          NODE_ENV: production
+
+      - name: Download official MariaDB Windows ZIP
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          New-Item -ItemType Directory -Force -Path packaging | Out-Null
+          $zip = Join-Path $env:RUNNER_TEMP "mariadb.zip"
+          $url = "https://downloads.mariadb.org/rest-api/mariadb/${env:MARIADB_VERSION}/mariadb-${env:MARIADB_VERSION}-winx64.zip"
+          Invoke-WebRequest -Uri $url -OutFile $zip
+          $sha = (Get-FileHash $zip -Algorithm SHA256).Hash.ToLowerInvariant()
+          Write-Host "MariaDB SHA256: $sha"
+          if ($sha -ne '98cb8429841fc558fbc48e8c979c3b66c88ac506d7505a589e8ac74a039b0b21') {
+            throw "MariaDB checksum mismatch"
+          }
+          $extract = Join-Path $env:RUNNER_TEMP "mariadb-extract"
+          Remove-Item -Recurse -Force $extract -ErrorAction SilentlyContinue
+          Expand-Archive -Path $zip -DestinationPath $extract -Force
+          $root = Get-ChildItem $extract -Directory | Select-Object -First 1
+          if (-not $root) { throw 'MariaDB ZIP did not contain a top-level directory' }
+          New-Item -ItemType Directory -Force -Path packaging/mariadb | Out-Null
+          Copy-Item -Recurse -Force "$($root.FullName)\*" packaging/mariadb/
+          if (-not (Test-Path packaging/mariadb/bin/mariadbd.exe)) { throw 'mariadbd.exe missing' }
+          if (-not (Test-Path packaging/mariadb/bin/mariadb-install-db.exe)) { throw 'mariadb-install-db.exe missing' }
+
+      - name: Build portable EXE
+        shell: pwsh
+        run: |
+          pnpm dlx electron-builder@${env:ELECTRON_BUILDER_VERSION} --win portable --x64 --config electron-builder.yml --config.electronVersion=${env:ELECTRON_VERSION}
+
+      - name: Smoke-check artifact
+        shell: pwsh
+        run: |
+          $exe = Get-ChildItem release -Filter "MEDORA-Windows10-*.exe" | Select-Object -First 1
+          if (-not $exe) { throw 'Portable MEDORA EXE was not produced' }
+          Write-Host "Produced: $($exe.FullName)"
+          Write-Host "Size: $([math]::Round($exe.Length / 1MB, 2)) MB"
+
+      - name: Upload MEDORA.exe
+        uses: actions/upload-artifact@v4
+        with:
+          name: MEDORA-Windows10-x64
+          path: release/MEDORA-Windows10-*.exe
+          if-no-files-found: error
+          retention-days: 14
