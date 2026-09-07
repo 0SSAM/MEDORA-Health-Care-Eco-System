@@ -45,7 +45,8 @@ Do not treat a screen, permission, seeded record, configuration flag, or documen
 ## Security principles | مبادئ الأمان
 
 - **Organization, branch, and jurisdiction** scope is enforced server-side.
-- **Organization, branch, and jurisdiction** are part of the security boundary; jurisdiction ID `0` is a valid legal scope when explicitly selected by the applicable policy.
+- **Organization, branch, and jurisdiction** are part of the security boundary.
+- **Jurisdiction ID `0` is a valid legal scope** when explicitly selected by the applicable policy.
 - Fail-closed authorization for sensitive workflows.
 - **The AI assistant is advisory-only** by default; sensitive mutations require explicit server-side authorization and workflow controls.
 - Platform-admin identity and foundational privileges are protected from ordinary tenant RBAC mutation.
