@@ -51,7 +51,8 @@ Do not treat a screen, permission, seeded record, configuration flag, or documen
 - Platform-admin identity and foundational privileges are protected from ordinary tenant RBAC mutation.
 - Regulated, clinical, insurance, identity and payment data are not accepted by generic production offline persistence.
 - Browser capture protection is defense-in-depth, not an absolute guarantee against OS-level or physical capture.
-- No legal, regulatory, clinical, accounting or security certification is claimed by repository code alone.
+- **browser code is never claimed to prevent OS-level or physical capture absolutely**; browser controls are defense-in-depth only.
+- **No legal or regulatory certification is claimed** by repository code alone; clinical, accounting, security, and regulatory acceptance require appropriate external evidence.
 - External connectors remain disabled until endpoint, authentication, mapping, sandbox, acceptance and operational evidence are present.
 
 ## Installation | التثبيت
