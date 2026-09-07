@@ -44,9 +44,10 @@ Do not treat a screen, permission, seeded record, configuration flag, or documen
 
 ## Security principles | مبادئ الأمان
 
-- Server-side organization, branch and jurisdiction scope.
+- **Organization, branch, and jurisdiction** scope is enforced server-side.
+- **Organization, branch, and jurisdiction** are part of the security boundary; jurisdiction ID `0` is a valid legal scope when explicitly selected by the applicable policy.
 - Fail-closed authorization for sensitive workflows.
-- The AI layer is advisory by default; sensitive mutations require explicit server-side authorization and workflow controls.
+- **The AI assistant is advisory-only** by default; sensitive mutations require explicit server-side authorization and workflow controls.
 - Platform-admin identity and foundational privileges are protected from ordinary tenant RBAC mutation.
 - Regulated, clinical, insurance, identity and payment data are not accepted by generic production offline persistence.
 - Browser capture protection is defense-in-depth, not an absolute guarantee against OS-level or physical capture.
