@@ -46,6 +46,10 @@ jobs:
         run: pnpm check
       - name: Build
         run: pnpm build
+      - name: Apply repository migrations to isolated CI database
+        run: pnpm exec drizzle-kit migrate
+        env:
+          DATABASE_URL: mysql://medora:medora@127.0.0.1:3306/medora
       - name: Test
         run: pnpm test
         env:
