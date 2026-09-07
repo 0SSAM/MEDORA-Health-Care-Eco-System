@@ -61,6 +61,7 @@
     {"idx":56,"version":"5","when":1787422744314,"tag":"0056_silly_sprite","breakpoints":true},
     {"idx":57,"version":"5","when":1787814503247,"tag":"0057_concerned_skrulls","breakpoints":true},
     {"idx":58,"version":"5","when":1787815518695,"tag":"0058_nasty_raider","breakpoints":true},
-    {"idx":59,"version":"5","when":1788710000000,"tag":"0059_insurance_execution_surface","breakpoints":true}
+    {"idx":59,"version":"5","when":1788710000000,"tag":"0059_insurance_execution_surface","breakpoints":true},
+    {"idx":60,"version":"5","when":1788770000000,"tag":"0060_el_baz_pharmacy_profile","breakpoints":true}
   ]
 }

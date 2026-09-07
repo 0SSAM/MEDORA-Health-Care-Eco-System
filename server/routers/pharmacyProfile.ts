@@ -22,6 +22,18 @@ function detectMode(orgType: string | null): OrgMode {
 }
 
 export const pharmacyProfileRouter = router({
+  /** Read the persisted pharmacy identity for the active organization/branch. */
+  profile: protectedProcedure.input(scope).query(async ({ ctx, input }) => {
+    assertScope(ctx, input);
+    const pool = getRawPool();
+    const [rows] = await pool.query(
+      "SELECT pharmacyKey, legalName, displayNameEn, displayNameAr, managerName, addressAr, addressEn, landline, whatsapp, logoPath, backgroundPath, status FROM pharmacy_profiles WHERE organizationId=? AND branchId=? LIMIT 1",
+      [input.organizationId, input.branchId],
+    );
+    const profile = (rows as Array<Record<string, string | null>>)[0];
+    return profile ? { found: true as const, profile } : { found: false as const, profile: null };
+  }),
+
   /** Capability matrix per deployment mode — single / chain / hospital. */
   capabilities: protectedProcedure.input(scope).query(async ({ ctx, input }) => {
     assertScope(ctx, input);
@@ -47,7 +59,7 @@ export const pharmacyProfileRouter = router({
           inpatient_dispensing: org?.organizationType === "hospital",
           ward_stock: org?.organizationType === "hospital",
           order_sets: org?.organizationType === "hospital",
-          payer_agreements: true, // hospital-payer-* policies exist
+          payer_agreements: true,
           icd11_coding: true,
         },
       },

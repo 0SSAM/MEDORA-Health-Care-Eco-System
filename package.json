@@ -17,7 +17,8 @@
     "format": "prettier --write .",
     "test": "vitest run",
     "e2e": "playwright test",
-    "db:push": "drizzle-kit generate && drizzle-kit migrate"
+    "db:push": "drizzle-kit generate && drizzle-kit migrate",
+    "provision:el-baz": "node scripts/provision-el-baz-pharmacy.mjs"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1111.0",
