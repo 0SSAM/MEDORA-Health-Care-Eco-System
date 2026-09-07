@@ -3,62 +3,55 @@
 > **One intelligent ecosystem for connected healthcare.**  
 > **منظومة ذكية واحدة لرعاية صحية مترابطة.**
 
-MEDORA is an open-source healthcare operations platform spanning pharmacy, POS, supply, finance, people, delivery, insurance foundations, governance, analytics, and AI-assisted decision support.
+MEDORA is an open-source healthcare operations platform spanning pharmacy, POS, supply, finance foundations, people, delivery, insurance operations foundations, governance, analytics, and AI-assisted decision support.
 
-MEDORA هي منصة مفتوحة المصدر لتشغيل منظومة الرعاية الصحية، تجمع الصيدليات ونقاط البيع والإمداد والمالية والموارد البشرية والتوصيل وأسس التأمين والحوكمة والتحليلات والمساعدة بالذكاء الاصطناعي.
+MEDORA هي منصة مفتوحة المصدر لتشغيل منظومة الرعاية الصحية، تجمع الصيدليات ونقاط البيع والإمداد وأسس المالية والموارد البشرية والتوصيل وأسس تشغيل التأمين والحوكمة والتحليلات والمساعدة بالذكاء الاصطناعي.
 
-## Start here | ابدأ من هنا
+## Current truth | الحقيقة الحالية
 
-### Public visitor sandbox
+MEDORA is **not production-complete** and does not claim regulatory certification, live insurer/government connectivity, or parity with a general-purpose enterprise suite. The repository distinguishes executable internal workflows from integration-gated capabilities.
 
-**`/demo` — Anonymous Admin Sandbox**
+ميدورا **ليست مكتملة للإنتاج** ولا تدّعي اعتمادًا تنظيميًا أو اتصالًا حيًا بشركات التأمين أو الجهات الحكومية أو تكافؤًا وظيفيًا مع حزم ERP العامة. ويفصل المستودع بين مسارات التشغيل الداخلية القابلة للتنفيذ والقدرات التي ما زالت محكومة بمتطلبات التكامل الخارجي.
 
-No username. No password. No employee account. No production authentication.
-
-The visitor sandbox is a synthetic, disposable product-discovery surface. It is not a production administrator and must never receive real patient, financial, employee, credential, payment, or operational data.
-
-**جرّب MEDORA بدون حساب:**
-
-**`/demo` — بيئة المسؤول التجريبية المجهولة**
-
-لا اسم مستخدم. لا كلمة مرور. لا حساب موظف. ولا مصادقة على الإنتاج.
-
-## Why MEDORA | لماذا MEDORA؟
-
-Healthcare operations are fragmented across clinics, pharmacies, counters, suppliers, finance teams, delivery fleets, insurers, and spreadsheets. MEDORA is designed around one operating model, many specialized workspaces, and one governed source of truth.
-
-تعمل الرعاية الصحية غالباً عبر أنظمة متفرقة. MEDORA مبنية حول نموذج تشغيل واحد، ومساحات متخصصة متعددة، ومصدر واحد منضبط للحقيقة التشغيلية.
+## Product surface | نطاق المنتج
 
 | Domain | English | العربية |
 |---|---|---|
 | Care | Healthcare workflows and protected clinical boundaries | مسارات الرعاية والحدود السريرية المحمية |
-| Pharmacy | Pharmacy-oriented operations and dispensing | تشغيل الصيدليات ومسارات الصرف |
+| Pharmacy | Pharmacy operations, dispensing and FEFO-aware workflows | تشغيل الصيدليات ومسارات الصرف وFEFO |
 | POS | Sales, receipts and barcode workflows | المبيعات والإيصالات والباركود |
-| Supply | Procurement, inventory, suppliers, FEFO and traceability | المشتريات والمخزون والموردون وFEFO والتتبع |
+| Supply | Procurement, inventory, suppliers and traceability foundations | المشتريات والمخزون والموردون وأسس التتبع |
 | Delivery | Fulfillment and delivery orchestration | التنفيذ والتوصيل |
 | Finance | Financial foundations, invoices and commercial visibility | الأسس المالية والفواتير والرؤية التجارية |
-| People | Workforce, attendance, shifts and HR foundations | الموظفون والحضور والورديات وأسس الموارد البشرية |
+| People | Workforce and HR foundations | الموظفون وأسس الموارد البشرية |
+| Customer Care / CRM | Customer profiles, care interactions and service workflows | ملفات العملاء وتفاعلات الرعاية وخدمة العملاء |
 | Governance | Scope, compliance, audit and controlled workflows | النطاق والامتثال والتدقيق والعمليات المنضبطة |
 | Intelligence | KPIs, analytics, anti-fraud and operational intelligence | مؤشرات الأداء والتحليلات ومكافحة الاحتيال |
 | AI | Bilingual advisory assistance and governed AI surfaces | مساعدة استشارية ثنائية اللغة ومسارات ذكاء اصطناعي محكومة |
-| Insurance | Insurance operations foundation and integration-ready boundaries | أساس تشغيل التأمين وحدود جاهزة للتكامل |
-| Connectors | Government, payment, catalog, device and external integration boundaries | حدود التكامل الحكومي والدفع والكتالوج والأجهزة |
+| Insurance | Internal eligibility, coverage, preauthorization, claims, remittance, appeals and communication foundations | أسس الأهلية والتغطية والموافقات المسبقة والمطالبات والتسويات والاستئنافات والاتصالات التأمينية |
+| Connectors | Government, payer, payment, catalog, device and external integration boundaries | حدود التكامل الحكومي والتأميني والدفع والكتالوج والأجهزة |
 
-## Product principles | مبادئ المنتج
+## Capability states | حالات القدرات
 
-**Human authority stays in control.** The AI assistant is advisory-only; sensitive mutations remain subject to explicit server-side authorization and workflow controls.
+MEDORA uses four truth states:
 
-**الإنسان صاحب القرار.** The AI assistant is advisory-only, وتظل التغييرات الحساسة خاضعة للتفويض الصريح من الخادم وضوابط سير العمل.
+1. **Implemented & tested** — implemented software with executable evidence and regression coverage.
+2. **Implemented foundation / not production integrated** — internal persistence/workflow exists, but an external or infrastructure dependency remains.
+3. **Planned** — intentionally not represented as implemented.
+4. **Blocked by external prerequisite** — requires authoritative source, credentials, certification, infrastructure, or acceptance evidence.
 
-**Scope is enforced at the server boundary.** Organization, branch, and jurisdiction are resolved from authenticated server-side context rather than trusted from arbitrary client input.
+Do not treat a screen, permission, seeded record, configuration flag, or documentation page as proof of a live integration.
 
-**يُفرض النطاق عند حدود الخادم.** تُستمد المؤسسة والفرع والاختصاص من السياق الموثق على الخادم، ولا يُعتمد على قيم يرسلها العميل وحده.
+## Security principles | مبادئ الأمان
 
-**Integration readiness is not a claim of live connectivity.** External connectors remain gated by contracts, credentials, security review, acceptance evidence, and deployment-specific approvals.
-
-**الاستعداد للتكامل لا يعني وجود اتصال حي.** تظل الموصلات الخارجية مرتبطة بالعقود والاعتمادات ومراجعة الأمان وأدلة القبول والموافقات الخاصة بالنشر.
-
-**The demo is not production.** The visitor sandbox is synthetic, disposable, and intentionally separated from production authentication.
+- Server-side organization, branch and jurisdiction scope.
+- Fail-closed authorization for sensitive workflows.
+- The AI layer is advisory by default; sensitive mutations require explicit server-side authorization and workflow controls.
+- Platform-admin identity and foundational privileges are protected from ordinary tenant RBAC mutation.
+- Regulated, clinical, insurance, identity and payment data are not accepted by generic production offline persistence.
+- Browser capture protection is defense-in-depth, not an absolute guarantee against OS-level or physical capture.
+- No legal, regulatory, clinical, accounting or security certification is claimed by repository code alone.
+- External connectors remain disabled until endpoint, authentication, mapping, sandbox, acceptance and operational evidence are present.
 
 ## Installation | التثبيت
 
@@ -110,7 +103,7 @@ OWNER_OPEN_ID=YOUR_OWNER_OPEN_ID
 OWNER_NAME=MEDORA Owner
 ```
 
-### Schema and verification
+### Verification
 
 ```bash
 pnpm db:push
@@ -119,6 +112,8 @@ pnpm test
 pnpm build
 pnpm audit --prod --audit-level=high
 bash scripts/ci-smoke.sh
+pnpm run build:cloudflare
+pnpm dlx wrangler@4.129.0 deploy --dry-run
 ```
 
 ### Start
@@ -131,13 +126,7 @@ Local application: `http://localhost:3000`
 
 Authenticated local development requires the OAuth provider to allow `/api/oauth/callback`.
 
-## Visitor Sandbox | بيئة الزائر
-
-The visitor surface provides anonymous product exploration with synthetic session-only state. It must remain independent of production authentication, production databases, real credentials, payments, and regulated external side effects.
-
-Browser shutdown cleanup is best-effort; `sessionStorage` is the primary session-expiry boundary. Browser code is never claimed to prevent OS-level or physical capture absolutely.
-
-## Architecture at a glance | نظرة معمارية
+## Architecture | المعمارية
 
 | Layer | Stack |
 |---|---|
@@ -153,15 +142,25 @@ Browser shutdown cleanup is best-effort; `sessionStorage` is the primary session
 
 The source tree separates browser UI, server routers, database schema, shared contracts, operational documentation, and automated verification.
 
-## Security & governance | الأمن والحوكمة
+## Insurance truth | حقيقة التأمين
 
-- Organization, branch, and jurisdiction scope is resolved server-side.
-- Sensitive workflows fail closed when required authorization or scope is unavailable.
-- The AI assistant is advisory-only.
-- Client-side capture protection is defense-in-depth; **browser code is never claimed to prevent OS-level or physical capture absolutely.**
-- No legal or regulatory certification is claimed by this repository.
-- Integration boundaries do not imply live external connectivity.
-- Jurisdiction ID `0` is a valid legal scope value and must not be treated as an invalid/missing identifier.
+The insurance domain now has an executable **internal** workflow surface for payer contracts, member references, coverage/benefit rules, eligibility requests, preauthorization, claims, claim events, secure attachment references, remittances, appeals, and payer communications. External payer transport remains deliberately fail-closed until the payer-specific contract and acceptance evidence exist.
+
+هذا يعني أن MEDORA يمكنها تشغيل دورة التأمين الداخلية وحفظها وتدقيقها، لكنه **لا يعني اتصالًا حيًا** بشركة تأمين أو TPA أو جهة حكومية. لا يتم اختراع التغطية أو الموافقة أو نتيجة المطالبة من جانب MEDORA عند غياب المصدر التأميني الموثوق.
+
+## Administration | الإدارة
+
+The user-control console is platform-admin-only. Ordinary organization roles cannot create or mutate the platform administrator through tenant RBAC. The admin account is protected by server-side invariants and regression contracts.
+
+لوحة التحكم بالمستخدمين مخصصة لأدمن المنصة فقط. ولا يمكن للأدوار المؤسسية العادية إنشاء أو تعديل مسؤول المنصة من خلال RBAC الخاص بالمؤسسة، مع وجود ضوابط خادمية واختبارات انحدار لحماية حساب الأدمن.
+
+## External integrations | التكاملات الخارجية
+
+Government, payer, payment, device and regulatory connectors are integration boundaries, not proof of connectivity. Production activation requires the relevant endpoint/channel, credentials or certificates, message mappings, sandbox validation, rejection/retry behavior, audit requirements, accountable ownership and acceptance evidence.
+
+## Operational limitations | الحدود التشغيلية
+
+Known production-readiness work remains in areas such as database referential-integrity hardening, full double-entry accounting, complete offline conflict resolution and trusted-device attestation, broad cross-tenant adversarial lifecycle testing, country-specific regulatory evidence, and live external integration acceptance. These are tracked explicitly rather than hidden behind UI claims.
 
 ## Repository map | خريطة المستودع
 
@@ -174,21 +173,6 @@ The source tree separates browser UI, server routers, database schema, shared co
 - `.env.example` — environment template
 - `scripts/` — verification and operational scripts
 - `LICENSE` — MIT license
-
-## Useful commands | أوامر مهمة
-
-```bash
-pnpm install --frozen-lockfile
-pnpm db:push
-pnpm check
-pnpm test
-pnpm build
-pnpm dev
-pnpm audit --prod --audit-level=high
-bash scripts/ci-smoke.sh
-pnpm run build:cloudflare
-pnpm dlx wrangler@4.129.0 deploy --dry-run
-```
 
 ## Contribution | المساهمة
 
