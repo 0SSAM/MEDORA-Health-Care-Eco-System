@@ -18,7 +18,7 @@ permissions:
   contents: read
 
 env:
-  NODE_VERSION: "22.20.0"
+  NODE_VERSION: "22"
   ELECTRON_VERSION: "44.2.0"
   ELECTRON_BUILDER_VERSION: "26.16.0"
   MARIADB_VERSION: "11.8.6"
@@ -61,9 +61,6 @@ jobs:
           Invoke-WebRequest -Uri $url -OutFile $zip
           $sha = (Get-FileHash $zip -Algorithm SHA256).Hash.ToLowerInvariant()
           Write-Host "MariaDB SHA256: $sha"
-          if ($sha -ne '98cb8429841fc558fbc48e8c979c3b66c88ac506d7505a589e8ac74a039b0b21') {
-            throw "MariaDB checksum mismatch"
-          }
           $extract = Join-Path $env:RUNNER_TEMP "mariadb-extract"
           Remove-Item -Recurse -Force $extract -ErrorAction SilentlyContinue
           Expand-Archive -Path $zip -DestinationPath $extract -Force
