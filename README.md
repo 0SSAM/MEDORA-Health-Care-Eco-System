@@ -96,7 +96,7 @@ Create `.env` from `.env.example` and keep it local. Never commit real secrets.
 
 ```dotenv
 NODE_ENV=development
-DATABASE_URL=mysql://medora_app:LOCAL_PASSWORD@127.0.0.1:3306/medora_dev
+DATABASE_URL=mysql://medora_app:REPLACE_WITH_A_STRONG_LOCAL_PASSWORD@127.0.0.1:3306/medora_dev
 JWT_SECRET=GENERATE_A_LONG_RANDOM_VALUE
 VITE_APP_ID=YOUR_OAUTH_APP_ID
 OAUTH_SERVER_URL=YOUR_OAUTH_SERVER_URL
