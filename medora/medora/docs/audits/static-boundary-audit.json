@@ -1,0 +1,625 @@
+{
+  "generatedAt": "2026-08-14T20:13:10.833Z",
+  "scope": "server routers, domain policies, scheduled callbacks, and db helper files",
+  "methodology": "Static inventory only; counts do not replace code review or disposable-database lifecycle tests.",
+  "summary": {
+    "filesScanned": 67,
+    "filesWithProtectedProcedures": 7,
+    "filesWithOrganizationScope": 22,
+    "filesWithJurisdictionScope": 22,
+    "filesWithRawErrorStrings": 0,
+    "filesWithBodyOrPayloadTokens": 6
+  },
+  "files": [
+    {
+      "file": "db.ts",
+      "lineCount": 1,
+      "protected-procedure": 0,
+      "organization-scope": 0,
+      "jurisdiction-scope": 0,
+      "raw-error-string": 0,
+      "body-or-payload": 0
+    },
+    {
+      "file": "domain/branch-access.test.ts",
+      "lineCount": 1,
+      "protected-procedure": 0,
+      "organization-scope": 0,
+      "jurisdiction-scope": 0,
+      "raw-error-string": 0,
+      "body-or-payload": 0
+    },
+    {
+      "file": "domain/branch-access.ts",
+      "lineCount": 1,
+      "protected-procedure": 0,
+      "organization-scope": 0,
+      "jurisdiction-scope": 0,
+      "raw-error-string": 0,
+      "body-or-payload": 0
+    },
+    {
+      "file": "domain/branch-compliance.test.ts",
+      "lineCount": 1,
+      "protected-procedure": 0,
+      "organization-scope": 0,
+      "jurisdiction-scope": 3,
+      "raw-error-string": 0,
+      "body-or-payload": 0
+    },
+    {
+      "file": "domain/branch-compliance.ts",
+      "lineCount": 1,
+      "protected-procedure": 0,
+      "organization-scope": 0,
+      "jurisdiction-scope": 2,
+      "raw-error-string": 0,
+      "body-or-payload": 0
+    },
+    {
+      "file": "domain/catalog-policy.test.ts",
+      "lineCount": 1,
+      "protected-procedure": 0,
+      "organization-scope": 0,
+      "jurisdiction-scope": 0,
+      "raw-error-string": 0,
+      "body-or-payload": 0
+    },
+    {
+      "file": "domain/catalog-policy.ts",
+      "lineCount": 1,
+      "protected-procedure": 0,
+      "organization-scope": 0,
+      "jurisdiction-scope": 0,
+      "raw-error-string": 0,
+      "body-or-payload": 0
+    },
+    {
+      "file": "domain/compliance-lifecycle.test.ts",
+      "lineCount": 1,
+      "protected-procedure": 0,
+      "organization-scope": 0,
+      "jurisdiction-scope": 0,
+      "raw-error-string": 0,
+      "body-or-payload": 0
+    },
+    {
+      "file": "domain/compliance-lifecycle.ts",
+      "lineCount": 1,
+      "protected-procedure": 0,
+      "organization-scope": 0,
+      "jurisdiction-scope": 0,
+      "raw-error-string": 0,
+      "body-or-payload": 0
+    },
+    {
+      "file": "domain/country-data-boundary.test.ts",
+      "lineCount": 1,
+      "protected-procedure": 0,
+      "organization-scope": 11,
+      "jurisdiction-scope": 11,
+      "raw-error-string": 0,
+      "body-or-payload": 0
+    },
+    {
+      "file": "domain/country-data-boundary.ts",
+      "lineCount": 1,
+      "protected-procedure": 0,
+      "organization-scope": 6,
+      "jurisdiction-scope": 6,
+      "raw-error-string": 0,
+      "body-or-payload": 0
+    },
+    {
+      "file": "domain/customer-care-policy.test.ts",
+      "lineCount": 1,
+      "protected-procedure": 0,
+      "organization-scope": 0,
+      "jurisdiction-scope": 0,
+      "raw-error-string": 0,
+      "body-or-payload": 1
+    },
+    {
+      "file": "domain/customer-care-policy.ts",
+      "lineCount": 1,
+      "protected-procedure": 0,
+      "organization-scope": 0,
+      "jurisdiction-scope": 0,
+      "raw-error-string": 0,
+      "body-or-payload": 0
+    },
+    {
+      "file": "domain/data-boundary.test.ts",
+      "lineCount": 1,
+      "protected-procedure": 0,
+      "organization-scope": 4,
+      "jurisdiction-scope": 10,
+      "raw-error-string": 0,
+      "body-or-payload": 0
+    },
+    {
+      "file": "domain/data-boundary.ts",
+      "lineCount": 1,
+      "protected-procedure": 0,
+      "organization-scope": 7,
+      "jurisdiction-scope": 6,
+      "raw-error-string": 0,
+      "body-or-payload": 0
+    },
+    {
+      "file": "domain/demo-access.test.ts",
+      "lineCount": 1,
+      "protected-procedure": 0,
+      "organization-scope": 0,
+      "jurisdiction-scope": 0,
+      "raw-error-string": 0,
+      "body-or-payload": 0
+    },
+    {
+      "file": "domain/demo-access.ts",
+      "lineCount": 1,
+      "protected-procedure": 0,
+      "organization-scope": 0,
+      "jurisdiction-scope": 0,
+      "raw-error-string": 0,
+      "body-or-payload": 0
+    },
+    {
+      "file": "domain/erp.test.ts",
+      "lineCount": 1,
+      "protected-procedure": 0,
+      "organization-scope": 0,
+      "jurisdiction-scope": 0,
+      "raw-error-string": 0,
+      "body-or-payload": 1
+    },
+    {
+      "file": "domain/erp.ts",
+      "lineCount": 1,
+      "protected-procedure": 0,
+      "organization-scope": 0,
+      "jurisdiction-scope": 0,
+      "raw-error-string": 0,
+      "body-or-payload": 2
+    },
+    {
+      "file": "domain/insurance-persistence-policy.ts",
+      "lineCount": 1,
+      "protected-procedure": 0,
+      "organization-scope": 0,
+      "jurisdiction-scope": 0,
+      "raw-error-string": 0,
+      "body-or-payload": 0
+    },
+    {
+      "file": "domain/insurance-policy.ts",
+      "lineCount": 1,
+      "protected-procedure": 0,
+      "organization-scope": 7,
+      "jurisdiction-scope": 7,
+      "raw-error-string": 0,
+      "body-or-payload": 0
+    },
+    {
+      "file": "domain/invoicing-policy.test.ts",
+      "lineCount": 1,
+      "protected-procedure": 0,
+      "organization-scope": 2,
+      "jurisdiction-scope": 2,
+      "raw-error-string": 0,
+      "body-or-payload": 0
+    },
+    {
+      "file": "domain/invoicing-policy.ts",
+      "lineCount": 1,
+      "protected-procedure": 0,
+      "organization-scope": 3,
+      "jurisdiction-scope": 3,
+      "raw-error-string": 0,
+      "body-or-payload": 0
+    },
+    {
+      "file": "domain/jurisdiction-access.test.ts",
+      "lineCount": 1,
+      "protected-procedure": 0,
+      "organization-scope": 0,
+      "jurisdiction-scope": 3,
+      "raw-error-string": 0,
+      "body-or-payload": 0
+    },
+    {
+      "file": "domain/jurisdiction-access.ts",
+      "lineCount": 1,
+      "protected-procedure": 0,
+      "organization-scope": 0,
+      "jurisdiction-scope": 4,
+      "raw-error-string": 0,
+      "body-or-payload": 0
+    },
+    {
+      "file": "domain/localization.test.ts",
+      "lineCount": 1,
+      "protected-procedure": 0,
+      "organization-scope": 0,
+      "jurisdiction-scope": 0,
+      "raw-error-string": 0,
+      "body-or-payload": 0
+    },
+    {
+      "file": "domain/localization.ts",
+      "lineCount": 1,
+      "protected-procedure": 0,
+      "organization-scope": 0,
+      "jurisdiction-scope": 0,
+      "raw-error-string": 0,
+      "body-or-payload": 0
+    },
+    {
+      "file": "domain/notification-scope.test.ts",
+      "lineCount": 1,
+      "protected-procedure": 0,
+      "organization-scope": 7,
+      "jurisdiction-scope": 0,
+      "raw-error-string": 0,
+      "body-or-payload": 0
+    },
+    {
+      "file": "domain/notification-scope.ts",
+      "lineCount": 1,
+      "protected-procedure": 0,
+      "organization-scope": 3,
+      "jurisdiction-scope": 0,
+      "raw-error-string": 0,
+      "body-or-payload": 0
+    },
+    {
+      "file": "domain/notifications-policy.test.ts",
+      "lineCount": 1,
+      "protected-procedure": 0,
+      "organization-scope": 0,
+      "jurisdiction-scope": 0,
+      "raw-error-string": 0,
+      "body-or-payload": 0
+    },
+    {
+      "file": "domain/notifications-policy.ts",
+      "lineCount": 1,
+      "protected-procedure": 0,
+      "organization-scope": 0,
+      "jurisdiction-scope": 0,
+      "raw-error-string": 0,
+      "body-or-payload": 0
+    },
+    {
+      "file": "domain/notifications-view.test.ts",
+      "lineCount": 1,
+      "protected-procedure": 0,
+      "organization-scope": 0,
+      "jurisdiction-scope": 0,
+      "raw-error-string": 0,
+      "body-or-payload": 0
+    },
+    {
+      "file": "domain/notifications-view.ts",
+      "lineCount": 1,
+      "protected-procedure": 0,
+      "organization-scope": 0,
+      "jurisdiction-scope": 0,
+      "raw-error-string": 0,
+      "body-or-payload": 0
+    },
+    {
+      "file": "domain/offline-policy.test.ts",
+      "lineCount": 1,
+      "protected-procedure": 0,
+      "organization-scope": 0,
+      "jurisdiction-scope": 0,
+      "raw-error-string": 0,
+      "body-or-payload": 0
+    },
+    {
+      "file": "domain/offline-policy.ts",
+      "lineCount": 1,
+      "protected-procedure": 0,
+      "organization-scope": 0,
+      "jurisdiction-scope": 0,
+      "raw-error-string": 0,
+      "body-or-payload": 0
+    },
+    {
+      "file": "domain/organization-access.test.ts",
+      "lineCount": 1,
+      "protected-procedure": 0,
+      "organization-scope": 5,
+      "jurisdiction-scope": 0,
+      "raw-error-string": 0,
+      "body-or-payload": 0
+    },
+    {
+      "file": "domain/organization-access.ts",
+      "lineCount": 1,
+      "protected-procedure": 0,
+      "organization-scope": 14,
+      "jurisdiction-scope": 0,
+      "raw-error-string": 0,
+      "body-or-payload": 0
+    },
+    {
+      "file": "domain/organization-workspace.test.ts",
+      "lineCount": 1,
+      "protected-procedure": 0,
+      "organization-scope": 0,
+      "jurisdiction-scope": 0,
+      "raw-error-string": 0,
+      "body-or-payload": 0
+    },
+    {
+      "file": "domain/organization-workspace.ts",
+      "lineCount": 1,
+      "protected-procedure": 0,
+      "organization-scope": 0,
+      "jurisdiction-scope": 0,
+      "raw-error-string": 0,
+      "body-or-payload": 0
+    },
+    {
+      "file": "domain/ownership-identity.test.ts",
+      "lineCount": 1,
+      "protected-procedure": 0,
+      "organization-scope": 0,
+      "jurisdiction-scope": 0,
+      "raw-error-string": 0,
+      "body-or-payload": 0
+    },
+    {
+      "file": "domain/promotion-policy.test.ts",
+      "lineCount": 1,
+      "protected-procedure": 0,
+      "organization-scope": 0,
+      "jurisdiction-scope": 0,
+      "raw-error-string": 0,
+      "body-or-payload": 0
+    },
+    {
+      "file": "domain/promotion-policy.ts",
+      "lineCount": 1,
+      "protected-procedure": 0,
+      "organization-scope": 0,
+      "jurisdiction-scope": 0,
+      "raw-error-string": 0,
+      "body-or-payload": 0
+    },
+    {
+      "file": "domain/realtimeReview.test.ts",
+      "lineCount": 1,
+      "protected-procedure": 0,
+      "organization-scope": 0,
+      "jurisdiction-scope": 0,
+      "raw-error-string": 0,
+      "body-or-payload": 0
+    },
+    {
+      "file": "domain/realtimeReview.ts",
+      "lineCount": 1,
+      "protected-procedure": 0,
+      "organization-scope": 0,
+      "jurisdiction-scope": 0,
+      "raw-error-string": 0,
+      "body-or-payload": 0
+    },
+    {
+      "file": "domain/regional-engine.test.ts",
+      "lineCount": 1,
+      "protected-procedure": 0,
+      "organization-scope": 0,
+      "jurisdiction-scope": 1,
+      "raw-error-string": 0,
+      "body-or-payload": 0
+    },
+    {
+      "file": "domain/regional-engine.ts",
+      "lineCount": 1,
+      "protected-procedure": 0,
+      "organization-scope": 0,
+      "jurisdiction-scope": 2,
+      "raw-error-string": 0,
+      "body-or-payload": 0
+    },
+    {
+      "file": "domain/regional-rules.test.ts",
+      "lineCount": 1,
+      "protected-procedure": 0,
+      "organization-scope": 0,
+      "jurisdiction-scope": 0,
+      "raw-error-string": 0,
+      "body-or-payload": 0
+    },
+    {
+      "file": "domain/regional-rules.ts",
+      "lineCount": 1,
+      "protected-procedure": 0,
+      "organization-scope": 0,
+      "jurisdiction-scope": 0,
+      "raw-error-string": 0,
+      "body-or-payload": 0
+    },
+    {
+      "file": "domain/reporting-insurance-policy.test.ts",
+      "lineCount": 1,
+      "protected-procedure": 0,
+      "organization-scope": 8,
+      "jurisdiction-scope": 8,
+      "raw-error-string": 0,
+      "body-or-payload": 1
+    },
+    {
+      "file": "domain/reporting-policy.ts",
+      "lineCount": 1,
+      "protected-procedure": 0,
+      "organization-scope": 12,
+      "jurisdiction-scope": 14,
+      "raw-error-string": 0,
+      "body-or-payload": 0
+    },
+    {
+      "file": "domain/rules.test.ts",
+      "lineCount": 1,
+      "protected-procedure": 0,
+      "organization-scope": 0,
+      "jurisdiction-scope": 0,
+      "raw-error-string": 0,
+      "body-or-payload": 0
+    },
+    {
+      "file": "domain/rules.ts",
+      "lineCount": 1,
+      "protected-procedure": 0,
+      "organization-scope": 0,
+      "jurisdiction-scope": 0,
+      "raw-error-string": 0,
+      "body-or-payload": 0
+    },
+    {
+      "file": "domain/safe-error.test.ts",
+      "lineCount": 1,
+      "protected-procedure": 0,
+      "organization-scope": 0,
+      "jurisdiction-scope": 0,
+      "raw-error-string": 0,
+      "body-or-payload": 1
+    },
+    {
+      "file": "domain/safe-error.ts",
+      "lineCount": 2,
+      "protected-procedure": 0,
+      "organization-scope": 0,
+      "jurisdiction-scope": 0,
+      "raw-error-string": 0,
+      "body-or-payload": 0
+    },
+    {
+      "file": "domain/sales-contact.test.ts",
+      "lineCount": 1,
+      "protected-procedure": 0,
+      "organization-scope": 0,
+      "jurisdiction-scope": 0,
+      "raw-error-string": 0,
+      "body-or-payload": 0
+    },
+    {
+      "file": "domain/sensitive-data.test.ts",
+      "lineCount": 1,
+      "protected-procedure": 0,
+      "organization-scope": 11,
+      "jurisdiction-scope": 0,
+      "raw-error-string": 0,
+      "body-or-payload": 0
+    },
+    {
+      "file": "domain/sensitive-data.ts",
+      "lineCount": 1,
+      "protected-procedure": 0,
+      "organization-scope": 3,
+      "jurisdiction-scope": 0,
+      "raw-error-string": 0,
+      "body-or-payload": 0
+    },
+    {
+      "file": "routers/erp.ts",
+      "lineCount": 1,
+      "protected-procedure": 10,
+      "organization-scope": 98,
+      "jurisdiction-scope": 106,
+      "raw-error-string": 0,
+      "body-or-payload": 12
+    },
+    {
+      "file": "routers/insurance.ts",
+      "lineCount": 1,
+      "protected-procedure": 4,
+      "organization-scope": 22,
+      "jurisdiction-scope": 23,
+      "raw-error-string": 0,
+      "body-or-payload": 0
+    },
+    {
+      "file": "routers/notifications.ts",
+      "lineCount": 1,
+      "protected-procedure": 4,
+      "organization-scope": 33,
+      "jurisdiction-scope": 0,
+      "raw-error-string": 0,
+      "body-or-payload": 0
+    },
+    {
+      "file": "routers/organizations.ts",
+      "lineCount": 1,
+      "protected-procedure": 7,
+      "organization-scope": 18,
+      "jurisdiction-scope": 0,
+      "raw-error-string": 0,
+      "body-or-payload": 0
+    },
+    {
+      "file": "routers/promotions.ts",
+      "lineCount": 1,
+      "protected-procedure": 4,
+      "organization-scope": 14,
+      "jurisdiction-scope": 9,
+      "raw-error-string": 0,
+      "body-or-payload": 0
+    },
+    {
+      "file": "routers/regional.ts",
+      "lineCount": 1,
+      "protected-procedure": 5,
+      "organization-scope": 0,
+      "jurisdiction-scope": 30,
+      "raw-error-string": 0,
+      "body-or-payload": 0
+    },
+    {
+      "file": "routers/reports.ts",
+      "lineCount": 1,
+      "protected-procedure": 7,
+      "organization-scope": 45,
+      "jurisdiction-scope": 39,
+      "raw-error-string": 0,
+      "body-or-payload": 0
+    },
+    {
+      "file": "scheduled/inventory.ts",
+      "lineCount": 1,
+      "protected-procedure": 0,
+      "organization-scope": 0,
+      "jurisdiction-scope": 0,
+      "raw-error-string": 0,
+      "body-or-payload": 0
+    },
+    {
+      "file": "scheduled/reports-policy.test.ts",
+      "lineCount": 1,
+      "protected-procedure": 0,
+      "organization-scope": 0,
+      "jurisdiction-scope": 2,
+      "raw-error-string": 0,
+      "body-or-payload": 0
+    },
+    {
+      "file": "scheduled/reports.ts",
+      "lineCount": 1,
+      "protected-procedure": 0,
+      "organization-scope": 12,
+      "jurisdiction-scope": 12,
+      "raw-error-string": 0,
+      "body-or-payload": 0
+    }
+  ],
+  "totals": {
+    "protected-procedure": 41,
+    "organization-scope": 345,
+    "jurisdiction-scope": 303,
+    "raw-error-string": 0,
+    "body-or-payload": 18
+  }
+}

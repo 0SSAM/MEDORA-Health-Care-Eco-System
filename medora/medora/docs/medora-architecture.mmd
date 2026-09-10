@@ -1,0 +1,18 @@
+flowchart LR
+  U[User / المستخدم] --> W[Role-aware Workspace]
+  W --> S[Server Authorization]
+  S --> O[Organization Scope]
+  O --> B[Branch Scope]
+  B --> J[Jurisdiction Policy]
+  J --> M{Module}
+  M --> POS[ERP / POS / Tax Invoice]
+  M --> RX[E-Prescription]
+  M --> CAT[Catalog Review & Import]
+  M --> CARE[Customer Care / Call Centre]
+  M --> CON[Connector Readiness]
+  POS --> A[Audit Evidence]
+  RX --> A
+  CAT --> A
+  CARE --> A
+  CON --> F[Fail-closed until formal evidence]
+  A --> R[Reports / Review]

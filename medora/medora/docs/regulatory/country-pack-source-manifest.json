@@ -1,0 +1,38 @@
+{
+  "manifestVersion": "2026-08-15",
+  "activationPolicy": "blocked-until-source-license-credentials-acceptance",
+  "packs": [
+    {
+      "country": "EG",
+      "authority": "Egyptian Drug Authority",
+      "status": "blocked",
+      "sources": ["https://edaegypt.gov.eg/en/the-regulatory-reference-of-the-egyptian-drug-authority-eda/regulatory-guidelines/ca-of-pharmaceutical-products/"],
+      "reviewNote": "Primary regulatory guidance reviewed; no reproducible complete machine-readable medicine register established.",
+      "activationBlockers": ["complete source-linked domain matrix", "effective dates", "local licences", "credentials", "acceptance tests"]
+    },
+    {
+      "country": "JO",
+      "authority": "Jordan Food and Drug Administration",
+      "status": "blocked",
+      "sources": ["https://www.jfda.jo/Default/Ar"],
+      "reviewNote": "Official portal reviewed as a source lead; detailed pack requirements are not activated.",
+      "activationBlockers": ["current domain-specific requirements", "effective dates", "local licences", "credentials", "acceptance tests"]
+    },
+    {
+      "country": "QA",
+      "authority": "Qatar Ministry of Public Health",
+      "status": "blocked",
+      "sources": ["https://www.moph.gov.qa/english/departments/policyaffairs/pdc/regnpricing/Pages/ServiceDetails.aspx?ItemId=191"],
+      "reviewNote": "Registration/pricing page recorded as a source lead; automated review was limited by CAPTCHA.",
+      "activationBlockers": ["accessible current technical requirements", "effective dates", "local licences", "credentials", "acceptance tests"]
+    },
+    {
+      "country": "MA",
+      "authority": "Moroccan Agency for Medicines and Health Products",
+      "status": "blocked",
+      "sources": ["https://www.ammps.gov.ma/"],
+      "reviewNote": "Official portal reviewed as a source lead; a complete organization-specific legal pack was not inferred from the landing page.",
+      "activationBlockers": ["domain-specific legal versions", "privacy/hosting rules", "local licences", "credentials", "acceptance tests"]
+    }
+  ]
+}

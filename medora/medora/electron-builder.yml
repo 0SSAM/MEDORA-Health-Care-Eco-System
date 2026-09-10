@@ -1,0 +1,27 @@
+appId: com.0ssam.medora
+productName: MEDORA
+executableName: MEDORA
+artifactName: MEDORA-Windows10-${version}.${ext}
+directories:
+  output: release
+files:
+  - "**/*"
+  - "!client/**"
+  - "!docs/**"
+  - "!tests/**"
+  - "!server/**/*.ts"
+  - "!shared/**/*.ts"
+  - "!drizzle/meta/**"
+extraResources:
+  - from: packaging/mariadb
+    to: mariadb
+asar: true
+win:
+  target:
+    - target: portable
+      arch:
+        - x64
+  signAndEditExecutable: false
+  sign: null
+portable:
+  requestExecutionLevel: user

@@ -1,0 +1,12 @@
+{
+  "schema": "medora-ownership-manifest/v1",
+  "product": "ميدورا | منظومة الرعاية الصحية المتكاملة",
+  "productSlug": "medora-integrated-health-system",
+  "ownerDeclaredBy": "Hossam Naeim Osman",
+  "notice": "Owner-declared provenance record; obtain professional legal review for registration, licensing, and enforcement.",
+  "copyright": "© 2026 ميدورا | MEDORA Integrated Health System",
+  "repositoryProject": "bdf-pharma-erp",
+  "licenseStatus": "project-controlled; do not redistribute without owner authorization",
+  "fingerprintAlgorithm": "sha256",
+  "sensitiveDataIncluded": false
+}

@@ -1,0 +1,54 @@
+{
+  "schemaVersion": 1,
+  "product": "MEDORA Health Care Eco System",
+  "scope": "IP and content-protection release surface",
+  "purpose": "A reproducible integrity record for selected source, migration, policy, and ownership files. It is not a copyright, trademark, or title registration.",
+  "algorithm": "SHA-256",
+  "files": [
+    {
+      "path": "LICENSE",
+      "sha256": "88ec8954175fd06368cacc99f7c0ab3f5f4dc624372351046c0ef2f805842c59"
+    },
+    {
+      "path": "NOTICE",
+      "sha256": "e3ec760f00eea5745325485c3bb4704f31f5ac129cea18242baaffc9aca2e137"
+    },
+    {
+      "path": "drizzle/schema.ts",
+      "sha256": "56e1b5fc1a9275d2c56975ef142a7a53e0408f07cbd334a45a34f90dc3e5a21f"
+    },
+    {
+      "path": "drizzle/0054_solid_wallow.sql",
+      "sha256": "34e8189e799f01d1ce0bfedc0c0977675d40ddafe8042d06360962c2b304c2b2"
+    },
+    {
+      "path": "server/routers/operations.ts",
+      "sha256": "a8a66b956cb3fd456126aa275bf613b2b894a8983515955bd6a650a6e2bc91e6"
+    },
+    {
+      "path": "client/src/pages/Home.tsx",
+      "sha256": "1e1936781a7e22e05679a89514d5f28c75daaf9fb8b91cf2ede08d7e63843ad6"
+    },
+    {
+      "path": "client/src/components/ScreenCaptureProtection.tsx",
+      "sha256": "f3b3fc6a9f2845f55b5acc693904e7d784264bc3ce8f80c2ee3ff2f6a4320fbb"
+    },
+    {
+      "path": "client/src/lib/screenCaptureProtection.ts",
+      "sha256": "43e9367cb36fa63f298efd5ec9a837db0d1999d9f2482e66583b6ea1d2002e7d"
+    },
+    {
+      "path": "server/_core/security.ts",
+      "sha256": "7da2b832bbe172fdd08cc4afdeb053c165eab4d2e386649e0f2a51b808551a23"
+    },
+    {
+      "path": "docs/security/screen-capture-protection.md",
+      "sha256": "e2c40c22af5b06d793b4dedfde86f3acf945fd043809d51357b23b06c4087e6b"
+    },
+    {
+      "path": "docs/security/native-device-protection-research.md",
+      "sha256": "066c9a1c19186986b8c7c536ec32a2a650628e0168ac38dc665ade7c8da1e7bd"
+    }
+  ],
+  "generatedAt": "2026-09-10T16:59:25.089Z"
+}

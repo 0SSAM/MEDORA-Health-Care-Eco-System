@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: MEDORA Discussions — مناقشات ميدورا
+    url: https://github.com/0SSAM/MEDORA-Health-Care-Eco-System/discussions
+    about: Questions, ideas, and general chat — الأسئلة والأفكار والنقاش العام (English / العربية)
+  - name: SECURITY — الإبلاغ عن ثغرة أمنية
+    url: https://github.com/0SSAM/MEDORA-Health-Care-Eco-System/security/policy
+    about: Please report security vulnerabilities privately — الرجاء إبلاغ الثغرات بشكل خاص

@@ -1,0 +1,56 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    services:
+      mariadb:
+        image: mariadb:10.11
+        env:
+          MARIADB_DATABASE: medora
+          MARIADB_USER: medora
+          MARIADB_PASSWORD: medora
+          MARIADB_ROOT_PASSWORD: root
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="healthcheck.sh --connect --innodb_initialized"
+          --health-interval=10s --health-timeout=5s --health-retries=8
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Setup pnpm
+        uses: pnpm/action-setup@f40ffcd9367d9f12939873eb1018b921a783ffaa # v4
+        with:
+          version: 10.34.5
+      - name: Setup Node
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22
+          cache: pnpm
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Dependency security audit
+        run: pnpm audit --audit-level=critical --json
+      - name: Typecheck
+        run: pnpm check
+      - name: Build
+        run: pnpm build
+      - name: Apply repository migrations to isolated CI database
+        run: pnpm exec drizzle-kit migrate
+        env:
+          DATABASE_URL: mysql://medora:medora@127.0.0.1:3306/medora
+      - name: Test
+        run: pnpm test
+        env:
+          DATABASE_URL: mysql://medora:medora@127.0.0.1:3306/medora

@@ -1,0 +1,22 @@
+CREATE TABLE IF NOT EXISTS pharmacy_profiles (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  organizationId INT NOT NULL,
+  branchId INT NOT NULL,
+  pharmacyKey VARCHAR(96) NOT NULL,
+  legalName VARCHAR(160) NOT NULL,
+  displayNameEn VARCHAR(160) NOT NULL,
+  displayNameAr VARCHAR(160) NOT NULL,
+  managerName VARCHAR(160) NULL,
+  addressAr VARCHAR(300) NULL,
+  addressEn VARCHAR(300) NULL,
+  landline VARCHAR(32) NULL,
+  whatsapp VARCHAR(32) NULL,
+  logoPath VARCHAR(300) NULL,
+  backgroundPath VARCHAR(300) NULL,
+  status ENUM('active','inactive') NOT NULL DEFAULT 'active',
+  createdAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updatedAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  UNIQUE KEY pharmacy_profile_scope (organizationId, branchId),
+  UNIQUE KEY pharmacy_profile_key (pharmacyKey),
+  INDEX pharmacy_profile_org_status (organizationId, status)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

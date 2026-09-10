@@ -1,0 +1,37 @@
+# Dependencies and caches
+node_modules
+.pnpm-store
+.cache
+.npm
+
+# Build and coverage output
+dist
+coverage
+*.tsbuildinfo
+
+# Secrets and local configuration
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.crt
+
+# Local logs and runtime state
+*.log
+logs
+*.pid
+
+# Git and editor metadata
+.git
+.github/.cache
+.vscode
+.idea
+.DS_Store
+
+# Local-only artifacts and generated presentation exports
+attached_assets
+medora-investor-presentation/screenshots
+medora-investor-presentation/sheets
+*.pptx
+*.pdf

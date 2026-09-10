@@ -1,0 +1,109 @@
+=== ROUTER PROCEDURES ===
+    commitSale: protectedProcedure
+    createDailyInventoryAlerts: protectedProcedure
+    logout: publicProcedure
+    me: publicProcedure
+    planFefo: protectedProcedure
+    prepareSale: protectedProcedure
+    search: protectedProcedure
+    validateDiscount: protectedProcedure
+  addEvidence: adminProcedure
+  approvePack: adminProcedure
+  approveProfile: adminProcedure
+  assertManager: protectedProcedure
+  assignBranchJurisdiction: adminProcedure
+  auth: router
+  callCentre: router
+  catalog: router
+  create: adminProcedure
+  create: protectedProcedure
+  createPack: adminProcedure
+  customerCare: router
+  get: protectedProcedure
+  list: protectedProcedure
+  listEvidence: protectedProcedure
+  listForOrganization: protectedProcedure
+  listPackAudits: adminProcedure
+  listPacks: protectedProcedure
+  markRead: protectedProcedure
+  members: protectedProcedure
+  mine: protectedProcedure
+  myBranchJurisdictions: protectedProcedure
+  offlineDrafts: router
+  policy: router
+  pos: router
+  prescription: router
+  registry: protectedProcedure
+  rollbackPack: adminProcedure
+  saveProfile: adminProcedure
+  schedule: router
+  setMembership: protectedProcedure
+  verifyEvidence: adminProcedure
+=== ROUTER FILES ===
+erp.ts
+notifications.ts
+organizations.ts
+regional.ts
+=== PAGES ===
+ComponentShowcase.tsx
+Home.tsx
+NotFound.tsx
+=== SCHEMA EXPORTS ===
+3:export const organizations = mysqlTable("organizations", {
+14:export const organizationMemberships = mysqlTable("organization_memberships", {
+23:export const users = mysqlTable("users", {
+35:export const branches = mysqlTable("branches", {
+44:export const branchUsers = mysqlTable("branch_users", {
+51:export const products = mysqlTable("products", {
+65:export const inventoryBatches = mysqlTable("inventory_batches", {
+78:export const sales = mysqlTable("sales", {
+94:export const saleItems = mysqlTable("sale_items", {
+104:export const auditLogs = mysqlTable("audit_logs", {
+117:export const scheduledJobs = mysqlTable("scheduled_jobs", {
+133:export const branchAlerts = mysqlTable("branch_alerts", {
+144:export const notifications = mysqlTable("notifications", {
+158:export const notificationReads = mysqlTable("notification_reads", {
+167:export const prescriptionIntakes = mysqlTable("prescription_intakes", {
+182:export const customerProfiles = mysqlTable("customer_profiles", {
+197:export const careInteractions = mysqlTable("care_interactions", {
+207:export const callTickets = mysqlTable("call_tickets", {
+227:export const catalogItems = mysqlTable("catalog_items", {
+250:export const catalogSyncQueue = mysqlTable("catalog_sync_queue", {
+269:export const jurisdictionProfiles = mysqlTable("jurisdiction_profiles", {
+287:export const branchJurisdictions = mysqlTable("branch_jurisdictions", {
+298:export const compliancePacks = mysqlTable("compliance_packs", {
+313:export const complianceRuleAudits = mysqlTable("compliance_rule_audits", {
+326:export const complianceEvidence = mysqlTable("compliance_evidence", {
+349:export const offlineDrafts = mysqlTable("offline_drafts", {
+=== AI/NOTIFICATION/REPORT REFERENCES ===
+client/src/components/AIChatBox.tsx
+client/src/pages/ComponentShowcase.tsx
+client/src/pages/Home.tsx
+server/_core/heartbeat.ts
+server/_core/index.ts
+server/_core/llm.ts
+server/_core/map.ts
+server/_core/notification.ts
+server/_core/sdk.ts
+server/_core/systemRouter.ts
+server/_core/types/manusTypes.ts
+server/_core/voiceTranscription.ts
+server/auth.logout.test.ts
+server/domain/erp.test.ts
+server/domain/erp.ts
+server/domain/notification-scope.test.ts
+server/domain/notification-scope.ts
+server/domain/notifications-policy.test.ts
+server/domain/notifications-view.test.ts
+server/domain/realtimeReview.ts
+server/domain/regional-engine.ts
+server/domain/regional-rules.ts
+server/domain/rules.test.ts
+server/domain/rules.ts
+server/integration/schema-boundary.test.ts
+server/routers.ts
+server/routers/erp.ts
+server/routers/notifications.ts
+server/routers/organizations.ts
+server/routers/regional.ts
+server/scheduled/inventory.ts

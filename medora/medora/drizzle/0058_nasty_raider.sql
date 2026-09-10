@@ -1,0 +1,1 @@
+ALTER TABLE `authentication_events` MODIFY COLUMN `eventType` enum('login_success','login_failure','logout','lockout','session_revoked','password_reset_requested','password_reset_completed','cache_refreshed') NOT NULL;

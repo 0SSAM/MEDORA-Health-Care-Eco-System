@@ -1,0 +1,4 @@
+ALTER TABLE `authentication_events` MODIFY COLUMN `eventType` enum('login_success','login_failure','logout','lockout','session_revoked','password_reset_requested','password_reset_completed','cache_refreshed','showcase_mutation_simulated') NOT NULL;--> statement-breakpoint
+ALTER TABLE `internal_credentials` ADD `accountType` enum('employee','showcase') DEFAULT 'employee' NOT NULL;--> statement-breakpoint
+ALTER TABLE `internal_sessions` ADD `sessionMode` enum('production','showcase') DEFAULT 'production' NOT NULL;--> statement-breakpoint
+ALTER TABLE `organizations` ADD `environment` enum('production','showcase') DEFAULT 'production' NOT NULL;
