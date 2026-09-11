@@ -1,4 +1,4 @@
-name: Build MEDORA Windows Portable
+name: Build MEDORA Windows Installer + Portable
 
 on:
   workflow_dispatch:
@@ -72,23 +72,29 @@ jobs:
           if (-not (Test-Path packaging/mariadb/bin/mariadbd.exe)) { throw 'mariadbd.exe missing' }
           if (-not (Test-Path packaging/mariadb/bin/mariadb-install-db.exe)) { throw 'mariadb-install-db.exe missing' }
 
-      - name: Build portable EXE
+      - name: Build installable NSIS EXE and standalone portable EXE
         shell: pwsh
         run: |
-          pnpm dlx electron-builder@${env:ELECTRON_BUILDER_VERSION} --win portable --x64 --config electron-builder.yml --config.electronVersion=${env:ELECTRON_VERSION}
+          pnpm dlx electron-builder@${env:ELECTRON_BUILDER_VERSION} --win nsis portable --x64 --config electron-builder.yml --config.electronVersion=${env:ELECTRON_VERSION}
 
-      - name: Smoke-check artifact
+      - name: Smoke-check both Windows artifacts
         shell: pwsh
         run: |
-          $exe = Get-ChildItem release -Filter "MEDORA-Windows10-*.exe" | Select-Object -First 1
-          if (-not $exe) { throw 'Portable MEDORA EXE was not produced' }
-          Write-Host "Produced: $($exe.FullName)"
-          Write-Host "Size: $([math]::Round($exe.Length / 1MB, 2)) MB"
+          $installer = Get-ChildItem release -Filter "MEDORA-Windows10-Installer-*.exe" | Select-Object -First 1
+          $portable = Get-ChildItem release -Filter "MEDORA-Windows10-Portable-*.exe" | Select-Object -First 1
+          if (-not $installer) { throw 'Installable MEDORA NSIS EXE was not produced' }
+          if (-not $portable) { throw 'Portable MEDORA EXE was not produced' }
+          if ($installer.Length -lt 1MB) { throw 'Installer EXE is unexpectedly small' }
+          if ($portable.Length -lt 1MB) { throw 'Portable EXE is unexpectedly small' }
+          Write-Host "Installer: $($installer.Name) - $([math]::Round($installer.Length / 1MB, 2)) MB"
+          Write-Host "Portable:  $($portable.Name) - $([math]::Round($portable.Length / 1MB, 2)) MB"
 
-      - name: Upload MEDORA.exe
+      - name: Upload MEDORA Windows executables
         uses: actions/upload-artifact@v4
         with:
           name: MEDORA-Windows10-x64
-          path: release/MEDORA-Windows10-*.exe
+          path: |
+            release/MEDORA-Windows10-Installer-*.exe
+            release/MEDORA-Windows10-Portable-*.exe
           if-no-files-found: error
           retention-days: 14
