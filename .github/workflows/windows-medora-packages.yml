@@ -6,6 +6,7 @@ on:
     paths:
       - "medora-2/medora/**"
       - "medora-2/package.json"
+      - "WINDOWS10-PACKAGES.md"
       - ".github/workflows/windows-medora-packages.yml"
 
 permissions:
