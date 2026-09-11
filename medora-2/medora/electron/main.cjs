@@ -4,6 +4,7 @@ const path = require("node:path");
 const crypto = require("node:crypto");
 const net = require("node:net");
 const { spawn } = require("node:child_process");
+const { provisionDesktopAdmin } = require("./provision-admin.cjs");
 
 const DB_PORT = 33306;
 const APP_PORT = 3000;
@@ -82,7 +83,7 @@ function run(command, args, env = {}) {
 async function initializeDatabase() {
   fs.mkdirSync(runtimeRoot(), { recursive: true });
   if (!fs.existsSync(executable("mariadbd.exe"))) {
-    throw new Error("Bundled MariaDB runtime is missing from the portable package.");
+    throw new Error("Bundled MariaDB runtime is missing from the Windows package.");
   }
 
   const password = dbPassword();
@@ -176,6 +177,9 @@ async function boot() {
   try {
     await initializeDatabase();
     await migrateDatabase();
+    // Fresh desktop databases receive the real system-manager account once.
+    // Existing installations are never reset: changing the password remains a normal account action.
+    await provisionDesktopAdmin(process.env.DATABASE_URL);
     await startMedoraServer();
     await createWindow();
   } catch (error) {
