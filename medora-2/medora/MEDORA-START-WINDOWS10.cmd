@@ -16,8 +16,10 @@ set "DBNAME=medora_local"
 set "DBUSER=medora_local"
 set "DBPASSFILE=%RUNTIME%\database-password.txt"
 set "SERVER=%ROOT%dist\index.js"
+set "BOOTSTRAP=%ROOT%scripts\bootstrap-desktop.mjs"
 if not exist "%NODE_EXE%" goto MISSING
 if not exist "%SERVER%" goto MISSING
+if not exist "%BOOTSTRAP%" goto MISSING
 if not exist "%DBD%" goto MISSING
 if not exist "%DBINIT%" goto MISSING
 if not exist "%DBCLI%" goto MISSING
@@ -49,6 +51,8 @@ set "NODE_ENV=production"
 set "MEDORA_DESKTOP_MODE=1"
 set "PORT=%APPPORT%"
 set "JWT_SECRET=%DBPASS%%DBPASS%"
+"%NODE_EXE%" "%BOOTSTRAP%"
+if errorlevel 1 goto BOOTSTRAP_FAILED
 start "MEDORA Server" /min "%NODE_EXE%" "%SERVER%"
 set /a WAIT=0
 :WAIT_APP
@@ -67,6 +71,10 @@ pause
 exit /b 1
 :DB_FAILED
 echo MEDORA local database could not be initialized or started.
+pause
+exit /b 1
+:BOOTSTRAP_FAILED
+echo MEDORA database migration or system-manager provisioning failed.
 pause
 exit /b 1
 :APP_FAILED
