@@ -6,6 +6,8 @@ on:
     paths:
       - "MEDORA-START-WINDOWS10.cmd"
       - ".github/workflows/windows-cmd-package.yml"
+      - "electron/provision-admin.cjs"
+      - "scripts/**"
       - "server/**"
       - "client/**"
       - "shared/**"
@@ -54,12 +56,14 @@ jobs:
           $ErrorActionPreference = 'Stop'
           $stage = Join-Path $env:GITHUB_WORKSPACE 'cmd-package'
           Remove-Item -Recurse -Force $stage -ErrorAction SilentlyContinue
-          New-Item -ItemType Directory -Force -Path "$stage\runtime\node", "$stage\runtime\mariadb", "$stage\dist", "$stage\drizzle" | Out-Null
+          New-Item -ItemType Directory -Force -Path "$stage\runtime\node", "$stage\runtime\mariadb", "$stage\dist", "$stage\drizzle", "$stage\scripts", "$stage\electron" | Out-Null
 
           Copy-Item 'MEDORA-START-WINDOWS10.cmd' $stage
           Copy-Item 'package.json' $stage
           Copy-Item 'dist\*' "$stage\dist" -Recurse -Force
           Copy-Item 'drizzle\*' "$stage\drizzle" -Recurse -Force
+          Copy-Item 'scripts\bootstrap-desktop.mjs' "$stage\scripts\bootstrap-desktop.mjs"
+          Copy-Item 'electron\provision-admin.cjs' "$stage\electron\provision-admin.cjs"
 
           $nodeZip = Join-Path $env:RUNNER_TEMP 'node.zip'
           Invoke-WebRequest -Uri "https://nodejs.org/dist/v${env:NODE_VERSION}/node-v${env:NODE_VERSION}-win-x64.zip" -OutFile $nodeZip
@@ -79,7 +83,6 @@ jobs:
           if (-not (Test-Path "$stage\runtime\mariadb\bin\mariadbd.exe")) { throw 'mariadbd.exe missing' }
           if (-not (Test-Path "$stage\runtime\mariadb\bin\mariadb-install-db.exe")) { throw 'mariadb-install-db.exe missing' }
 
-          # Recreate a physical, portable production node_modules tree.
           $lock = Join-Path $stage 'pnpm-lock.yaml'
           Copy-Item 'pnpm-lock.yaml' $lock
           if (Test-Path 'patches') { Copy-Item 'patches' "$stage\patches" -Recurse -Force }
@@ -89,7 +92,7 @@ jobs:
           Remove-Item $lock -Force
           Remove-Item "$stage\patches" -Recurse -Force -ErrorAction SilentlyContinue
 
-          $manifest = @{ product = 'MEDORA'; version = (Get-Content 'package.json' | ConvertFrom-Json).version; node = $env:NODE_VERSION; mariadb = $env:MARIADB_VERSION; launcher = 'MEDORA-START-WINDOWS10.cmd'; localhost = $true } | ConvertTo-Json
+          $manifest = @{ product = 'MEDORA'; version = (Get-Content 'package.json' | ConvertFrom-Json).version; node = $env:NODE_VERSION; mariadb = $env:MARIADB_VERSION; launcher = 'MEDORA-START-WINDOWS10.cmd'; systemManager = 'admin'; demoUser = $false; localhost = $true } | ConvertTo-Json
           Set-Content "$stage\WINDOWS10-PACKAGE.json" $manifest -Encoding UTF8
           $zip = Join-Path $env:GITHUB_WORKSPACE "MEDORA-Windows10-CMD.zip"
           Compress-Archive -Path "$stage\*" -DestinationPath $zip -CompressionLevel Optimal -Force
