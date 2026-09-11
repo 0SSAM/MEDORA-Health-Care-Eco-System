@@ -6,7 +6,6 @@ on:
     paths:
       - "medora-2/medora/**"
       - "medora-2/package.json"
-      - "medora-2/pnpm-lock.yaml"
       - ".github/workflows/windows-medora-packages.yml"
 
 permissions:
@@ -30,32 +29,26 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
       - name: Setup Node
         uses: actions/setup-node@v7
         with:
           node-version: ${{ env.NODE_VERSION }}
           architecture: x64
           package-manager-cache: false
-
       - name: Enable Corepack
         shell: pwsh
         run: corepack enable
-
       - name: Install parent build-tool dependencies
         shell: pwsh
-        run: pnpm --dir .. install --frozen-lockfile
-
+        run: pnpm --dir .. install --no-frozen-lockfile --ignore-scripts
       - name: Install application dependencies
         shell: pwsh
         run: pnpm install --frozen-lockfile
-
       - name: Build MEDORA
         shell: pwsh
         run: pnpm build
         env:
           NODE_ENV: production
-
       - name: Bundle official MariaDB
         shell: pwsh
         run: |
@@ -70,11 +63,9 @@ jobs:
           Copy-Item "$($root.FullName)\*" packaging/mariadb -Recurse -Force
           if (-not (Test-Path packaging/mariadb/bin/mariadbd.exe)) { throw 'mariadbd.exe missing' }
           if (-not (Test-Path packaging/mariadb/bin/mariadb-install-db.exe)) { throw 'mariadb-install-db.exe missing' }
-
       - name: Build NSIS installer and standalone portable EXE
         shell: pwsh
         run: pnpm dlx electron-builder@${env:ELECTRON_BUILDER_VERSION} --win nsis portable --x64 --config electron-builder.yml --config.electronVersion=${env:ELECTRON_VERSION}
-
       - name: Verify both EXEs
         shell: pwsh
         run: |
@@ -86,7 +77,6 @@ jobs:
           if ($portable.Length -lt 1MB) { throw 'Portable EXE unexpectedly small' }
           Write-Host "Installer: $($installer.Name) - $([math]::Round($installer.Length / 1MB, 2)) MB"
           Write-Host "Portable: $($portable.Name) - $([math]::Round($portable.Length / 1MB, 2)) MB"
-
       - name: Upload EXEs
         uses: actions/upload-artifact@v4
         with:
@@ -107,22 +97,18 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
       - name: Setup Node
         uses: actions/setup-node@v7
         with:
           node-version: ${{ env.NODE_VERSION }}
           architecture: x64
           package-manager-cache: false
-
       - name: Enable Corepack
         shell: pwsh
         run: corepack enable
-
       - name: Install parent build-tool dependencies
         shell: pwsh
-        run: pnpm --dir .. install --frozen-lockfile
-
+        run: pnpm --dir .. install --no-frozen-lockfile --ignore-scripts
       - name: Install application dependencies and build
         shell: pwsh
         run: |
@@ -130,7 +116,6 @@ jobs:
           pnpm build
         env:
           NODE_ENV: production
-
       - name: Stage production CMD package
         shell: pwsh
         run: |
@@ -144,7 +129,6 @@ jobs:
           Copy-Item 'drizzle\*' "$stage\drizzle" -Recurse -Force
           Copy-Item 'scripts\bootstrap-desktop.mjs' "$stage\scripts\bootstrap-desktop.mjs"
           Copy-Item 'electron\provision-admin.cjs' "$stage\electron\provision-admin.cjs"
-
           $nodeZip = Join-Path $env:RUNNER_TEMP 'node.zip'
           Invoke-WebRequest -Uri "https://nodejs.org/dist/v${env:NODE_VERSION}/node-v${env:NODE_VERSION}-win-x64.zip" -OutFile $nodeZip
           $nodeExtract = Join-Path $env:RUNNER_TEMP 'node-extract'
@@ -152,7 +136,6 @@ jobs:
           Expand-Archive $nodeZip $nodeExtract -Force
           $nodeRoot = Get-ChildItem $nodeExtract -Directory | Select-Object -First 1
           Copy-Item "$($nodeRoot.FullName)\*" "$stage\runtime\node" -Recurse -Force
-
           $mariaZip = Join-Path $env:RUNNER_TEMP 'mariadb.zip'
           Invoke-WebRequest -Uri "https://downloads.mariadb.org/rest-api/mariadb/${env:MARIADB_VERSION}/mariadb-${env:MARIADB_VERSION}-winx64.zip" -OutFile $mariaZip
           $mariaExtract = Join-Path $env:RUNNER_TEMP 'mariadb-extract'
@@ -162,7 +145,6 @@ jobs:
           Copy-Item "$($mariaRoot.FullName)\*" "$stage\runtime\mariadb" -Recurse -Force
           if (-not (Test-Path "$stage\runtime\mariadb\bin\mariadbd.exe")) { throw 'mariadbd.exe missing' }
           if (-not (Test-Path "$stage\runtime\mariadb\bin\mariadb-install-db.exe")) { throw 'mariadb-install-db.exe missing' }
-
           Copy-Item 'pnpm-lock.yaml' "$stage\pnpm-lock.yaml"
           if (Test-Path 'patches') { Copy-Item 'patches' "$stage\patches" -Recurse -Force }
           Push-Location $stage
@@ -170,18 +152,15 @@ jobs:
           Pop-Location
           Remove-Item "$stage\pnpm-lock.yaml" -Force
           Remove-Item "$stage\patches" -Recurse -Force -ErrorAction SilentlyContinue
-
           $manifest = @{ product = 'MEDORA'; launcher = 'MEDORA-START-WINDOWS10.cmd'; systemManager = 'admin'; demoUser = $false; node = $env:NODE_VERSION; mariadb = $env:MARIADB_VERSION } | ConvertTo-Json
           Set-Content "$stage\WINDOWS10-PACKAGE.json" $manifest -Encoding UTF8
           Compress-Archive -Path "$stage\*" -DestinationPath "$env:GITHUB_WORKSPACE\MEDORA-Windows10-CMD.zip" -CompressionLevel Optimal -Force
-
       - name: Verify CMD package
         shell: pwsh
         run: |
           $zip = Get-Item "$env:GITHUB_WORKSPACE\MEDORA-Windows10-CMD.zip"
           if ($zip.Length -lt 1MB) { throw 'CMD package unexpectedly small' }
           Write-Host "CMD package: $([math]::Round($zip.Length / 1MB, 2)) MB"
-
       - name: Upload CMD package
         uses: actions/upload-artifact@v4
         with:
