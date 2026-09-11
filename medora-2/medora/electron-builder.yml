@@ -17,14 +17,9 @@ extraResources:
 asar: true
 win:
   target:
-    - target: nsis
-      arch:
-        - x64
-    - target: portable
-      arch:
-        - x64
+    - nsis
+    - portable
   signAndEditExecutable: false
-  sign: null
 nsis:
   artifactName: MEDORA-Windows10-Installer-${version}.${ext}
   oneClick: false
