@@ -66,7 +66,7 @@ jobs:
           if (-not (Test-Path packaging/mariadb/bin/mariadb-install-db.exe)) { throw 'mariadb-install-db.exe missing' }
       - name: Build NSIS installer and standalone portable EXE
         shell: pwsh
-        run: pnpm dlx electron-builder@${env:ELECTRON_BUILDER_VERSION} --win nsis portable --x64 --config electron-builder.yml --config.electronVersion=${env:ELECTRON_VERSION}
+        run: pnpm dlx electron-builder@${env:ELECTRON_BUILDER_VERSION} --win nsis portable --x64 --config electron-builder.yml --config.electronVersion=${env:ELECTRON_VERSION} --publish never
       - name: Verify both EXEs
         shell: pwsh
         run: |
@@ -149,9 +149,9 @@ jobs:
           Copy-Item 'pnpm-lock.yaml' "$stage\pnpm-lock.yaml"
           if (Test-Path 'patches') { Copy-Item 'patches' "$stage\patches" -Recurse -Force }
           Push-Location $stage
-          pnpm install --prod --frozen-lockfile --node-linker=hoisted --ignore-scripts
+          pnpm install --prod --no-frozen-lockfile --node-linker=hoisted --ignore-scripts
           Pop-Location
-          Remove-Item "$stage\pnpm-lock.yaml" -Force
+          Remove-Item "$stage\pnpm-lock.yaml" -Force -ErrorAction SilentlyContinue
           Remove-Item "$stage\patches" -Recurse -Force -ErrorAction SilentlyContinue
           $manifest = @{ product = 'MEDORA'; launcher = 'MEDORA-START-WINDOWS10.cmd'; systemManager = 'admin'; demoUser = $false; node = $env:NODE_VERSION; mariadb = $env:MARIADB_VERSION } | ConvertTo-Json
           Set-Content "$stage\WINDOWS10-PACKAGE.json" $manifest -Encoding UTF8
