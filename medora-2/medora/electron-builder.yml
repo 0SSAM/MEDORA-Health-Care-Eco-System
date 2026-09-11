@@ -11,17 +11,27 @@ files:
   - "!tests/**"
   - "!server/**/*.ts"
   - "!shared/**/*.ts"
-  - "!drizzle/meta/**"
 extraResources:
   - from: packaging/mariadb
     to: mariadb
 asar: true
 win:
   target:
+    - target: nsis
+      arch:
+        - x64
     - target: portable
       arch:
         - x64
   signAndEditExecutable: false
   sign: null
+nsis:
+  artifactName: MEDORA-Windows10-Installer-${version}.${ext}
+  oneClick: false
+  perMachine: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
 portable:
+  artifactName: MEDORA-Windows10-Portable-${version}.${ext}
   requestExecutionLevel: user
