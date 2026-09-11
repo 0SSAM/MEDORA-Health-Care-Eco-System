@@ -5,6 +5,8 @@ on:
   push:
     paths:
       - "medora-2/medora/**"
+      - "medora-2/package.json"
+      - "medora-2/pnpm-lock.yaml"
       - ".github/workflows/windows-medora-packages.yml"
 
 permissions:
@@ -40,7 +42,11 @@ jobs:
         shell: pwsh
         run: corepack enable
 
-      - name: Install dependencies
+      - name: Install parent build-tool dependencies
+        shell: pwsh
+        run: pnpm --dir .. install --frozen-lockfile
+
+      - name: Install application dependencies
         shell: pwsh
         run: pnpm install --frozen-lockfile
 
@@ -113,7 +119,11 @@ jobs:
         shell: pwsh
         run: corepack enable
 
-      - name: Install and build
+      - name: Install parent build-tool dependencies
+        shell: pwsh
+        run: pnpm --dir .. install --frozen-lockfile
+
+      - name: Install application dependencies and build
         shell: pwsh
         run: |
           pnpm install --frozen-lockfile
