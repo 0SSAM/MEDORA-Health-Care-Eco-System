@@ -1,14 +1,16 @@
 name: MEDORA Force Reconstruction
 
 on:
-  create:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened]
 
 permissions:
   contents: write
 
 jobs:
   reconstruct:
-    if: ${{ github.event.ref_type == 'branch' && startsWith(github.event.ref, 'trigger-medora-reconstruction-') }}
+    if: ${{ github.event.pull_request.base.ref == 'main' }}
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -48,6 +50,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -B medora-reconstructed-output
           git add -A
           git commit -m "chore: force reconstruct MEDORA from redesign archive [medora-reconstruction]"
-          git push origin HEAD:main
+          git push --force origin HEAD:medora-reconstructed-output
