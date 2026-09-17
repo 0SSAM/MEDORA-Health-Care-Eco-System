@@ -1,21 +1,23 @@
 name: MEDORA Force Reconstruction
 
 on:
-  push:
+  pull_request:
     branches: [main]
+    types: [opened, synchronize, reopened]
 
 permissions:
   contents: write
 
 jobs:
   reconstruct:
-    if: ${{ !contains(github.event.head_commit.message, '[medora-reconstruction]') }}
+    if: ${{ github.event.pull_request.base.ref == 'main' }}
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
-      - name: Checkout repository
+      - name: Checkout current main
         uses: actions/checkout@v4
         with:
+          ref: main
           fetch-depth: 0
 
       - name: Verify source archive
@@ -43,7 +45,7 @@ jobs:
           rm -rf .reconstruction
           git status --short
 
-      - name: Commit reconstructed tree
+      - name: Commit reconstructed tree to main
         shell: bash
         run: |
           git config user.name "github-actions[bot]"
