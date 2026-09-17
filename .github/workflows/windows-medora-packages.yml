@@ -4,8 +4,8 @@ on:
   workflow_dispatch:
   push:
     paths:
-      - "medora-2/medora/**"
-      - "medora-2/package.json"
+      - "**"
+      - "package.json"
       - "WINDOWS10-PACKAGES.md"
       - ".github/workflows/windows-medora-packages.yml"
 
@@ -13,7 +13,7 @@ permissions:
   contents: read
 
 env:
-  APP_DIR: medora-2/medora
+  APP_DIR: .
   NODE_VERSION: "22.17.1"
   ELECTRON_VERSION: "44.2.0"
   ELECTRON_BUILDER_VERSION: "26.16.0"
@@ -26,7 +26,7 @@ jobs:
     timeout-minutes: 60
     defaults:
       run:
-        working-directory: medora-2/medora
+        working-directory: .
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -39,9 +39,6 @@ jobs:
       - name: Enable Corepack
         shell: pwsh
         run: corepack enable
-      - name: Install parent build-tool dependencies
-        shell: pwsh
-        run: pnpm --dir .. install --no-frozen-lockfile --ignore-scripts
       - name: Install application dependencies
         shell: pwsh
         run: pnpm install --frozen-lockfile
@@ -83,8 +80,8 @@ jobs:
         with:
           name: MEDORA-Windows10-EXE
           path: |
-            medora-2/medora/release/MEDORA-Windows10-Installer-*.exe
-            medora-2/medora/release/MEDORA-Windows10-Portable-*.exe
+            release/MEDORA-Windows10-Installer-*.exe
+            release/MEDORA-Windows10-Portable-*.exe
           if-no-files-found: error
           retention-days: 14
 
@@ -94,7 +91,7 @@ jobs:
     timeout-minutes: 60
     defaults:
       run:
-        working-directory: medora-2/medora
+        working-directory: .
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -107,9 +104,6 @@ jobs:
       - name: Enable Corepack
         shell: pwsh
         run: corepack enable
-      - name: Install parent build-tool dependencies
-        shell: pwsh
-        run: pnpm --dir .. install --no-frozen-lockfile --ignore-scripts
       - name: Install application dependencies and build
         shell: pwsh
         run: |
