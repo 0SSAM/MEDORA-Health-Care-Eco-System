@@ -1,1 +1,0 @@
-ALTER TABLE `jurisdiction_profiles` MODIFY COLUMN `legalAuthorityProfile` varchar(240) NOT NULL DEFAULT 'UNVERIFIED_AUTHORITY';

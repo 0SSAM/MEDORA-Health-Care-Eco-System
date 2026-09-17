@@ -1,1 +1,0 @@
-ALTER TABLE `compliance_evidence` ADD `verifiedAt` timestamp;

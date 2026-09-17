@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MEDORA | Health Care Eco System</title>
+    <meta name="description" content="MEDORA is a bilingual healthcare operations platform for pharmacy, care, finance, delivery, governance, and AI-assisted workflows." />
+    <style>
+      :root {
+        --bg: #051220;
+        --panel: rgba(255,255,255,0.08);
+        --line: rgba(255,255,255,0.12);
+        --text: #f8fbff;
+        --muted: rgba(235,245,255,0.74);
+        --cyan: #67e8f9;
+        --teal: #2dd4bf;
+        --violet: #8b5cf6;
+        --emerald: #34d399;
+      }
+      * { box-sizing: border-box; }
+      html, body { margin: 0; font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: radial-gradient(circle at top left, rgba(103,232,249,0.2), transparent 24%), radial-gradient(circle at 80% 20%, rgba(139,92,246,0.18), transparent 24%), linear-gradient(180deg, #04111d 0%, #081a2c 45%, #051220 100%); color: var(--text); }
+      body::before { content: ""; position: fixed; inset: 0; background-image: linear-gradient(rgba(148,163,184,0.08) 1px, transparent 1px), linear-gradient(90deg, rgba(148,163,184,0.08) 1px, transparent 1px); background-size: 28px 28px; opacity: .28; pointer-events: none; }
+      a { color: inherit; text-decoration: none; }
+      .shell { position: relative; max-width: 1380px; margin: 0 auto; padding: 28px 20px 80px; }
+      .nav { display: flex; justify-content: space-between; align-items: center; gap: 20px; }
+      .brand { display: flex; align-items: center; gap: 14px; }
+      .logo { width: 56px; height: 56px; border-radius: 20px; display: grid; place-items: center; background: linear-gradient(135deg, #06b6d4, #14b8a6 55%, #7c3aed); box-shadow: 0 16px 40px rgba(0,0,0,.2); font-size: 22px; }
+      .brand h1 { margin: 0; font-size: 18px; }
+      .brand p { margin: 4px 0 0; font-size: 12px; color: var(--muted); }
+      .pill { border: 1px solid var(--line); background: rgba(255,255,255,.05); border-radius: 999px; padding: 10px 14px; font-size: 12px; color: #d8f7ff; }
+      .hero { display: grid; gap: 36px; align-items: center; padding: 64px 0 48px; }
+      @media (min-width: 980px) { .hero { grid-template-columns: 1.08fr .92fr; gap: 54px; padding: 88px 0 64px; } }
+      .eyebrow { display: inline-flex; gap: 8px; align-items: center; border: 1px solid var(--line); background: rgba(255,255,255,.06); border-radius: 999px; padding: 8px 14px; font-size: 11px; letter-spacing: .18em; text-transform: uppercase; font-weight: 700; color: #b9f4ff; }
+      .hero h2 { margin: 18px 0 0; font-size: clamp(42px, 8vw, 84px); line-height: .98; letter-spacing: -.05em; }
+      .hero p { margin: 22px 0 0; max-width: 760px; font-size: 18px; line-height: 1.9; color: var(--muted); }
+      .cta-row { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 28px; }
+      .btn { display: inline-flex; align-items: center; gap: 10px; padding: 14px 22px; border-radius: 20px; font-weight: 800; }
+      .btn.primary { background: white; color: #07111f; box-shadow: 0 16px 40px rgba(255,255,255,.16); }
+      .btn.secondary { border: 1px solid var(--line); background: rgba(255,255,255,.05); color: white; }
+      .subpill { display: inline-flex; margin-top: 18px; padding: 10px 14px; border-radius: 999px; background: rgba(251,191,36,.12); border: 1px solid rgba(251,191,36,.2); font-size: 12px; font-weight: 700; color: #fde68a; }
+      .metrics { margin-top: 28px; display: grid; gap: 14px; }
+      @media (min-width: 680px) { .metrics { grid-template-columns: repeat(3, 1fr); } }
+      .metric { border: 1px solid var(--line); background: rgba(255,255,255,.05); border-radius: 24px; padding: 18px; backdrop-filter: blur(16px); }
+      .metric small { display: inline-block; padding: 6px 10px; border-radius: 999px; color: #04111d; font-weight: 900; letter-spacing: .12em; text-transform: uppercase; background: linear-gradient(90deg, var(--cyan), var(--teal)); }
+      .metric strong { display: block; margin-top: 18px; font-size: 34px; }
+      .panel { position: relative; border: 1px solid var(--line); background: rgba(255,255,255,.06); border-radius: 34px; padding: 22px; backdrop-filter: blur(20px); box-shadow: 0 30px 80px rgba(2,8,23,.42); }
+      .panel-grid { display: grid; gap: 16px; }
+      @media (min-width: 860px) { .panel-grid { grid-template-columns: 1.08fr .92fr; } }
+      .panel-card { border: 1px solid var(--line); border-radius: 28px; background: rgba(4,18,32,.64); padding: 22px; }
+      .panel-card h3, .section h3, .section h4 { margin: 0; }
+      .panel-card p { color: var(--muted); line-height: 1.8; }
+      ul { padding-left: 18px; }
+      li { margin: 12px 0; color: var(--muted); line-height: 1.7; }
+      .mini { border: 1px solid var(--line); background: rgba(255,255,255,.05); border-radius: 26px; padding: 20px; }
+      .section { padding: 72px 0 0; }
+      .section-label { display: inline-flex; align-items: center; gap: 8px; border: 1px solid var(--line); background: rgba(255,255,255,.05); border-radius: 999px; padding: 8px 14px; font-size: 11px; letter-spacing: .18em; text-transform: uppercase; font-weight: 800; color: #c9fbff; }
+      .section h3 { margin-top: 18px; font-size: clamp(30px, 5vw, 54px); line-height: 1.04; letter-spacing: -.04em; }
+      .section .intro { max-width: 920px; margin-top: 18px; color: var(--muted); line-height: 1.9; font-size: 17px; }
+      .cards { display: grid; gap: 16px; margin-top: 28px; }
+      @media (min-width: 760px) { .cards { grid-template-columns: repeat(2, 1fr); } }
+      @media (min-width: 1160px) { .cards { grid-template-columns: repeat(3, 1fr); } }
+      .card { border: 1px solid var(--line); border-radius: 28px; padding: 22px; background: rgba(255,255,255,.05); }
+      .card .icon { width: 48px; height: 48px; display: grid; place-items: center; border-radius: 18px; background: rgba(103,232,249,.12); font-size: 22px; }
+      .card p { color: var(--muted); line-height: 1.8; }
+      .timeline { display: grid; gap: 16px; margin-top: 26px; }
+      .step { display: flex; gap: 14px; border: 1px solid var(--line); background: rgba(5,20,34,.74); border-radius: 26px; padding: 20px; }
+      .step .num { width: 44px; height: 44px; border-radius: 18px; display: grid; place-items: center; background: white; color: #051220; font-weight: 900; flex: 0 0 auto; }
+      .checklist { display: grid; gap: 12px; margin-top: 26px; }
+      @media (min-width: 760px) { .checklist { grid-template-columns: repeat(2, 1fr); } }
+      .check { border: 1px solid var(--line); background: rgba(255,255,255,.05); border-radius: 22px; padding: 16px 18px; font-weight: 700; color: #eef9ff; }
+      .cta { margin-top: 72px; border: 1px solid rgba(255,255,255,.12); border-radius: 38px; padding: 32px; background: linear-gradient(135deg, rgba(6,182,212,.16), rgba(15,23,42,.75), rgba(16,185,129,.18)); }
+      .footer { margin-top: 36px; text-align: center; color: rgba(235,245,255,.56); font-size: 12px; line-height: 1.8; }
+    </style>
+  </head>
+  <body>
+    <div class="shell">
+      <header class="nav">
+        <div class="brand">
+          <div class="logo">✦</div>
+          <div>
+            <h1>MEDORA | Health Care Eco System</h1>
+            <p>Clinical clarity, commercial control, and governed intelligence</p>
+          </div>
+        </div>
+        <div class="pill">Bilingual • Fail-closed • Admin-governed</div>
+      </header>
+
+      <section class="hero">
+        <div>
+          <div class="eyebrow">✦ MEDORA | NEXT-GENERATION HEALTHCARE OPERATING SYSTEM</div>
+          <h2>A magical front door for a disciplined healthcare platform.</h2>
+          <p>MEDORA now presents itself as one coordinated command surface for pharmacy, care operations, finance, delivery, governance, and AI-assisted decision support—bright in presentation, strict in product truth, and built for Arabic and English teams.</p>
+          <div class="cta-row">
+            <a class="btn primary" href="#platform">Explore the platform →</a>
+            <a class="btn secondary" href="#governance">See trust model</a>
+          </div>
+          <div class="subpill">Bootstrap desktop admin: admin / admin</div>
+          <div class="metrics">
+            <div class="metric"><small>Protected modules</small><strong>24+</strong></div>
+            <div class="metric"><small>Languages</small><strong>AR + EN</strong></div>
+            <div class="metric"><small>Control model</small><strong>Fail-closed</strong></div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-grid">
+            <div class="panel-card">
+              <h3>Mission-control framing</h3>
+              <p>The public narrative now mirrors the real repository and runtime surfaces: operations, care, finance, delivery, identity, governance, and integration readiness.</p>
+              <ul>
+                <li>Organization, branch, and jurisdiction remain visible as part of the security boundary.</li>
+                <li>Human review remains mandatory for sensitive financial, clinical, and regulated flows.</li>
+                <li>External connectivity is described honestly as integration-gated until verified.</li>
+              </ul>
+            </div>
+            <div>
+              <div class="mini">
+                <h3>Magnetic operating surface</h3>
+                <p>A deployable landing experience that explains MEDORA with more energy while keeping all the important caveats and governance language in plain sight.</p>
+              </div>
+              <div class="mini" style="margin-top:16px;">
+                <h3>Brilliant, not vague</h3>
+                <p>No fake live integrations. No hidden governance. No decorative ambiguity. The visual system is richer, but the product truth is still explicit.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" id="platform">
+        <div class="section-label">◌ The operating surface</div>
+        <h3>Every domain now reads like part of one ecosystem.</h3>
+        <p class="intro">The redesign unifies interface language, public copy, and deployment packaging so MEDORA feels like a single healthcare operating system instead of a collection of disconnected screens.</p>
+        <div class="cards">
+          <article class="card"><div class="icon">⚙</div><h4>Operations command</h4><p>Daily workflows, branch-aware actions, and governed progress states now feel coordinated and intentional.</p></article>
+          <article class="card"><div class="icon">♥</div><h4>Care-safe boundaries</h4><p>Clinical and prescription pathways remain explicit about their guarded scope and their fail-closed controls.</p></article>
+          <article class="card"><div class="icon">₿</div><h4>Financial control</h4><p>Finance, POS, supplier balance, and accountability surfaces are framed as disciplined operating control.</p></article>
+          <article class="card"><div class="icon">⇄</div><h4>Delivery orchestration</h4><p>Logistics, dispatch, and branch execution are positioned as healthcare fulfillment infrastructure.</p></article>
+          <article class="card"><div class="icon">✧</div><h4>Advisory intelligence</h4><p>AI stays assistive and bilingual without claiming authority it does not have.</p></article>
+          <article class="card"><div class="icon">▣</div><h4>Institutional readiness</h4><p>MEDORA can now introduce itself coherently to clinics, pharmacies, hospitals, insurers, and multi-branch operators.</p></article>
+        </div>
+      </section>
+
+      <section class="section" id="schema">
+        <div class="section-label">◌ Experience schema</div>
+        <h3>The page is now schema-driven, not just hard-coded.</h3>
+        <p class="intro">Hero messaging, metrics, feature cards, governance language, and CTA structure are organized around a reusable public experience schema so the product story can evolve cleanly across the app and deployment surfaces.</p>
+        <div class="timeline">
+          <div class="step"><div class="num">01</div><div><h4>Narrative schema first</h4><p>Brand story, metrics, and module framing now come from a dedicated public schema source.</p></div></div>
+          <div class="step"><div class="num">02</div><div><h4>Visual hierarchy second</h4><p>The interface emphasizes rhythm, contrast, and card sequencing while preserving bilingual clarity.</p></div></div>
+          <div class="step"><div class="num">03</div><div><h4>Governance always visible</h4><p>Security, review, and integration boundaries stay in the page instead of hiding in footnotes.</p></div></div>
+        </div>
+      </section>
+
+      <section class="section" id="governance">
+        <div class="section-label">◌ Governance by default</div>
+        <h3>Brighter design, stricter honesty.</h3>
+        <p class="intro">MEDORA still distinguishes implemented capability from aspirational connectivity. This refresh modernizes the page, the content system, and the static site package without weakening the security posture or overclaiming compliance.</p>
+        <div class="checklist">
+          <div class="check">Tenant and branch isolation</div>
+          <div class="check">Append-only audit evidence</div>
+          <div class="check">Human review for sensitive actions</div>
+          <div class="check">Integration-gated external connectivity</div>
+        </div>
+      </section>
+
+      <section class="cta">
+        <div class="section-label">◌ MEDORA</div>
+        <h3>Bring MEDORA to flagship-product level.</h3>
+        <p class="intro">Use this renewed landing experience as the public front door, pair it with the reorganized repository, and deploy the static package while the protected application continues to handle real operations and governed access.</p>
+      </section>
+
+      <div class="footer">Built for teams who need healthcare software to feel calm, powerful, and accountable at the same time.</div>
+    </div>
+  </body>
+</html>
