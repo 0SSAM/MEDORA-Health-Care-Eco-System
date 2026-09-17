@@ -1,16 +1,14 @@
 name: MEDORA Force Reconstruction
 
 on:
-  pull_request:
-    branches: [main]
-    types: [opened, synchronize, reopened]
+  create:
 
 permissions:
   contents: write
 
 jobs:
   reconstruct:
-    if: ${{ github.event.pull_request.base.ref == 'main' }}
+    if: ${{ github.event.ref_type == 'branch' && startsWith(github.event.ref, 'trigger-medora-reconstruction-') }}
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
