@@ -63,7 +63,7 @@ jobs:
           if (-not (Test-Path packaging/mariadb/bin/mariadb-install-db.exe)) { throw 'mariadb-install-db.exe missing' }
       - name: Build NSIS installer and standalone portable EXE
         shell: pwsh
-        run: pnpm dlx electron-builder@${env:ELECTRON_BUILDER_VERSION} --win nsis portable --x64 --config electron-builder.yml --config.electronVersion=${env:ELECTRON_VERSION} --publish never
+        run: npx --yes electron-builder@${env:ELECTRON_BUILDER_VERSION} --win nsis portable --x64 --config electron-builder.yml --config.electronVersion=${env:ELECTRON_VERSION} --publish never
       - name: Verify both EXEs
         shell: pwsh
         run: |
