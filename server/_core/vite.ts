@@ -13,15 +13,27 @@ export async function setupVite(app: Express, server: Server) {
     allowedHosts: true as const,
   };
 
+  // vite.config.ts exports a factory (defineConfig(({command}) => ...)), so
+  // resolve it with the current mode before handing it to createViteServer.
+  const baseConfig =
+    typeof viteConfig === "function"
+      ? await viteConfig({
+          command: "serve",
+          mode: "development",
+          isSsrBuild: false,
+          isPreview: false,
+        })
+      : viteConfig;
+
   const vite = await createViteServer({
-    ...viteConfig,
+    ...baseConfig,
     configFile: false,
     server: serverOptions,
     appType: "custom",
   });
 
   app.use(vite.middlewares);
-  app.use("*", async (req, res, next) => {
+  app.use("/{*splat}", async (req, res, next) => {
     const url = req.originalUrl;
 
     try {
@@ -61,7 +73,7 @@ export function serveStatic(app: Express) {
   app.use(express.static(distPath));
 
   // fall through to index.html if the file doesn't exist
-  app.use("*", (_req, res) => {
+  app.use("/{*splat}", (_req, res) => {
     res.sendFile(path.resolve(distPath, "index.html"));
   });
 }

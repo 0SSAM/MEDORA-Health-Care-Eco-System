@@ -33,21 +33,36 @@ Sensitive flows remain governed by fail-closed authorization, organization and b
 - Bilingual Arabic / English UI
 
 ## Local setup
+
+MEDORA runs with **zero external configuration** — no MySQL server, no
+`.env` file, and no manual seeding. The first `pnpm dev` boots an embedded
+MySQL server inside the workspace (one-time binary download, cached in
+`.medora-runtime/`), applies all migrations, and provisions the admin
+account, RBAC, delivery zones, and the CC0 Egyptian drug catalog (25k+ items).
+
 1. Install Node.js 22+ and pnpm.
-2. Create a MySQL or MariaDB database.
-3. Copy `.env.example` to `.env` and set values such as `DATABASE_URL`, `JWT_SECRET`, and `OAUTH_SERVER_URL`.
-4. Install dependencies:
+2. Install dependencies:
    ```bash
-   pnpm install --frozen-lockfile
+   pnpm install
    ```
-5. Apply schema:
+3. Provision (optional — `pnpm dev` does this automatically):
    ```bash
-   pnpm db:push
+   pnpm setup
    ```
-6. Start development:
+4. Start development:
    ```bash
    pnpm dev
    ```
+5. Open the app and sign in with the seeded administrator:
+   `admin` / `admin` (override via `MEDORA_ADMIN_USERNAME` /
+   `MEDORA_ADMIN_PASSWORD` before first boot).
+
+All state lives in `.medora-data/` (delete it for a factory reset). Set
+`DATABASE_URL` to a MySQL/MariaDB server at any time to bypass the embedded
+runtime and use a managed database instead; set `JWT_SECRET` in production.
+
+Legacy manual setup (still supported): copy `.env.example` to `.env`, set
+`DATABASE_URL` / `OAUTH_SERVER_URL`, apply the schema with `pnpm db:push`.
 
 ## Runtime checks
 - Health endpoint: `/api/health`

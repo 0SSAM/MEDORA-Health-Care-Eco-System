@@ -1,7 +1,7 @@
 import { and, desc, eq } from "drizzle-orm";
 import { z } from "zod";
 import { createHash } from "crypto";
-import { parse as parseCookie } from "cookie";
+import { parseCookie } from "../_core/cookies";
 import { protectedProcedure, router } from "../_core/trpc";
 import { createHeartbeatJob } from "../_core/heartbeat";
 import { COOKIE_NAME } from "@shared/const";
