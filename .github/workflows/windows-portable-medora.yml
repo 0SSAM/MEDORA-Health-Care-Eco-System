@@ -31,6 +31,9 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Validate npm-compatible package metadata
+        shell: pwsh
+        run: npm pkg get overrides | Out-Null
       - name: Setup Node
         uses: actions/setup-node@v7
         with:
