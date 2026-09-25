@@ -8,6 +8,7 @@ import net from "net";
 import { rateLimit } from "express-rate-limit";
 import { createExpressMiddleware } from "@trpc/server/adapters/express";
 import { registerOAuthRoutes } from "./oauth";
+import { prepareRuntimeEnvironment, stopEmbeddedDatabase } from "./embedded-database";
 import { registerStorageProxy } from "./storageProxy";
 import { appRouter } from "../routers";
 import { createContext } from "./context";
@@ -54,6 +55,17 @@ async function findAvailablePort(startPort: number = 3000): Promise<number> {
 }
 
 async function startServer() {
+  // Zero-setup database runtime: boots (or reuses) the embedded MySQL server
+  // when DATABASE_URL is not configured, applies migrations, and seeds
+  // first-run data. With DATABASE_URL configured this only ensures a stable
+  // local JWT secret and returns immediately.
+  const databaseInfo = await prepareRuntimeEnvironment();
+  if (databaseInfo.mode === "embedded") {
+    console.log(
+      `[medora] using the embedded database (port ${databaseInfo.port}); data directory: ${databaseInfo.dataDir}`
+    );
+  }
+
   const app = express();
   app.use("/api/channels", webhookRouter());
   const server = createServer(app);
@@ -128,4 +140,22 @@ async function startServer() {
   });
 }
 
-startServer().catch(console.error);
+let shuttingDown = false;
+async function shutdown(signal: string) {
+  if (shuttingDown) return;
+  shuttingDown = true;
+  console.log(`[medora] received ${signal}, shutting down…`);
+  await stopEmbeddedDatabase();
+  process.exit(0);
+}
+process.on("SIGINT", () => void shutdown("SIGINT"));
+process.on("SIGTERM", () => void shutdown("SIGTERM"));
+process.on("exit", () => {
+  void stopEmbeddedDatabase();
+});
+
+startServer().catch(async error => {
+  console.error(error);
+  await stopEmbeddedDatabase();
+  process.exit(1);
+});

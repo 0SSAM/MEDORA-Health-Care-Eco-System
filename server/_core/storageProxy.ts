@@ -9,8 +9,11 @@ function isSafeStorageKey(key: string): boolean {
 }
 
 export function registerStorageProxy(app: Express) {
-  app.get("/manus-storage/*", async (req, res) => {
-    const key = (req.params as Record<string, string>)[0];
+  app.get("/manus-storage/{*splat}", async (req, res) => {
+    // router@2 (Express 5) delivers wildcard captures as an array under the
+    // named parameter; flatten it back to the raw key path.
+    const raw = (req.params as Record<string, string | string[]>)["splat"];
+    const key = Array.isArray(raw) ? raw.join("/") : raw;
     if (!key || !isSafeStorageKey(key)) {
       res.status(400).send("Invalid storage key");
       return;

@@ -1,10 +1,21 @@
 import type { CookieOptions, Request } from "express";
+import * as cookieModule from "cookie";
 
 const LOCAL_HOSTS = new Set(["localhost", "127.0.0.1", "::1"]);
 
+type ParsedCookies = Record<string, string | undefined>;
+
+// cookie v2 renamed `parse` to `parseCookie`; support both package generations
+// without spreading that migration across every server route.
+export const parseCookie = (cookieModule as unknown as {
+  parseCookie?: (value: string) => ParsedCookies;
+  parse?: (value: string) => ParsedCookies;
+}).parseCookie ?? (cookieModule as unknown as {
+  parse: (value: string) => ParsedCookies;
+}).parse;
+
 function isIpAddress(host: string) {
-  // Basic IPv4 check and IPv6 presence detection.
-  if (/^\d{1,3}(\.\d{1,3}){3}$/.test(host)) return true;
+  if (/^\\d{1,3}(\\.\\d{1,3}){3}$/.test(host)) return true;
   return host.includes(":");
 }
 
@@ -24,21 +35,8 @@ export function isSecureRequest(req: Request) {
 export function getSessionCookieOptions(
   req: Request
 ): Pick<CookieOptions, "domain" | "httpOnly" | "path" | "sameSite" | "secure"> {
-  // const hostname = req.hostname;
-  // const shouldSetDomain =
-  //   hostname &&
-  //   !LOCAL_HOSTS.has(hostname) &&
-  //   !isIpAddress(hostname) &&
-  //   hostname !== "127.0.0.1" &&
-  //   hostname !== "::1";
-
-  // const domain =
-  //   shouldSetDomain && !hostname.startsWith(".")
-  //     ? `.${hostname}`
-  //     : shouldSetDomain
-  //       ? hostname
-  //       : undefined;
-
+  // Keep host-only cookies for local and single-host deployments. Cross-host
+  // deployments can still use the secure SameSite=None options below.
   return {
     httpOnly: true,
     path: "/",

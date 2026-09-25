@@ -1,97 +1,122 @@
-// Preconfigured storage helpers for Manus WebDev templates
-// Uploads via Forge Server presigned URL to S3 (PUT direct).
-// Downloads return /manus-storage/{key} paths served via 307 redirect.
+/**
+ * Object storage helper for server-side uploads.
+ *
+ * MEDORA keeps object storage optional: when S3 credentials are configured
+ * the generated/uploaded object is persisted to the bucket and a durable URL
+ * is returned. Without credentials the caller receives a fail-closed error so
+ * that flows never pretend an object was stored when it was not.
+ *
+ * Keys are sanitized before use: no traversal segments, no control
+ * characters, and a bounded length.
+ */
+import {
+  GetObjectCommand,
+  PutObjectCommand,
+  S3Client,
+} from "@aws-sdk/client-s3";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
-import { ENV } from "./_core/env";
+const MAX_KEY_LENGTH = 512;
 
-function getForgeConfig() {
-  const forgeUrl = ENV.forgeApiUrl;
-  const forgeKey = ENV.forgeApiKey;
+function isSafeKey(key: string): boolean {
+  return (
+    key.length > 0 &&
+    key.length <= MAX_KEY_LENGTH &&
+    !/[\\\0\r\n]/.test(key) &&
+    !key.split("/").some(segment => segment === ".." || segment === ".")
+  );
+}
 
-  if (!forgeUrl || !forgeKey) {
+function s3Configured(): boolean {
+  return Boolean(
+    process.env.S3_ENDPOINT &&
+      process.env.S3_BUCKET_NAME &&
+      process.env.S3_ACCESS_KEY_ID &&
+      process.env.S3_SECRET_ACCESS_KEY
+  );
+}
+
+let cachedClient: S3Client | null = null;
+
+function getS3Client(): S3Client {
+  if (!cachedClient) {
+    cachedClient = new S3Client({
+      region: process.env.S3_REGION || "auto",
+      endpoint: process.env.S3_ENDPOINT,
+      forcePathStyle: true,
+      credentials: {
+        accessKeyId: process.env.S3_ACCESS_KEY_ID as string,
+        secretAccessKey: process.env.S3_SECRET_ACCESS_KEY as string,
+      },
+    });
+  }
+  return cachedClient;
+}
+
+export type StoragePutResult = {
+  /** Durable URL that can be handed to clients for download/display. */
+  url: string;
+  /** The sanitized storage key the object was written to. */
+  key: string;
+};
+
+export async function storagePut(
+  key: string,
+  body: Buffer | Uint8Array,
+  contentType: string
+): Promise<StoragePutResult> {
+  if (!isSafeKey(key)) {
+    throw new Error("Invalid storage key");
+  }
+  if (!s3Configured()) {
     throw new Error(
-      "Storage config missing: set BUILT_IN_FORGE_API_URL and BUILT_IN_FORGE_API_KEY",
+      "Object storage is not configured (S3_ENDPOINT, S3_BUCKET_NAME, S3_ACCESS_KEY_ID, S3_SECRET_ACCESS_KEY)"
     );
   }
 
-  return { forgeUrl: forgeUrl.replace(/\/+$/, ""), forgeKey };
+  const client = getS3Client();
+  const bucket = process.env.S3_BUCKET_NAME as string;
+  await client.send(
+    new PutObjectCommand({
+      Bucket: bucket,
+      Key: key,
+      Body: body,
+      ContentType: contentType || "application/octet-stream",
+    })
+  );
+
+  const endpoint = (process.env.S3_ENDPOINT as string).replace(/\/+$/, "");
+  const url = `${endpoint}/${bucket}/${key
+    .split("/")
+    .map(encodeURIComponent)
+    .join("/")}`;
+  return { url, key };
 }
 
-function normalizeKey(relKey: string): string {
-  return relKey.replace(/^\/+/, "");
-}
-
-function appendHashSuffix(relKey: string): string {
-  const hash = crypto.randomUUID().replace(/-/g, "").slice(0, 8);
-  const lastDot = relKey.lastIndexOf(".");
-  if (lastDot === -1) return `${relKey}_${hash}`;
-  return `${relKey.slice(0, lastDot)}_${hash}${relKey.slice(lastDot)}`;
-}
-
-export async function storagePut(
-  relKey: string,
-  data: Buffer | Uint8Array | string,
-  contentType = "application/octet-stream",
-): Promise<{ key: string; url: string }> {
-  const { forgeUrl, forgeKey } = getForgeConfig();
-  const key = appendHashSuffix(normalizeKey(relKey));
-
-  // 1. Get presigned PUT URL from Forge
-  const presignUrl = new URL("v1/storage/presign/put", forgeUrl + "/");
-  presignUrl.searchParams.set("path", key);
-
-  const presignResp = await fetch(presignUrl, {
-    headers: { Authorization: `Bearer ${forgeKey}` },
-  });
-
-  if (!presignResp.ok) {
-    const msg = await presignResp.text().catch(() => presignResp.statusText);
-    throw new Error(`Storage presign failed (${presignResp.status}): ${msg}`);
+/**
+ * Mint a short-lived signed GET URL for a stored object. Fail-closed: throws
+ * when storage is not configured or the key is unsafe so callers never fall
+ * back to a publicly reachable URL by accident.
+ */
+export async function storageGetSignedUrl(
+  key: string,
+  expiresInSeconds = 900
+): Promise<string> {
+  if (!isSafeKey(key)) {
+    throw new Error("Invalid storage key");
+  }
+  if (!s3Configured()) {
+    throw new Error(
+      "Object storage is not configured (S3_ENDPOINT, S3_BUCKET_NAME, S3_ACCESS_KEY_ID, S3_SECRET_ACCESS_KEY)"
+    );
   }
 
-  const { url: s3Url } = (await presignResp.json()) as { url: string };
-  if (!s3Url) throw new Error("Forge returned empty presign URL");
-
-  // 2. PUT file directly to S3
-  const blob =
-    typeof data === "string"
-      ? new Blob([data], { type: contentType })
-      : new Blob([data as any], { type: contentType });
-
-  const uploadResp = await fetch(s3Url, {
-    method: "PUT",
-    headers: { "Content-Type": contentType },
-    body: blob,
+  const client = getS3Client();
+  const command = new GetObjectCommand({
+    Bucket: process.env.S3_BUCKET_NAME as string,
+    Key: key,
   });
-
-  if (!uploadResp.ok) {
-    throw new Error(`Storage upload to S3 failed (${uploadResp.status})`);
-  }
-
-  return { key, url: `/manus-storage/${key}` };
+  return getSignedUrl(client, command, { expiresIn: expiresInSeconds });
 }
 
-export async function storageGet(relKey: string): Promise<{ key: string; url: string }> {
-  const key = normalizeKey(relKey);
-  return { key, url: `/manus-storage/${key}` };
-}
-
-export async function storageGetSignedUrl(relKey: string): Promise<string> {
-  const { forgeUrl, forgeKey } = getForgeConfig();
-  const key = normalizeKey(relKey);
-
-  const getUrl = new URL("v1/storage/presign/get", forgeUrl + "/");
-  getUrl.searchParams.set("path", key);
-
-  const resp = await fetch(getUrl, {
-    headers: { Authorization: `Bearer ${forgeKey}` },
-  });
-
-  if (!resp.ok) {
-    const msg = await resp.text().catch(() => resp.statusText);
-    throw new Error(`Storage signed URL failed (${resp.status}): ${msg}`);
-  }
-
-  const { url } = (await resp.json()) as { url: string };
-  return url;
-}
+export const storageInternals = { isSafeKey, s3Configured };

@@ -23,7 +23,7 @@
     },
     {
       "path": "server/routers/operations.ts",
-      "sha256": "a8a66b956cb3fd456126aa275bf613b2b894a8983515955bd6a650a6e2bc91e6"
+      "sha256": "a577d2d3dc7bf5aba98cb84c13533c07254bade9299d0dc290c22c00d7befe94"
     },
     {
       "path": "client/src/pages/Home.tsx",

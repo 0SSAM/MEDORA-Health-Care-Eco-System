@@ -1,4 +1,5 @@
 import { defineConfig } from "vitest/config";
+import react from "@vitejs/plugin-react";
 import path from "path";
 
 const templateRoot = path.resolve(import.meta.dirname);
@@ -9,6 +10,7 @@ const brandEnv = {
 };
 
 export default defineConfig({
+  plugins: [react()],
   env: brandEnv,
   root: templateRoot,
   resolve: {
