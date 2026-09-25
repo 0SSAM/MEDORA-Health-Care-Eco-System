@@ -105,7 +105,6 @@
     "autoprefixer": "^10.6.1",
     "drizzle-kit": "^0.31.11",
     "esbuild": "^0.28.2",
-    "pnpm": "^12.5.1",
     "postcss": "^8.5.28",
     "prettier": "^3.9.8",
     "tailwindcss": "^4.3.3",
