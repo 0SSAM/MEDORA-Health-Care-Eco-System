@@ -78,7 +78,7 @@ jobs:
       - name: Build installable NSIS EXE and standalone portable EXE
         shell: pwsh
         run: |
-          npx --yes electron-builder@${env:ELECTRON_BUILDER_VERSION} --win nsis portable --x64 --config electron-builder.yml --config.electronVersion=${env:ELECTRON_VERSION}
+          npx --yes electron-builder@${env:ELECTRON_BUILDER_VERSION} --win nsis portable --x64 --config electron-builder.yml --config.electronVersion=${env:ELECTRON_VERSION} --publish never
 
       - name: Smoke-check both Windows artifacts
         shell: pwsh
