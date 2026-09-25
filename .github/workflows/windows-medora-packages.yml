@@ -41,7 +41,7 @@ jobs:
         run: corepack enable
       - name: Install application dependencies
         shell: pwsh
-        run: pnpm install --frozen-lockfile
+        run: pnpm install --frozen-lockfile --node-linker=hoisted
       - name: Build MEDORA
         shell: pwsh
         run: pnpm build
