@@ -44,7 +44,7 @@ jobs:
 
       - name: Install dependencies
         shell: pwsh
-        run: pnpm install --frozen-lockfile
+        run: pnpm install --frozen-lockfile --node-linker=hoisted
 
       - name: Build MEDORA server and web assets
         shell: pwsh
