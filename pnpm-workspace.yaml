@@ -6,6 +6,13 @@ packages:
 onlyBuiltDependencies:
   - pnpm
 
+# electron-builder's node-module collector resolves the pnpm binary from
+# node_modules/.pnpm (the devDependency, which can be a different major than
+# packageManager). Under corepack that version mismatch aborts with
+# ERR_PNPM_BAD_PM_VERSION and breaks Windows packaging; ignore it. The Rust
+# engine (pnpm v12+) reads this from pnpm-workspace.yaml.
+pmOnFail: ignore
+
 patchedDependencies:
   wouter@3.7.1: patches/wouter@3.7.1.patch
 
