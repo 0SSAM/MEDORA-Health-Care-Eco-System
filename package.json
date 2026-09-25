@@ -105,7 +105,7 @@
     "autoprefixer": "^10.6.0",
     "drizzle-kit": "^0.31.10",
     "esbuild": "^0.28.2",
-    "pnpm": "^12.4.1",
+    "pnpm": "^10.34.5",
     "postcss": "^8.5.28",
     "prettier": "^3.9.6",
     "tailwindcss": "^4.3.3",
@@ -132,7 +132,7 @@
     "rollup": "4.59.0",
     "react-is": "19.2.1"
   },
-  "packageManager": "pnpm@10.34.5",
+  "packageManager": "pnpm@10.34.5+sha512.c753b6c3ad7afa13af388fa6d808035a008e30ea9993f58c6663e2bc5ff21679aa834db094987129aa4d488b86df57f7b634981b2f827cdcacc698cc0cfb88af",
   "keywords": [
     "medora",
     "healthcare",
