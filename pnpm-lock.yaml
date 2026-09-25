@@ -277,9 +277,6 @@ importers:
       esbuild:
         specifier: ^0.28.2
         version: 0.28.2
-      pnpm:
-        specifier: ^12.5.1
-        version: 12.5.1
       postcss:
         specifier: ^8.5.28
         version: 8.5.28
@@ -3256,11 +3253,6 @@ packages:
   playwright@1.63.0:
     resolution: {integrity: sha512-+7ziBLidS4NaNCdt57SUDT+wYmmd5fmiQejUic/kb+YsYSCPyOOE9sebzMjNmQrsnNpDJqd4WHvV/8lfKfUDUg==}
     engines: {node: '>=20'}
-    hasBin: true
-
-  pnpm@12.5.1:
-    resolution: {integrity: sha512-4/MFvHhKK8ifWtO2E4iJRw+ujSr182thIW7JHCw9ZAiXdfneOKrDMQROpA8kXLDVZmOS399lgk4ZB+9qLGLeXw==}
-    engines: {node: '>=18.*'}
     hasBin: true
 
   postcss-selector-parser@6.0.10:
