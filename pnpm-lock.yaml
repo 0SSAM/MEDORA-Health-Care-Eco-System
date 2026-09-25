@@ -3255,6 +3255,8 @@ packages:
     engines: {node: '>=20'}
     hasBin: true
 
+  pnpm@12.5.1: {}
+
   postcss-selector-parser@6.0.10:
     resolution: {integrity: sha512-IQ7TZdoaqbT+LCpShg46jnZVlhWD2w6iQYAcYXfHARZ7X1t/UGhhceQDs5X0cGqKvYlHNOuv7Oa1xmb0oQuA3w==}
     engines: {node: '>=4'}
