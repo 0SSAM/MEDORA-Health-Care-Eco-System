@@ -11,6 +11,9 @@ updates:
     groups:
       production-dependencies:
         dependency-type: production
+        ignore:
+          - dependency-name: "wouter"
+            versions: ["> 3.7.1"]
       development-dependencies:
         dependency-type: development
 
