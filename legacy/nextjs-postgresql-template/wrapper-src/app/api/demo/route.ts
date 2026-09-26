@@ -53,7 +53,11 @@ export async function POST(request: NextRequest) {
     }
     if (body.action === 'settings') {
       const p = body.preferences as Preferences;
-      if (!p || typeof p.company !== 'string' || !p.company.trim() || p.company.length > 100 || typeof p.email !== 'string' || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(p.email) || p.email.length > 150 || !['SAR', 'AED', 'USD'].includes(p.currency) || typeof p.notifications !== 'boolean') return NextResponse.json({ error: 'يرجى التحقق من بيانات الإعدادات.' }, { status: 400 });
+      const email = typeof p?.email === 'string' ? p.email : '';
+      const at = email.indexOf('@');
+      const dot = email.lastIndexOf('.');
+      const emailValid = email.length <= 150 && at > 0 && dot > at + 1 && dot < email.length - 1;
+      if (!p || typeof p.company !== 'string' || !p.company.trim() || p.company.length > 100 || !emailValid || !['SAR', 'AED', 'USD'].includes(p.currency) || typeof p.notifications !== 'boolean') return NextResponse.json({ error: 'يرجى التحقق من بيانات الإعدادات.' }, { status: 400 });
       await db.update(demoSessions).set({ preferences: { company: p.company.trim(), email: p.email, notifications: p.notifications, currency: p.currency } }).where(eq(demoSessions.id, current.id));
       return NextResponse.json({ success: true });
     }
