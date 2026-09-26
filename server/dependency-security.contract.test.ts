@@ -22,7 +22,7 @@ describe("dependency-security alert contract", () => {
     expect(lockfile).not.toContain("esbuild@0.18.20");
     expect(lockfile).not.toContain("uuid@8.3.2");
     expect(lockfile).not.toContain("autocannon@8.0.0");
-    expect(workspace).toContain("uuid: 11.1.1");
-    expect(lockfile).toContain("uuid@11.1.1");
+    expect(workspace).not.toContain("uuid:");
+    expect(lockfile).toContain("uuid@14.0.2");
   });
 });
